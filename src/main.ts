@@ -19,12 +19,29 @@ async function run() {
 
     // get all releases
     const octokit = github.getOctokit(token);
-    const releases = await octokit.rest.repos.listReleases({
-      ...context.repo
-    });
+    const releases = await octokit.paginate(
+      octokit.rest.repos.listReleases,
+      {
+        ...context.repo,
+        per_page: 100
+      },
+      response => response.data
+    );
 
-    core.info(`Found ${releases.data.length} releases`);
-    core.info(`Latest release: ${releases.data[0].tag_name}`);
+    const tags = await octokit.paginate(
+      octokit.rest.repos.listTags,
+      {
+        ...context.repo,
+        per_page: 100
+      },
+      response => response.data
+    );
+
+    core.info(tags[0].name)
+
+    core.info(`Found ${releases.length} releases`);
+    core.info(`Latest release: ${releases[0].tag_name}`);
+    core.info(releases[0].target_commitish);
 
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

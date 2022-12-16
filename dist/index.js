@@ -58,9 +58,12 @@ function run() {
             const token = core.getInput('github-token');
             // get all releases
             const octokit = github.getOctokit(token);
-            const releases = yield octokit.rest.repos.listReleases(Object.assign({}, context.repo));
-            core.info(`Found ${releases.data.length} releases`);
-            core.info(`Latest release: ${releases.data[0].tag_name}`);
+            const releases = yield octokit.paginate(octokit.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
+            const tags = yield octokit.paginate(octokit.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
+            core.info(tags[0].name);
+            core.info(`Found ${releases.length} releases`);
+            core.info(`Latest release: ${releases[0].tag_name}`);
+            core.info(releases[0].target_commitish);
         }
         catch (error) {
             if (error instanceof Error)
