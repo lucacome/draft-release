@@ -39,8 +39,8 @@ async function run() {
     // yaml type definition for release.yml
     // changelog:
     //   exclude:
-    //   labels:
-    //     - skip-changelog
+    //     labels:
+    //       - skip-changelog
     // categories:
     //   - title: 🚀 Features
     //     labels:
@@ -69,17 +69,17 @@ async function run() {
 
     type ReleaseYAML = {
       changelog: {
-        exclude: string[],
-        labels: string[]
-      },
-      categories: {
-        title: string,
-        labels: string[]
-      }[]
-    }
+        exclude: {
+          labels: string[]
+        },
+        categories: {
+          title: string,
+          labels: string[]
+        }[]
+      }
 
     const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
-    core.info(`doc: ${doc.changelog}`);
+    core.info(`doc: ${doc.changelog.exclude.labels}`);
 
 
 
