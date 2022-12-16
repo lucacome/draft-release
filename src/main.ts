@@ -25,7 +25,7 @@ async function run() {
     // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
 
 
-    const releaseFile = '.github/workflows/release.yml';
+    const releaseFile = '.github/release.yml';
 
     // read releaseFile
     const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');

@@ -62,7 +62,7 @@ function run() {
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
             // generate release notes for the next release
             // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
-            const releaseFile = '.github/workflows/release.yml';
+            const releaseFile = '.github/release.yml';
             // read releaseFile
             const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
             core.info(`releaseFileContent: ${releaseFileContent}`);
