@@ -36,8 +36,50 @@ async function run() {
     // const releaseNotes = parsedYAML
     // core.info(`releaseNotes: ${releaseNotes}`);
 
-    const doc = jsyaml.load(releaseFileContent) as any;
-    core.info(`doc: ${doc.changelog}`);
+    // yaml type definition for release.yml
+    // changelog:
+    //   exclude:
+    //   labels:
+    //     - skip-changelog
+    // categories:
+    //   - title: 🚀 Features
+    //     labels:
+    //       - enhancement
+    //   - title: 💣 Breaking Changes
+    //     labels:
+    //       - change
+    //   - title: 🐛 Bug Fixes
+    //     labels:
+    //       - bug
+    //   - title: 📝 Documentation
+    //     labels:
+    //       - documentation
+    //   - title: 🧪 Tests
+    //     labels:
+    //       - tests
+    //   - title: 🔨 Maintenance
+    //     labels:
+    //       - chore
+    //   - title: ⬆️ Dependencies
+    //     labels:
+    //       - dependencies
+    //   - title: Other Changes
+    //     labels:
+    //       - "*"
+
+    type ReleaseYAML = {
+      changelog: {
+        exclude: string[],
+        labels: string[]
+      },
+      categories: {
+        title: string,
+        labels: string[]
+      }[]
+    }
+
+    const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
+    core.info(`doc: ${doc.categories[0].title}`);
 
 
 

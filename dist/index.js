@@ -69,10 +69,8 @@ function run() {
             const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
             const parsedYAML = (0, yaml_1.parse)(releaseFileContent);
             core.info(`releaseFileContent: ${parsedYAML}`);
-            // const releaseNotes = parsedYAML
-            // core.info(`releaseNotes: ${releaseNotes}`);
             const doc = jsyaml.load(releaseFileContent);
-            core.info(`doc: ${doc.changelog}`);
+            core.info(`doc: ${doc.categories[0].title}`);
         }
         catch (error) {
             if (error instanceof Error)
