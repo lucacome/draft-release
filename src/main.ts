@@ -23,9 +23,8 @@ async function run() {
       ...context.repo
     });
 
-    // get the latest release
-    const latestRelease = releases.data[0];
-    core.info(`Latest release: ${latestRelease.tag_name}`);
+    core.info(`Found ${releases.data.length} releases`);
+    core.info(`Latest release: ${releases.data[0].tag_name}`);
 
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
