@@ -79,7 +79,7 @@ async function run() {
     }
 
     const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
-    core.info(`doc: ${doc.categories[0].title}`);
+    core.info(`doc: ${doc.changelog}`);
 
 
 
