@@ -62,7 +62,7 @@ function run() {
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
             // generate release notes for the next release
             // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
-            const testFolder = '.';
+            const testFolder = '.github/';
             fs.readdirSync(testFolder).forEach(file => {
                 console.log(file);
             });
