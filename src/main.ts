@@ -72,14 +72,17 @@ async function run() {
         exclude: {
           labels: string[]
         },
-        categories: {
-          title: string,
-          labels: string[]
-        }[]
-      }
+      },
+      categories: {
+        title: string,
+        labels: string[]
+      }[]
+    }
 
     const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
-    core.info(`doc: ${doc.changelog.exclude.labels}`);
+    core.info(`labels: ${doc.changelog.exclude.labels}`);
+    core.info(`categories: ${doc.categories}`);
+
 
 
 

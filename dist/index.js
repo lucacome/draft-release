@@ -70,7 +70,8 @@ function run() {
             const parsedYAML = (0, yaml_1.parse)(releaseFileContent);
             core.info(`releaseFileContent: ${parsedYAML}`);
             const doc = jsyaml.load(releaseFileContent);
-            core.info(`doc: ${doc.changelog}`);
+            core.info(`labels: ${doc.changelog.exclude.labels}`);
+            core.info(`categories: ${doc.categories}`);
         }
         catch (error) {
             if (error instanceof Error)
