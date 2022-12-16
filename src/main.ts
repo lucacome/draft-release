@@ -3,9 +3,17 @@ import {wait} from './wait'
 import * as github from '@actions/github'
 
 async function run(): Promise<void> {
-
-  core.info('Hello World')
   core.info(github.context.eventName)
+  const context = github.context
+
+  // get all releases
+  const octokit = github.getOctokit(core.getInput('github-token'))
+  const {data: releases} = await octokit.rest.repos.listReleases({
+    ...context.repo
+  })
+
+  core.info(releases.toString())
+
   try {
     const ms: string = core.getInput('milliseconds')
     core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true

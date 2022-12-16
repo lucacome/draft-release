@@ -44,8 +44,12 @@ const wait_1 = __nccwpck_require__(5817);
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info('Hello World');
         core.info(github.context.eventName);
+        const context = github.context;
+        // get all releases
+        const octokit = github.getOctokit(core.getInput('github-token'));
+        const { data: releases } = yield octokit.rest.repos.listReleases(Object.assign({}, context.repo));
+        core.info(releases.toString());
         try {
             const ms = core.getInput('milliseconds');
             core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
