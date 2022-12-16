@@ -65,18 +65,17 @@ async function run() {
     }
 
     const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
-    core.info(`labels: ${doc.changelog.exclude.labels}`);
-    core.info(`categories: ${doc.changelog.categories}`);
-    core.info(`title: ${doc.changelog.categories[0].title}`);
 
-    // for every category in categories save the title and labels
-    [...doc.changelog.categories].forEach(category => {
-      core.info(`category: ${category.title}`);
-      core.info(`labels: ${category.labels}`);
+    // save all titles and corresponding labels from release.yml in an array
+    const categories = doc.changelog.categories.map(category => {
+      return {
+        title: category.title,
+        labels: category.labels
+      }
     }
     );
 
-
+    core.info(`categories: ${categories}`);
 
 
 
