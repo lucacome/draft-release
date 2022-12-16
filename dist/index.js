@@ -71,7 +71,8 @@ function run() {
             core.info(`releaseFileContent: ${parsedYAML}`);
             const doc = jsyaml.load(releaseFileContent);
             core.info(`labels: ${doc.changelog.exclude.labels}`);
-            core.info(`categories: ${doc.categories}`);
+            core.info(`categories: ${doc.changelog.categories}`);
+            core.info(`title: ${doc.changelog.categories[0].title}`);
         }
         catch (error) {
             if (error instanceof Error)

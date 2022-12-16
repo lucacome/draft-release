@@ -41,47 +41,33 @@ async function run() {
     //   exclude:
     //     labels:
     //       - skip-changelog
-    // categories:
-    //   - title: 🚀 Features
-    //     labels:
-    //       - enhancement
-    //   - title: 💣 Breaking Changes
-    //     labels:
-    //       - change
-    //   - title: 🐛 Bug Fixes
-    //     labels:
-    //       - bug
-    //   - title: 📝 Documentation
-    //     labels:
-    //       - documentation
-    //   - title: 🧪 Tests
-    //     labels:
-    //       - tests
-    //   - title: 🔨 Maintenance
-    //     labels:
-    //       - chore
-    //   - title: ⬆️ Dependencies
-    //     labels:
-    //       - dependencies
-    //   - title: Other Changes
-    //     labels:
-    //       - "*"
+    //   categories:
+    //     - title: 🚀 Features
+    //       labels:
+    //         - enhancement
+    //     - title: 💣 Breaking Changes
+    //       labels:
+    //         - change
+    //     - title: 🐛 Bug Fixes
+    //       labels:
+    //         - bug
 
     type ReleaseYAML = {
       changelog: {
         exclude: {
           labels: string[]
         },
-      },
-      categories: {
-        title: string,
-        labels: string[]
-      }[]
+        categories: {
+          title: string,
+          labels: string[]
+        }[]
+      }
     }
 
     const doc = jsyaml.load(releaseFileContent) as ReleaseYAML;
     core.info(`labels: ${doc.changelog.exclude.labels}`);
-    core.info(`categories: ${doc.categories}`);
+    core.info(`categories: ${doc.changelog.categories}`);
+    core.info(`title: ${doc.changelog.categories[0].title}`);
 
 
 
