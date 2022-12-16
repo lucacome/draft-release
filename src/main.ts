@@ -2,6 +2,8 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import { getRelease } from './release'
 import * as fs from 'fs';
+import { parse, stringify } from 'yaml'
+import * as jsyaml from 'js-yaml'
 
 async function run() {
   try {
@@ -29,7 +31,15 @@ async function run() {
 
     // read releaseFile
     const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
-    core.info(`releaseFileContent: ${releaseFileContent}`);
+    const parsedYAML = parse(releaseFileContent);
+    core.info(`releaseFileContent: ${parsedYAML}`);
+    const releaseNotes = parsedYAML['categories'][0]['labels'];
+    core.info(`releaseNotes: ${releaseNotes}`);
+
+    const doc = jsyaml.load(releaseFileContent);
+    core.info(`doc: ${doc}`);
+
+
 
 
   } catch (error) {
