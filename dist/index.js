@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const release_1 = __nccwpck_require__(878);
+const fs = __importStar(__nccwpck_require__(7147));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -59,6 +60,12 @@ function run() {
             const token = core.getInput('github-token');
             const [latestRelease, releaseID] = yield (0, release_1.getRelease)(token);
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
+            // generate release notes for the next release
+            // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
+            const testFolder = '.';
+            fs.readdirSync(testFolder).forEach(file => {
+                console.log(file);
+            });
         }
         catch (error) {
             if (error instanceof Error)
