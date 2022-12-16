@@ -1,5 +1,6 @@
-import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as core from '@actions/core'
+import { getRelease } from './release'
 
 async function run() {
   try {
@@ -16,32 +17,8 @@ async function run() {
     core.endGroup();
 
     const token = core.getInput('github-token');
-
-    // get all releases
-    const octokit = github.getOctokit(token);
-    const releases = await octokit.paginate(
-      octokit.rest.repos.listReleases,
-      {
-        ...context.repo,
-        per_page: 100
-      },
-      response => response.data
-    );
-
-    const tags = await octokit.paginate(
-      octokit.rest.repos.listTags,
-      {
-        ...context.repo,
-        per_page: 100
-      },
-      response => response.data
-    );
-
-    core.info(tags[0].name)
-
-    core.info(`Found ${releases.length} releases`);
-    core.info(`Latest release: ${releases[0].tag_name}`);
-    core.info(releases[0].target_commitish);
+    const [latestRelease, releaseID] = await getRelease(token);
+    core.info(`getRelease: ${latestRelease}, ${releaseID}`);
 
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

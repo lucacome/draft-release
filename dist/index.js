@@ -39,8 +39,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const core = __importStar(__nccwpck_require__(2186));
+const release_1 = __nccwpck_require__(878);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -56,14 +57,8 @@ function run() {
             core.info(`runId: ${context.runId}`);
             core.endGroup();
             const token = core.getInput('github-token');
-            // get all releases
-            const octokit = github.getOctokit(token);
-            const releases = yield octokit.paginate(octokit.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
-            const tags = yield octokit.paginate(octokit.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
-            core.info(tags[0].name);
-            core.info(`Found ${releases.length} releases`);
-            core.info(`Latest release: ${releases[0].tag_name}`);
-            core.info(releases[0].target_commitish);
+            const [latestRelease, releaseID] = yield (0, release_1.getRelease)(token);
+            core.info(`getRelease: ${latestRelease}, ${releaseID}`);
         }
         catch (error) {
             if (error instanceof Error)
@@ -72,6 +67,90 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 878:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getRelease = void 0;
+const github = __importStar(__nccwpck_require__(5438));
+const core = __importStar(__nccwpck_require__(2186));
+function getRelease(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const context = github.context;
+        let latestRelease = 'v0.0.0';
+        let releaseID = 0;
+        // get all releases
+        const octokit = github.getOctokit(token);
+        const releases = yield octokit.paginate(octokit.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        const tags = yield octokit.paginate(octokit.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
+        if (!context.ref.startsWith('refs/heads/')) {
+            // not a branch
+            // todo: handle tags
+            return [latestRelease, releaseID];
+        }
+        // if there are no releases
+        if (releases.length === 0) {
+            core.info(`No releases found`);
+            return [latestRelease, releaseID];
+        }
+        const currentBranch = context.ref.replace('refs/heads/', '');
+        core.info(`Current branch: ${currentBranch}`);
+        const releaseInCurrent = releases.find(release => !release.draft && release.target_commitish === currentBranch);
+        if (releaseInCurrent === undefined) {
+            core.info(`No release found for branch ${currentBranch}`);
+            latestRelease = releases[0].tag_name;
+            releaseID = releases[0].id;
+        }
+        else {
+            latestRelease = releaseInCurrent.tag_name;
+            releaseID = releaseInCurrent.id;
+        }
+        core.info(tags[0].name);
+        core.info(`Found ${releases.length} releases`);
+        core.info(`Latest release: ${releases[0].tag_name}`);
+        core.info(releases[0].target_commitish);
+        return [latestRelease, releaseID];
+    });
+}
+exports.getRelease = getRelease;
 
 
 /***/ }),
