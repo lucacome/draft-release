@@ -69,6 +69,13 @@ async function run() {
     core.info(`categories: ${doc.changelog.categories}`);
     core.info(`title: ${doc.changelog.categories[0].title}`);
 
+    // for every category in categories save the title and labels
+    [...doc.changelog.categories].forEach(category => {
+      core.info(`category: ${category.title}`);
+      core.info(`labels: ${category.labels}`);
+    }
+    );
+
 
 
 
