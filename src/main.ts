@@ -25,7 +25,7 @@ async function run() {
     // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
 
 
-    const testFolder = '.';
+    const testFolder = '.github/';
 
     fs.readdirSync(testFolder).forEach(file => {
       console.log(file);
