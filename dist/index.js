@@ -46,8 +46,9 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(github.context.eventName);
         const context = github.context;
+        const token = core.getInput('github-token');
         // get all releases
-        const octokit = github.getOctokit(core.getInput('github-token'));
+        const octokit = github.getOctokit(token);
         const { data: releases } = yield octokit.rest.repos.listReleases(Object.assign({}, context.repo));
         core.info(releases.toString());
         try {

@@ -6,8 +6,10 @@ async function run(): Promise<void> {
   core.info(github.context.eventName)
   const context = github.context
 
+  const token = core.getInput('github-token')
+
   // get all releases
-  const octokit = github.getOctokit(core.getInput('github-token'))
+  const octokit = github.getOctokit(token)
   const {data: releases} = await octokit.rest.repos.listReleases({
     ...context.repo
   })
