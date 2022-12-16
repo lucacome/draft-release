@@ -36,8 +36,8 @@ async function run() {
     // const releaseNotes = parsedYAML
     // core.info(`releaseNotes: ${releaseNotes}`);
 
-    const doc = jsyaml.load(releaseFileContent);
-    core.info(`doc: ${doc}`);
+    const doc = jsyaml.load(releaseFileContent) as any;
+    core.info(`doc: ${doc.changelog}`);
 
 
 

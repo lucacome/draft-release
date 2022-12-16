@@ -72,7 +72,7 @@ function run() {
             // const releaseNotes = parsedYAML
             // core.info(`releaseNotes: ${releaseNotes}`);
             const doc = jsyaml.load(releaseFileContent);
-            core.info(`doc: ${doc}`);
+            core.info(`doc: ${doc.changelog}`);
         }
         catch (error) {
             if (error instanceof Error)
