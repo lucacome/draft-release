@@ -69,8 +69,8 @@ function run() {
             const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
             const parsedYAML = (0, yaml_1.parse)(releaseFileContent);
             core.info(`releaseFileContent: ${parsedYAML}`);
-            const releaseNotes = parsedYAML['categories'][0]['labels'];
-            core.info(`releaseNotes: ${releaseNotes}`);
+            // const releaseNotes = parsedYAML
+            // core.info(`releaseNotes: ${releaseNotes}`);
             const doc = jsyaml.load(releaseFileContent);
             core.info(`doc: ${doc}`);
         }
