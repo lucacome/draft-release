@@ -62,10 +62,10 @@ function run() {
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
             // generate release notes for the next release
             // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
-            const testFolder = '.github/';
-            fs.readdirSync(testFolder).forEach(file => {
-                console.log(file);
-            });
+            const releaseFile = '.github/workflows/release.yml';
+            // read releaseFile
+            const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
+            core.info(`releaseFileContent: ${releaseFileContent}`);
         }
         catch (error) {
             if (error instanceof Error)

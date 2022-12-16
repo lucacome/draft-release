@@ -25,11 +25,11 @@ async function run() {
     // const releaseNotes = await generateReleaseNotes(latestRelease, releaseID);
 
 
-    const testFolder = '.github/';
+    const releaseFile = '.github/workflows/release.yml';
 
-    fs.readdirSync(testFolder).forEach(file => {
-      console.log(file);
-    });
+    // read releaseFile
+    const releaseFileContent = fs.readFileSync(releaseFile, 'utf8');
+    core.info(`releaseFileContent: ${releaseFileContent}`);
 
 
   } catch (error) {
