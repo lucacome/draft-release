@@ -1,7 +1,10 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
+import { components as OctoOpenApiTypes } from '@octokit/openapi-types';
 
-export async function getRelease(token: string): Promise<[string, number]> {
+type Release = OctoOpenApiTypes['schemas']['release'];
+
+export async function getRelease(token: string): Promise<[Release[], string, number]> {
   const context = github.context;
   let latestRelease = 'v0.0.0';
   let releaseID = 0;
@@ -33,13 +36,13 @@ export async function getRelease(token: string): Promise<[string, number]> {
   if (!context.ref.startsWith('refs/heads/')) {
     // not a branch
     // todo: handle tags
-    return [latestRelease, releaseID];
+    return [releases, latestRelease, releaseID];
   }
 
   // if there are no releases
   if (releases.length === 0) {
     core.info(`No releases found`);
-    return [latestRelease, releaseID];
+    return [releases, latestRelease, releaseID];
   }
 
   const currentBranch = context.ref.replace('refs/heads/', '');
@@ -64,6 +67,5 @@ export async function getRelease(token: string): Promise<[string, number]> {
   core.info(`Latest release: ${releases[0].tag_name}`);
   core.info(releases[0].target_commitish);
 
-  return [latestRelease, releaseID];
-
+  return [releases, latestRelease, releaseID];
 }

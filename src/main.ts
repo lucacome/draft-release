@@ -22,17 +22,36 @@ async function run() {
     const major = core.getInput('major-label');
     const minor = core.getInput('minor-label');
 
-    const [latestRelease, releaseID] = await getRelease(token);
+    const [releases, latestRelease, releaseID] = await getRelease(token);
     core.info(`getRelease: ${latestRelease}, ${releaseID}`);
 
     // generate release notes for the next release
     const releaseNotes = await generateReleaseNotes(latestRelease, releaseID, 'next');
 
     // get version increase
-    const versionIncrease = await getVersionIncrease(latestRelease, major, minor, releaseNotes);
+    const versionIncrease = 'v' + await getVersionIncrease(latestRelease, major, minor, releaseNotes);
     core.info(`versionIncrease: ${versionIncrease}`);
 
+    const newReleaseNotes = await generateReleaseNotes(latestRelease, releaseID, versionIncrease);
 
+    // find if a release draft already exists for versionIncrease
+    const releaseDraft = releases.find(release => release.draft && release.tag_name === versionIncrease);
+    core.info(`releaseDraft: ${releaseDraft}`);
+
+
+    if (releaseDraft === undefined) {
+      // create a new release draft
+      const octokit = github.getOctokit(token);
+      const response = await octokit.rest.repos.createRelease({
+        ...context.repo,
+        tag_name: versionIncrease,
+        name: versionIncrease,
+        body: newReleaseNotes,
+        draft: true,
+        target_commitish: context.ref.replace('refs/heads/', '')
+      });
+      core.info(`createRelease: ${response.data}`);
+    }
 
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

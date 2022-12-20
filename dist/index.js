@@ -61,13 +61,23 @@ function run() {
             const token = core.getInput('github-token');
             const major = core.getInput('major-label');
             const minor = core.getInput('minor-label');
-            const [latestRelease, releaseID] = yield (0, release_1.getRelease)(token);
+            const [releases, latestRelease, releaseID] = yield (0, release_1.getRelease)(token);
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
             // generate release notes for the next release
             const releaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseID, 'next');
             // get version increase
-            const versionIncrease = yield (0, version_1.getVersionIncrease)(latestRelease, major, minor, releaseNotes);
+            const versionIncrease = 'v' + (yield (0, version_1.getVersionIncrease)(latestRelease, major, minor, releaseNotes));
             core.info(`versionIncrease: ${versionIncrease}`);
+            const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseID, versionIncrease);
+            // find if a release draft already exists for versionIncrease
+            const releaseDraft = releases.find(release => release.draft && release.tag_name === versionIncrease);
+            core.info(`releaseDraft: ${releaseDraft}`);
+            if (releaseDraft === undefined) {
+                // create a new release draft
+                const octokit = github.getOctokit(token);
+                const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, body: newReleaseNotes, draft: true, target_commitish: context.ref.replace('refs/heads/', '') }));
+                core.info(`createRelease: ${response.data}`);
+            }
         }
         catch (error) {
             if (error instanceof Error)
@@ -198,12 +208,12 @@ function getRelease(token) {
         if (!context.ref.startsWith('refs/heads/')) {
             // not a branch
             // todo: handle tags
-            return [latestRelease, releaseID];
+            return [releases, latestRelease, releaseID];
         }
         // if there are no releases
         if (releases.length === 0) {
             core.info(`No releases found`);
-            return [latestRelease, releaseID];
+            return [releases, latestRelease, releaseID];
         }
         const currentBranch = context.ref.replace('refs/heads/', '');
         core.info(`Current branch: ${currentBranch}`);
@@ -221,7 +231,7 @@ function getRelease(token) {
         core.info(`Found ${releases.length} releases`);
         core.info(`Latest release: ${releases[0].tag_name}`);
         core.info(releases[0].target_commitish);
-        return [latestRelease, releaseID];
+        return [releases, latestRelease, releaseID];
     });
 }
 exports.getRelease = getRelease;
