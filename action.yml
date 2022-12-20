@@ -6,6 +6,14 @@ inputs:
     description: 'GitHub Token as provided by secrets'
     default: ${{ github.token }}
     required: true
+  major-label:
+    description: 'Label to use for major version bump'
+    default: 'change'
+    required: false
+  minor-label:
+    description: 'Label to use for minor version bump'
+    default: 'enhancement'
+    required: false
   milliseconds: # change this
     required: true
     description: 'input description here'
