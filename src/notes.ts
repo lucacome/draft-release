@@ -28,7 +28,7 @@ export async function parseNotes(notes: string, major: string, minor: string): P
     let notesType;
 
     notes.includes(`### ${minor}`) ? notesType = 'minor' : notesType = 'patch'
-    notes.includes(`### ${major}`) ? notesType = 'major' : notesType = notesType
+    notes.includes(`### ${major}`) ? notesType = 'major' : notesType
 
     return notesType;
 
