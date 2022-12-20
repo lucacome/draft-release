@@ -4,7 +4,7 @@ import { getRelease } from './release'
 import { generateReleaseNotes } from './notes'
 import { getVersionIncrease } from './version'
 
-async function run() {
+async function run(): Promise<void> {
   try {
     const context = github.context;
     core.startGroup(`Context info`);
@@ -56,6 +56,7 @@ async function run() {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+  return;
 }
 
 run();

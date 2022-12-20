@@ -83,6 +83,7 @@ function run() {
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
+        return;
     });
 }
 run();
