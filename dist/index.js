@@ -68,14 +68,20 @@ function run() {
             // get version increase
             const versionIncrease = 'v' + (yield (0, version_1.getVersionIncrease)(latestRelease, major, minor, releaseNotes));
             core.info(`versionIncrease: ${versionIncrease}`);
-            const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseID, versionIncrease);
             // find if a release draft already exists for versionIncrease
             const releaseDraft = releases.find(release => release.draft && release.tag_name === versionIncrease);
             core.info(`releaseDraft: ${releaseDraft}`);
             if (releaseDraft === undefined) {
                 // create a new release draft
                 const octokit = github.getOctokit(token);
-                const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, body: newReleaseNotes, draft: true, target_commitish: context.ref.replace('refs/heads/', '') }));
+                const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, draft: true, generate_release_notes: true, target_commitish: context.ref.replace('refs/heads/', '') }));
+                core.info(`createRelease: ${response.data}`);
+            }
+            else {
+                const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseDraft.id, versionIncrease);
+                // update the release draft
+                const octokit = github.getOctokit(token);
+                const response = yield octokit.rest.repos.updateRelease(Object.assign(Object.assign({}, context.repo), { release_id: releaseDraft.id, tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes }));
                 core.info(`createRelease: ${response.data}`);
             }
         }
@@ -147,7 +153,7 @@ function parseNotes(notes, major, minor) {
     return __awaiter(this, void 0, void 0, function* () {
         let notesType;
         notes.includes(`### ${minor}`) ? notesType = 'minor' : notesType = 'patch';
-        notes.includes(`### ${major}`) ? notesType = 'major' : notesType = notesType;
+        notes.includes(`### ${major}`) ? notesType = 'major' : notesType;
         return notesType;
     });
 }
@@ -221,8 +227,14 @@ function getRelease(token) {
         const releaseInCurrent = releases.find(release => !release.draft && release.target_commitish === currentBranch);
         if (releaseInCurrent === undefined) {
             core.info(`No release found for branch ${currentBranch}`);
-            latestRelease = releases[0].tag_name;
-            releaseID = releases[0].id;
+            // find latest release that is not a draft
+            const latestNonDraft = releases.find(release => !release.draft);
+            if (latestNonDraft === undefined) {
+                core.info(`No non-draft releases found`);
+                return [releases, latestRelease, releaseID];
+            }
+            latestRelease = latestNonDraft.tag_name;
+            releaseID = latestNonDraft.id;
         }
         else {
             latestRelease = releaseInCurrent.tag_name;
