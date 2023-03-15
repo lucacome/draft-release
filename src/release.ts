@@ -54,8 +54,15 @@ export async function getRelease(token: string): Promise<[Release[], string, num
 
   if (releaseInCurrent === undefined) {
     core.info(`No release found for branch ${currentBranch}`);
-    latestRelease = releases[0].tag_name;
-    releaseID = releases[0].id;
+
+    // find latest release that is not a draft
+    const latestNonDraft = releases.find(release => !release.draft);
+    if (latestNonDraft === undefined) {
+      core.info(`No non-draft releases found`);
+      return [releases, latestRelease, releaseID];
+    }
+    latestRelease = latestNonDraft.tag_name;
+    releaseID = latestNonDraft.id;
   } else {
     latestRelease = releaseInCurrent.tag_name;
     releaseID = releaseInCurrent.id;

@@ -32,8 +32,6 @@ async function run(): Promise<void> {
     const versionIncrease = 'v' + await getVersionIncrease(latestRelease, major, minor, releaseNotes);
     core.info(`versionIncrease: ${versionIncrease}`);
 
-    const newReleaseNotes = await generateReleaseNotes(latestRelease, releaseID, versionIncrease);
-
     // find if a release draft already exists for versionIncrease
     const releaseDraft = releases.find(release => release.draft && release.tag_name === versionIncrease);
     core.info(`releaseDraft: ${releaseDraft}`);
@@ -46,9 +44,22 @@ async function run(): Promise<void> {
         ...context.repo,
         tag_name: versionIncrease,
         name: versionIncrease,
-        body: newReleaseNotes,
         draft: true,
+        generate_release_notes: true,
         target_commitish: context.ref.replace('refs/heads/', '')
+      });
+      core.info(`createRelease: ${response.data}`);
+    } else {
+      const newReleaseNotes = await generateReleaseNotes(latestRelease, releaseDraft.id, versionIncrease);
+      // update the release draft
+      const octokit = github.getOctokit(token);
+      const response = await octokit.rest.repos.updateRelease({
+        ...context.repo,
+        release_id: releaseDraft.id,
+        tag_name: versionIncrease,
+        name: versionIncrease,
+        target_commitish: context.ref.replace('refs/heads/', ''),
+        body: newReleaseNotes
       });
       core.info(`createRelease: ${response.data}`);
     }
