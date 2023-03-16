@@ -81,6 +81,10 @@ export async function createOrUpdateRelease(
 ): Promise<void> {
   const context = github.context
   const newReleaseNotes = await generateReleaseNotes(client, inputs, latestRelease, releaseID, versionIncrease)
+  // print latestRelease, versionIncrease, releaseID
+  core.info(`Latest release: ${latestRelease}`)
+  core.info(`Version increase: ${versionIncrease}`)
+  core.info(`Release ID: ${releaseID}`)
 
   const releaseParams = {
     ...context.repo,

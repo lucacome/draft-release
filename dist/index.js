@@ -297,6 +297,10 @@ function createOrUpdateRelease(client, inputs, latestRelease, versionIncrease, r
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
         const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseID, versionIncrease);
+        // print latestRelease, versionIncrease, releaseID
+        core.info(`Latest release: ${latestRelease}`);
+        core.info(`Version increase: ${versionIncrease}`);
+        core.info(`Release ID: ${releaseID}`);
         const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes });
         const response = yield (releaseID === 0
             ? client.rest.repos.createRelease(Object.assign(Object.assign({}, releaseParams), { draft: true }))
