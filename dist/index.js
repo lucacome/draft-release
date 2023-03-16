@@ -301,7 +301,7 @@ function createOrUpdateRelease(client, inputs, latestRelease, versionIncrease, r
         const response = yield (releaseID === 0
             ? client.rest.repos.createRelease(Object.assign(Object.assign({}, releaseParams), { draft: true }))
             : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseID })));
-        core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${response.data}`);
+        core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${JSON.stringify(response.data)}`);
     });
 }
 exports.createOrUpdateRelease = createOrUpdateRelease;

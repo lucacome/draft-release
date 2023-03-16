@@ -100,5 +100,5 @@ export async function createOrUpdateRelease(
         release_id: releaseID,
       }))
 
-  core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${response.data}`)
+  core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${JSON.stringify(response.data)}`)
 }
