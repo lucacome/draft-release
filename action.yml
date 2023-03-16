@@ -14,10 +14,14 @@ inputs:
     description: 'Label to use for minor version bump'
     default: 'enhancement'
     required: false
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  notes-header:
+    description: 'Header to use for changelog'
+    default: ''
+    required: false
+  notes-footer:
+    description: 'Footer to use for changelog'
+    default: ''
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

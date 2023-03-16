@@ -4,35 +4,28 @@ import {components as OctoOpenApiTypes} from '@octokit/openapi-types'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 
-export async function getRelease(
-  token: string
-): Promise<[Release[], string, number]> {
+export async function getRelease(client: ReturnType<typeof github.getOctokit>): Promise<[Release[], string, number]> {
   const context = github.context
   let latestRelease = 'v0.0.0'
   let releaseID = 0
 
   // get all releases
-  const octokit = github.getOctokit(token)
-  const releases = await octokit.paginate(
-    octokit.rest.repos.listReleases,
+  const releases = await client.paginate(
+    client.rest.repos.listReleases,
     {
       ...context.repo,
-      per_page: 100
+      per_page: 100,
     },
-    response =>
-      response.data.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
+    (response) => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
   )
 
-  const tags = await octokit.paginate(
-    octokit.rest.repos.listTags,
+  const tags = await client.paginate(
+    client.rest.repos.listTags,
     {
       ...context.repo,
-      per_page: 100
+      per_page: 100,
     },
-    response => response.data
+    (response) => response.data,
   )
 
   if (!context.ref.startsWith('refs/heads/')) {
@@ -50,15 +43,13 @@ export async function getRelease(
   const currentBranch = context.ref.replace('refs/heads/', '')
   core.info(`Current branch: ${currentBranch}`)
 
-  const releaseInCurrent = releases.find(
-    release => !release.draft && release.target_commitish === currentBranch
-  )
+  const releaseInCurrent = releases.find((release) => !release.draft && release.target_commitish === currentBranch)
 
   if (releaseInCurrent === undefined) {
     core.info(`No release found for branch ${currentBranch}`)
 
     // find latest release that is not a draft
-    const latestNonDraft = releases.find(release => !release.draft)
+    const latestNonDraft = releases.find((release) => !release.draft)
     if (latestNonDraft === undefined) {
       core.info(`No non-draft releases found`)
       return [releases, latestRelease, releaseID]

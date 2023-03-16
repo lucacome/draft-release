@@ -1,6 +1,51 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 3842:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getInputs = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+function getInputs() {
+    return {
+        githubToken: core.getInput('github-token'),
+        majorLabel: core.getInput('major-label'),
+        minorLabel: core.getInput('minor-label'),
+        header: core.getInput('notes-header'),
+        footer: core.getInput('notes-footer'),
+    };
+}
+exports.getInputs = getInputs;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -44,6 +89,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const release_1 = __nccwpck_require__(878);
 const notes_1 = __nccwpck_require__(376);
 const version_1 = __nccwpck_require__(8217);
+const context_1 = __nccwpck_require__(3842);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -58,30 +104,27 @@ function run() {
             core.info(`runNumber: ${context.runNumber}`);
             core.info(`runId: ${context.runId}`);
             core.endGroup();
-            const token = core.getInput('github-token');
-            const major = core.getInput('major-label');
-            const minor = core.getInput('minor-label');
-            const [releases, latestRelease, releaseID] = yield (0, release_1.getRelease)(token);
+            const inputs = (0, context_1.getInputs)();
+            const client = github.getOctokit(inputs.githubToken);
+            const [releases, latestRelease, releaseID] = yield (0, release_1.getRelease)(client);
             core.info(`getRelease: ${latestRelease}, ${releaseID}`);
             // generate release notes for the next release
-            const releaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseID, 'next');
+            const releaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseID, 'next');
             // get version increase
-            const versionIncrease = 'v' + (yield (0, version_1.getVersionIncrease)(latestRelease, major, minor, releaseNotes));
+            const versionIncrease = 'v' + (yield (0, version_1.getVersionIncrease)(latestRelease, inputs, releaseNotes));
             core.info(`versionIncrease: ${versionIncrease}`);
             // find if a release draft already exists for versionIncrease
-            const releaseDraft = releases.find(release => release.draft && release.tag_name === versionIncrease);
+            const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease);
             core.info(`releaseDraft: ${releaseDraft}`);
             if (releaseDraft === undefined) {
                 // create a new release draft
-                const octokit = github.getOctokit(token);
-                const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, draft: true, generate_release_notes: true, target_commitish: context.ref.replace('refs/heads/', '') }));
+                const response = yield client.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, draft: true, generate_release_notes: true, target_commitish: context.ref.replace('refs/heads/', '') }));
                 core.info(`createRelease: ${response.data}`);
             }
             else {
-                const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(latestRelease, releaseDraft.id, versionIncrease);
+                const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseDraft.id, versionIncrease);
                 // update the release draft
-                const octokit = github.getOctokit(token);
-                const response = yield octokit.rest.repos.updateRelease(Object.assign(Object.assign({}, context.repo), { release_id: releaseDraft.id, tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes }));
+                const response = yield client.rest.repos.updateRelease(Object.assign(Object.assign({}, context.repo), { release_id: releaseDraft.id, tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes }));
                 core.info(`createRelease: ${response.data}`);
             }
         }
@@ -137,23 +180,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseNotes = exports.generateReleaseNotes = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-const core = __importStar(__nccwpck_require__(2186));
 const semver = __importStar(__nccwpck_require__(1383));
-function generateReleaseNotes(latestRelease, releaseID, nextRelease) {
+function generateReleaseNotes(client, inputs, latestRelease, releaseID, nextRelease) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
-        const token = core.getInput('github-token');
-        const octokit = github.getOctokit(token);
-        const notes = yield octokit.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { release_id: releaseID, tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
-        return notes.data.body;
+        const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { release_id: releaseID, tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
+        let body = notes.data.body;
+        if (inputs.header) {
+            body = `${inputs.header}\n\n${body}`;
+        }
+        if (inputs.footer) {
+            body = `${body}\n\n${inputs.footer}`;
+        }
+        return body;
     });
 }
 exports.generateReleaseNotes = generateReleaseNotes;
 function parseNotes(notes, major, minor) {
     return __awaiter(this, void 0, void 0, function* () {
         let notesType;
-        notes.includes(`### ${minor}`) ? notesType = 'minor' : notesType = 'patch';
-        notes.includes(`### ${major}`) ? notesType = 'major' : notesType;
+        notes.includes(`### ${minor}`) ? (notesType = 'minor') : (notesType = 'patch');
+        notes.includes(`### ${major}`) ? (notesType = 'major') : notesType;
         return notesType;
     });
 }
@@ -203,15 +250,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRelease = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
-function getRelease(token) {
+function getRelease(client) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
         let latestRelease = 'v0.0.0';
         let releaseID = 0;
         // get all releases
-        const octokit = github.getOctokit(token);
-        const releases = yield octokit.paginate(octokit.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-        const tags = yield octokit.paginate(octokit.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), response => response.data);
+        const releases = yield client.paginate(client.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), (response) => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        const tags = yield client.paginate(client.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), (response) => response.data);
         if (!context.ref.startsWith('refs/heads/')) {
             // not a branch
             // todo: handle tags
@@ -224,11 +270,11 @@ function getRelease(token) {
         }
         const currentBranch = context.ref.replace('refs/heads/', '');
         core.info(`Current branch: ${currentBranch}`);
-        const releaseInCurrent = releases.find(release => !release.draft && release.target_commitish === currentBranch);
+        const releaseInCurrent = releases.find((release) => !release.draft && release.target_commitish === currentBranch);
         if (releaseInCurrent === undefined) {
             core.info(`No release found for branch ${currentBranch}`);
             // find latest release that is not a draft
-            const latestNonDraft = releases.find(release => !release.draft);
+            const latestNonDraft = releases.find((release) => !release.draft);
             if (latestNonDraft === undefined) {
                 core.info(`No non-draft releases found`);
                 return [releases, latestRelease, releaseID];
@@ -299,10 +345,10 @@ function getCategories() {
     return __awaiter(this, void 0, void 0, function* () {
         const content = yield fs_1.promises.readFile('.github/release.yml', 'utf8');
         const doc = yaml.load(content);
-        return doc.changelog.categories.map(category => {
+        return doc.changelog.categories.map((category) => {
             return {
                 title: category.title,
-                labels: category.labels
+                labels: category.labels,
             };
         });
     });
@@ -310,8 +356,11 @@ function getCategories() {
 // function that returns tile for matching label
 function getTitleForLabel(label) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (label === '') {
+            return '';
+        }
         const categories = yield getCategories();
-        const category = categories.find(category => category.labels.includes(label));
+        const category = categories.find((category) => category.labels.includes(label));
         if (category === undefined) {
             return '';
         }
@@ -319,17 +368,11 @@ function getTitleForLabel(label) {
     });
 }
 // function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
-function getVersionIncrease(latestRelease, major, minor, notes) {
+function getVersionIncrease(latestRelease, inputs, notes) {
     return __awaiter(this, void 0, void 0, function* () {
-        let majorTitle = '';
-        let minorTitle = '';
-        if (major !== '') {
-            majorTitle = yield getTitleForLabel(major);
-        }
-        if (minor !== '') {
-            minorTitle = yield getTitleForLabel(minor);
-        }
-        const version = yield (0, notes_1.parseNotes)(notes, majorTitle, minorTitle);
+        const majorTitle = yield getTitleForLabel(inputs.majorLabel);
+        const minorTitle = yield getTitleForLabel(inputs.minorLabel);
+        const version = (yield (0, notes_1.parseNotes)(notes, majorTitle, minorTitle));
         return semver.inc(latestRelease, version) || '';
     });
 }
