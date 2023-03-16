@@ -116,17 +116,8 @@ function run() {
             // find if a release draft already exists for versionIncrease
             const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease);
             core.info(`releaseDraft: ${releaseDraft}`);
-            if (releaseDraft === undefined) {
-                // create a new release draft
-                const response = yield client.rest.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, draft: true, generate_release_notes: true, target_commitish: context.ref.replace('refs/heads/', '') }));
-                core.info(`createRelease: ${response.data}`);
-            }
-            else {
-                const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseDraft.id, versionIncrease);
-                // update the release draft
-                const response = yield client.rest.repos.updateRelease(Object.assign(Object.assign({}, context.repo), { release_id: releaseDraft.id, tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes }));
-                core.info(`createRelease: ${response.data}`);
-            }
+            // create or update release
+            yield (0, release_1.createOrUpdateRelease)(client, inputs, latestRelease, versionIncrease, releaseDraft ? releaseDraft.id : releaseID);
         }
         catch (error) {
             if (error instanceof Error)
@@ -254,9 +245,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getRelease = void 0;
+exports.createOrUpdateRelease = exports.getRelease = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
+const notes_1 = __nccwpck_require__(376);
 function getRelease(client) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
@@ -301,6 +293,18 @@ function getRelease(client) {
     });
 }
 exports.getRelease = getRelease;
+function createOrUpdateRelease(client, inputs, latestRelease, versionIncrease, releaseID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const context = github.context;
+        const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseID, versionIncrease);
+        const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes });
+        const response = yield (releaseID === 0
+            ? client.rest.repos.createRelease(Object.assign(Object.assign({}, releaseParams), { draft: true }))
+            : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseID })));
+        core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${response.data}`);
+    });
+}
+exports.createOrUpdateRelease = createOrUpdateRelease;
 
 
 /***/ }),

@@ -22,7 +22,7 @@ jobs:
       - uses: ./
         with:
           notes-header: |
-            ## Welcome to the %TAG% release of NGINX Ingress Controller
+            ## Welcome to the %TAG% release of Draft Release
               This is some text to welcome you to the release %TAG_STRIPPED%.
           notes-footer: |
             ## Upgrade
