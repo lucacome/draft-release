@@ -20,10 +20,10 @@ export async function generateReleaseNotes(
 
   let body = notes.data.body
   if (inputs.header) {
-    body = `${inputs.header}\n\n${body}`
+    body = `${inputs.header.replace('%TAG%', nextRelease)}\n\n${body}`
   }
   if (inputs.footer) {
-    body = `${body}\n\n${inputs.footer}`
+    body = `${body}\n\n${inputs.footer.replace('%TAG%', nextRelease)}`
   }
 
   return body
