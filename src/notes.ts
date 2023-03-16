@@ -1,6 +1,6 @@
 import * as github from '@actions/github'
 import * as semver from 'semver'
-import { Inputs } from './context'
+import {Inputs} from './context'
 
 export async function generateReleaseNotes(
     client: ReturnType<typeof github.getOctokit>,
@@ -20,13 +20,13 @@ export async function generateReleaseNotes(
 
     let body = notes.data.body
     if (inputs.header) {
-        // replace all occurrences of %TAG% with the next release tag
-        const header = inputs.header.replace(/%TAG%/g, nextRelease)
+        let header = replaceAll(inputs.header, '%TAG%', nextRelease)
+        header = replaceAll(header, '%TAG_STRIPPED%', nextRelease.replace('v', ''))
         body = `${header}\n\n${body}`
     }
     if (inputs.footer) {
-        // replace all occurrences of %TAG% with the next release tag
-        const footer = inputs.footer.replace(/%TAG%/g, nextRelease)
+        let footer = replaceAll(inputs.footer, '%TAG%', nextRelease)
+        footer = replaceAll(footer, '%TAG_STRIPPED%', nextRelease.replace('v', ''))
         body = `${body}\n\n${footer}`
     }
 
@@ -40,4 +40,8 @@ export async function parseNotes(notes: string, major: string, minor: string): P
     notes.includes(`### ${major}`) ? (notesType = 'major') : notesType
 
     return notesType
+}
+
+function replaceAll(str: string, find: string, replace: string): string {
+    return str.replace(new RegExp(find, 'g'), replace)
 }

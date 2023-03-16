@@ -187,13 +187,13 @@ function generateReleaseNotes(client, inputs, latestRelease, releaseID, nextRele
         const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { release_id: releaseID, tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
         let body = notes.data.body;
         if (inputs.header) {
-            // replace all occurrences of %TAG% with the next release tag
-            const header = inputs.header.replace(/%TAG%/g, nextRelease);
+            let header = replaceAll(inputs.header, '%TAG%', nextRelease);
+            header = replaceAll(header, '%TAG_STRIPPED%', nextRelease.replace('v', ''));
             body = `${header}\n\n${body}`;
         }
         if (inputs.footer) {
-            // replace all occurrences of %TAG% with the next release tag
-            const footer = inputs.footer.replace(/%TAG%/g, nextRelease);
+            let footer = replaceAll(inputs.footer, '%TAG%', nextRelease);
+            footer = replaceAll(footer, '%TAG_STRIPPED%', nextRelease.replace('v', ''));
             body = `${body}\n\n${footer}`;
         }
         return body;
@@ -209,6 +209,9 @@ function parseNotes(notes, major, minor) {
     });
 }
 exports.parseNotes = parseNotes;
+function replaceAll(str, find, replace) {
+    return str.replace(new RegExp(find, 'g'), replace);
+}
 
 
 /***/ }),
