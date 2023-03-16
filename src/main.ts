@@ -28,11 +28,11 @@ async function run(): Promise<void> {
     core.info(`Latest release: ${latestRelease}`)
     core.info(`Found ${releases.length} releases:`)
     releases.forEach((release) => {
+      core.info(`-`.repeat(20))
       core.info(`ID: ${release.id}`)
       core.info(`Release: ${release.tag_name}`)
       core.info(`Draft: ${release.draft}`)
       core.info(`Target commitish: ${release.target_commitish}`)
-      core.info(`-`.repeat(20))
     })
     core.endGroup()
 

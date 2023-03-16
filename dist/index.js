@@ -111,11 +111,11 @@ function run() {
             core.info(`Latest release: ${latestRelease}`);
             core.info(`Found ${releases.length} releases:`);
             releases.forEach((release) => {
+                core.info(`-`.repeat(20));
                 core.info(`ID: ${release.id}`);
                 core.info(`Release: ${release.tag_name}`);
                 core.info(`Draft: ${release.draft}`);
                 core.info(`Target commitish: ${release.target_commitish}`);
-                core.info(`-`.repeat(20));
             });
             core.endGroup();
             // generate release notes for the next release
@@ -300,8 +300,8 @@ function createOrUpdateRelease(client, inputs, releases, latestRelease, versionI
         const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease);
         core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${versionIncrease}`);
         core.info(`latestRelease: ${latestRelease}`);
-        core.info(`releaseDraft: ${releaseDraft}`);
-        core.info(`newReleaseNotes: ${newReleaseNotes}`);
+        core.info(`ReleaseNotes: ${newReleaseNotes}`);
+        core.debug(`releaseDraft: ${releaseDraft}`);
         core.endGroup();
         const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes });
         const response = yield (releaseDraft === undefined

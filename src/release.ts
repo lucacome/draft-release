@@ -77,8 +77,8 @@ export async function createOrUpdateRelease(
 
   core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${versionIncrease}`)
   core.info(`latestRelease: ${latestRelease}`)
-  core.info(`releaseDraft: ${releaseDraft}`)
-  core.info(`newReleaseNotes: ${newReleaseNotes}`)
+  core.info(`ReleaseNotes: ${newReleaseNotes}`)
+  core.debug(`releaseDraft: ${releaseDraft}`)
   core.endGroup()
 
   const releaseParams = {
