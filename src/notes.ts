@@ -6,13 +6,11 @@ export async function generateReleaseNotes(
   client: ReturnType<typeof github.getOctokit>,
   inputs: Inputs,
   latestRelease: string,
-  releaseID: number,
   nextRelease: string,
 ): Promise<string> {
   const context = github.context
   const notes = await client.rest.repos.generateReleaseNotes({
     ...context.repo,
-    release_id: releaseID,
     tag_name: nextRelease,
     previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
     target_commitish: context.ref.replace('refs/heads/', ''),

@@ -106,18 +106,25 @@ function run() {
             core.endGroup();
             const inputs = (0, context_1.getInputs)();
             const client = github.getOctokit(inputs.githubToken);
-            const [releases, latestRelease, releaseID] = yield (0, release_1.getRelease)(client);
-            core.info(`getRelease: ${latestRelease}, ${releaseID}`);
+            const [releases, latestRelease] = yield (0, release_1.getRelease)(client);
+            core.startGroup(`Releases`);
+            core.info(`Latest release: ${latestRelease}`);
+            releases.forEach((release) => {
+                // add separator
+                core.info(`-`.repeat(20));
+                core.info(`ID: ${release.id}`);
+                core.info(`Release: ${release.tag_name}`);
+                core.info(`Draft: ${release.draft}`);
+                core.info(`Target commitish: ${release.target_commitish}`);
+            });
+            core.endGroup();
             // generate release notes for the next release
-            const releaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseID, 'next');
+            const releaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, 'next');
             // get version increase
             const versionIncrease = 'v' + (yield (0, version_1.getVersionIncrease)(latestRelease, inputs, releaseNotes));
             core.info(`versionIncrease: ${versionIncrease}`);
-            // find if a release draft already exists for versionIncrease
-            const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease);
-            core.info(`releaseDraft: ${releaseDraft}`);
             // create or update release
-            yield (0, release_1.createOrUpdateRelease)(client, inputs, latestRelease, versionIncrease, releaseDraft ? releaseDraft.id : releaseID);
+            yield (0, release_1.createOrUpdateRelease)(client, inputs, releases, latestRelease, versionIncrease);
         }
         catch (error) {
             if (error instanceof Error)
@@ -172,10 +179,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseNotes = exports.generateReleaseNotes = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const semver = __importStar(__nccwpck_require__(1383));
-function generateReleaseNotes(client, inputs, latestRelease, releaseID, nextRelease) {
+function generateReleaseNotes(client, inputs, latestRelease, nextRelease) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
-        const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { release_id: releaseID, tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
+        const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
         let body = notes.data.body;
         if (inputs.header) {
             let header = replaceAll(inputs.header, '%TAG%', nextRelease);
@@ -253,19 +260,18 @@ function getRelease(client) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
         let latestRelease = 'v0.0.0';
-        let releaseID = 0;
         // get all releases
         const releases = yield client.paginate(client.rest.repos.listReleases, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), (response) => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         const tags = yield client.paginate(client.rest.repos.listTags, Object.assign(Object.assign({}, context.repo), { per_page: 100 }), (response) => response.data);
         if (!context.ref.startsWith('refs/heads/')) {
             // not a branch
             // todo: handle tags
-            return [releases, latestRelease, releaseID];
+            return [releases, latestRelease];
         }
         // if there are no releases
         if (releases.length === 0) {
             core.info(`No releases found`);
-            return [releases, latestRelease, releaseID];
+            return [releases, latestRelease];
         }
         const currentBranch = context.ref.replace('refs/heads/', '');
         core.info(`Current branch: ${currentBranch}`);
@@ -276,36 +282,36 @@ function getRelease(client) {
             const latestNonDraft = releases.find((release) => !release.draft);
             if (latestNonDraft === undefined) {
                 core.info(`No non-draft releases found`);
-                return [releases, latestRelease, releaseID];
+                return [releases, latestRelease];
             }
             latestRelease = latestNonDraft.tag_name;
-            releaseID = latestNonDraft.id;
         }
         else {
             latestRelease = releaseInCurrent.tag_name;
-            releaseID = releaseInCurrent.id;
         }
         core.info(tags[0].name);
         core.info(`Found ${releases.length} releases`);
         core.info(`Latest release: ${releases[0].tag_name}`);
         core.info(releases[0].target_commitish);
-        return [releases, latestRelease, releaseID];
+        return [releases, latestRelease];
     });
 }
 exports.getRelease = getRelease;
-function createOrUpdateRelease(client, inputs, latestRelease, versionIncrease, releaseID) {
+function createOrUpdateRelease(client, inputs, releases, latestRelease, versionIncrease) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
-        const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, releaseID, versionIncrease);
+        const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, versionIncrease);
         // print latestRelease, versionIncrease, releaseID
         core.info(`Latest release: ${latestRelease}`);
         core.info(`Version increase: ${versionIncrease}`);
-        core.info(`Release ID: ${releaseID}`);
+        // find if a release draft already exists for versionIncrease
+        const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease);
+        core.info(`releaseDraft: ${releaseDraft}`);
         const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: versionIncrease, name: versionIncrease, target_commitish: context.ref.replace('refs/heads/', ''), body: newReleaseNotes });
-        const response = yield (releaseID === 0
+        const response = yield (releaseDraft === undefined
             ? client.rest.repos.createRelease(Object.assign(Object.assign({}, releaseParams), { draft: true }))
-            : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseID })));
-        core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`);
+            : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseDraft.id })));
+        core.info(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`);
     });
 }
 exports.createOrUpdateRelease = createOrUpdateRelease;

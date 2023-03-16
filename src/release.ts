@@ -6,10 +6,9 @@ import {Inputs} from './context'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 
-export async function getRelease(client: ReturnType<typeof github.getOctokit>): Promise<[Release[], string, number]> {
+export async function getRelease(client: ReturnType<typeof github.getOctokit>): Promise<[Release[], string]> {
   const context = github.context
   let latestRelease = 'v0.0.0'
-  let releaseID = 0
 
   // get all releases
   const releases = await client.paginate(
@@ -33,13 +32,13 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
   if (!context.ref.startsWith('refs/heads/')) {
     // not a branch
     // todo: handle tags
-    return [releases, latestRelease, releaseID]
+    return [releases, latestRelease]
   }
 
   // if there are no releases
   if (releases.length === 0) {
     core.info(`No releases found`)
-    return [releases, latestRelease, releaseID]
+    return [releases, latestRelease]
   }
 
   const currentBranch = context.ref.replace('refs/heads/', '')
@@ -54,13 +53,11 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
     const latestNonDraft = releases.find((release) => !release.draft)
     if (latestNonDraft === undefined) {
       core.info(`No non-draft releases found`)
-      return [releases, latestRelease, releaseID]
+      return [releases, latestRelease]
     }
     latestRelease = latestNonDraft.tag_name
-    releaseID = latestNonDraft.id
   } else {
     latestRelease = releaseInCurrent.tag_name
-    releaseID = releaseInCurrent.id
   }
 
   core.info(tags[0].name)
@@ -69,22 +66,25 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
   core.info(`Latest release: ${releases[0].tag_name}`)
   core.info(releases[0].target_commitish)
 
-  return [releases, latestRelease, releaseID]
+  return [releases, latestRelease]
 }
 
 export async function createOrUpdateRelease(
   client: ReturnType<typeof github.getOctokit>,
   inputs: Inputs,
+  releases: Release[],
   latestRelease: string,
   versionIncrease: string,
-  releaseID: number,
 ): Promise<void> {
   const context = github.context
-  const newReleaseNotes = await generateReleaseNotes(client, inputs, latestRelease, releaseID, versionIncrease)
+  const newReleaseNotes = await generateReleaseNotes(client, inputs, latestRelease, versionIncrease)
   // print latestRelease, versionIncrease, releaseID
   core.info(`Latest release: ${latestRelease}`)
   core.info(`Version increase: ${versionIncrease}`)
-  core.info(`Release ID: ${releaseID}`)
+
+  // find if a release draft already exists for versionIncrease
+  const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease)
+  core.info(`releaseDraft: ${releaseDraft}`)
 
   const releaseParams = {
     ...context.repo,
@@ -94,15 +94,15 @@ export async function createOrUpdateRelease(
     body: newReleaseNotes,
   }
 
-  const response = await (releaseID === 0
+  const response = await (releaseDraft === undefined
     ? client.rest.repos.createRelease({
         ...releaseParams,
         draft: true,
       })
     : client.rest.repos.updateRelease({
         ...releaseParams,
-        release_id: releaseID,
+        release_id: releaseDraft.id,
       }))
 
-  core.info(`${releaseID === 0 ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
+  core.info(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
 }

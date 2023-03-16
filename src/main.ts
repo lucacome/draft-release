@@ -22,22 +22,28 @@ async function run(): Promise<void> {
     const inputs: Inputs = getInputs()
     const client = github.getOctokit(inputs.githubToken)
 
-    const [releases, latestRelease, releaseID] = await getRelease(client)
-    core.info(`getRelease: ${latestRelease}, ${releaseID}`)
+    const [releases, latestRelease] = await getRelease(client)
+    core.startGroup(`Releases`)
+    core.info(`Latest release: ${latestRelease}`)
+    releases.forEach((release) => {
+      // add separator
+      core.info(`-`.repeat(20))
+      core.info(`ID: ${release.id}`)
+      core.info(`Release: ${release.tag_name}`)
+      core.info(`Draft: ${release.draft}`)
+      core.info(`Target commitish: ${release.target_commitish}`)
+    })
+    core.endGroup()
 
     // generate release notes for the next release
-    const releaseNotes = await generateReleaseNotes(client, inputs, latestRelease, releaseID, 'next')
+    const releaseNotes = await generateReleaseNotes(client, inputs, latestRelease, 'next')
 
     // get version increase
     const versionIncrease = 'v' + (await getVersionIncrease(latestRelease, inputs, releaseNotes))
     core.info(`versionIncrease: ${versionIncrease}`)
 
-    // find if a release draft already exists for versionIncrease
-    const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease)
-    core.info(`releaseDraft: ${releaseDraft}`)
-
     // create or update release
-    await createOrUpdateRelease(client, inputs, latestRelease, versionIncrease, releaseDraft ? releaseDraft.id : releaseID)
+    await createOrUpdateRelease(client, inputs, releases, latestRelease, versionIncrease)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
