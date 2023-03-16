@@ -20,51 +20,44 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
     (response) => response.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
   )
 
-  const tags = await client.paginate(
-    client.rest.repos.listTags,
-    {
-      ...context.repo,
-      per_page: 100,
-    },
-    (response) => response.data,
-  )
-
   if (!context.ref.startsWith('refs/heads/')) {
     // not a branch
     // todo: handle tags
+    const tags = await client.paginate(
+      client.rest.repos.listTags,
+      {
+        ...context.repo,
+        per_page: 100,
+      },
+      (response) => response.data,
+    )
+    core.info(`tags: ${tags}`)
     return [releases, latestRelease]
   }
 
   // if there are no releases
   if (releases.length === 0) {
-    core.info(`No releases found`)
+    core.debug(`No releases found`)
     return [releases, latestRelease]
   }
 
   const currentBranch = context.ref.replace('refs/heads/', '')
-  core.info(`Current branch: ${currentBranch}`)
+  core.debug(`Current branch: ${currentBranch}`)
 
   const releaseInCurrent = releases.find((release) => !release.draft && release.target_commitish === currentBranch)
 
   if (releaseInCurrent === undefined) {
-    core.info(`No release found for branch ${currentBranch}`)
+    core.debug(`No release found for branch ${currentBranch}`)
 
     // find latest release that is not a draft
     const latestNonDraft = releases.find((release) => !release.draft)
     if (latestNonDraft === undefined) {
-      core.info(`No non-draft releases found`)
       return [releases, latestRelease]
     }
     latestRelease = latestNonDraft.tag_name
   } else {
     latestRelease = releaseInCurrent.tag_name
   }
-
-  core.info(tags[0].name)
-
-  core.info(`Found ${releases.length} releases`)
-  core.info(`Latest release: ${releases[0].tag_name}`)
-  core.info(releases[0].target_commitish)
 
   return [releases, latestRelease]
 }
@@ -78,13 +71,15 @@ export async function createOrUpdateRelease(
 ): Promise<void> {
   const context = github.context
   const newReleaseNotes = await generateReleaseNotes(client, inputs, latestRelease, versionIncrease)
-  // print latestRelease, versionIncrease, releaseID
-  core.info(`Latest release: ${latestRelease}`)
-  core.info(`Version increase: ${versionIncrease}`)
 
   // find if a release draft already exists for versionIncrease
   const releaseDraft = releases.find((release) => release.draft && release.tag_name === versionIncrease)
+
+  core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${versionIncrease}`)
+  core.info(`latestRelease: ${latestRelease}`)
   core.info(`releaseDraft: ${releaseDraft}`)
+  core.info(`newReleaseNotes: ${newReleaseNotes}`)
+  core.endGroup()
 
   const releaseParams = {
     ...context.repo,
@@ -104,5 +99,5 @@ export async function createOrUpdateRelease(
         release_id: releaseDraft.id,
       }))
 
-  core.info(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
+  core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
 }

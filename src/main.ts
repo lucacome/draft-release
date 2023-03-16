@@ -23,15 +23,16 @@ async function run(): Promise<void> {
     const client = github.getOctokit(inputs.githubToken)
 
     const [releases, latestRelease] = await getRelease(client)
+
     core.startGroup(`Releases`)
     core.info(`Latest release: ${latestRelease}`)
+    core.info(`Found ${releases.length} releases:`)
     releases.forEach((release) => {
-      // add separator
-      core.info(`-`.repeat(20))
       core.info(`ID: ${release.id}`)
       core.info(`Release: ${release.tag_name}`)
       core.info(`Draft: ${release.draft}`)
       core.info(`Target commitish: ${release.target_commitish}`)
+      core.info(`-`.repeat(20))
     })
     core.endGroup()
 
@@ -40,7 +41,6 @@ async function run(): Promise<void> {
 
     // get version increase
     const versionIncrease = 'v' + (await getVersionIncrease(latestRelease, inputs, releaseNotes))
-    core.info(`versionIncrease: ${versionIncrease}`)
 
     // create or update release
     await createOrUpdateRelease(client, inputs, releases, latestRelease, versionIncrease)
