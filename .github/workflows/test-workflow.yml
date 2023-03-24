@@ -1,0 +1,28 @@
+name: 'test workflow'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  test: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./
+        id: draft-release
+        with:
+          notes-header: |
+            ## Welcome to the {{version}} release of Draft Release
+              This is some text to welcome you to the release {{version-number}}.
+          notes-footer: |
+            ## Upgrade
+            - For Docker, use the {{version}} image from Docker Hub.
+            - For Binaries use the {{version-number}} release from GitHub.
+
+      - run: |
+          echo "Version: ${{ steps.draft-release.outputs.version }}"
+          echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
+          echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
+          echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
