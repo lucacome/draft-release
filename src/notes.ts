@@ -3,6 +3,10 @@ import * as semver from 'semver'
 import * as handlebars from 'handlebars'
 import {Inputs} from './context'
 
+interface VariableObject {
+  [key: string]: string
+}
+
 export async function generateReleaseNotes(
   client: ReturnType<typeof github.getOctokit>,
   inputs: Inputs,
@@ -19,10 +23,18 @@ export async function generateReleaseNotes(
 
   let body = notes.data.body
 
+  // get all the variables from inputs.variables
+  const variables: VariableObject = inputs.variables.reduce((acc: VariableObject, variable: string) => {
+    const [key, value] = variable.split('=')
+    acc[key] = value
+    return acc
+  }, {})
+
   // variables to replace in header and footer
   const data = {
     version: nextRelease,
     'version-number': nextRelease.replace('v', ''),
+    ...variables,
   }
 
   if (inputs.header) {

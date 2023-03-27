@@ -137,6 +137,7 @@ describe('createOrUpdateRelease', () => {
     minorLabel: 'minor',
     header: 'header',
     footer: 'footer',
+    variables: [],
   }
   beforeEach(() => {
     jest.clearAllMocks()

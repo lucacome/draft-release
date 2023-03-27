@@ -22,6 +22,10 @@ inputs:
     description: 'Footer to use for changelog'
     default: ''
     required: false
+  variables:
+    description: 'List of variables to use in the header and footer'
+    default: ''
+    required: false
 outputs:
   version:
     description: 'The version of the release'

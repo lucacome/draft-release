@@ -32,11 +32,12 @@ jobs:
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `github-token` | `string` | The GitHub token to use for the release. (default `github.token`) |
 | `minor-label` | `string` | The label to use for minor releases. (default `enhancement`) |
 | `major-label` | `string` | The label to use for major releases. (default `change`) |
 | `notes-header` | `string` | The header to use for the release notes. |
 | `notes-footer` | `string` | The footer to use for the release notes. |
-| `github-token` | `string` | The GitHub token to use for the release. (default `github.token`) |
+| `variables` | `list` | A list of variables to use in the header and footer. |
 
 ## Outputs
 
@@ -52,6 +53,8 @@ jobs:
 The header and footer have two special placeholders that will be replaced with the version number of the next release:
 - `{{version}}` will be replaced with the version number of the next release.
 - `{{version-number}}` will be replaced with the version number of the next release without the `v` prefix.
+
+Additionally, you can use the `variables` input to define additional variables that can be used in the header and footer. These variables should be provided as a list of key-value pairs, using the format key=variable, with each pair separated by a new line. The key represents the variable name, while the value corresponds to the variable's assigned value. The variables can be used in the header and footer by using the syntax `{{variable-name}}`.
 
 ## Examples
 
@@ -74,9 +77,13 @@ jobs:
         with:
           minor-label: 'enhancement'
           major-label: 'change'
+          variables: |
+            my-variable=My Variable
           notes-footer: |
             This is a footer.
             It can be multiline.
+            And can use variables like {{version}} and {{version-number}}.
+            Or custom variables like {{my-variable}}.
 ```
 
 ### Get Version Number of Next Release

@@ -9,6 +9,7 @@ describe('getVersionIncrease', () => {
     githubToken: '',
     header: '',
     footer: '',
+    variables: [],
   }
 
   test('should return patch with empty labels (bug)', async () => {

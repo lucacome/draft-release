@@ -32,6 +32,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getInputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const util_1 = __nccwpck_require__(8662);
 function getInputs() {
     return {
         githubToken: core.getInput('github-token'),
@@ -39,6 +40,7 @@ function getInputs() {
         minorLabel: core.getInput('minor-label'),
         header: core.getInput('notes-header'),
         footer: core.getInput('notes-footer'),
+        variables: util_1.Util.getInputList('variables'),
     };
 }
 exports.getInputs = getInputs;
@@ -186,11 +188,14 @@ function generateReleaseNotes(client, inputs, latestRelease, nextRelease) {
         const context = github.context;
         const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
         let body = notes.data.body;
+        // get all the variables from inputs.variables
+        const variables = inputs.variables.reduce((acc, variable) => {
+            const [key, value] = variable.split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
         // variables to replace in header and footer
-        const data = {
-            version: nextRelease,
-            'version-number': nextRelease.replace('v', ''),
-        };
+        const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', '') }, variables);
         if (inputs.header) {
             const header = handlebars.compile(inputs.header)(data);
             body = `${header}\n\n${body}`;
@@ -2346,6 +2351,10 @@ function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
     }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
         return false;
@@ -2371,14 +2380,662 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
+
+/***/ }),
+
+/***/ 1962:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
+const fs = __importStar(__nccwpck_require__(7147));
+const path = __importStar(__nccwpck_require__(1017));
+_a = fs.promises
+// export const {open} = 'fs'
+, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+// export const {open} = 'fs'
+exports.IS_WINDOWS = process.platform === 'win32';
+// See https://github.com/nodejs/node/blob/d0153aee367422d0858105abec186da4dff0a0c5/deps/uv/include/uv/win.h#L691
+exports.UV_FS_O_EXLOCK = 0x10000000;
+exports.READONLY = fs.constants.O_RDONLY;
+function exists(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield exports.stat(fsPath);
+        }
+        catch (err) {
+            if (err.code === 'ENOENT') {
+                return false;
+            }
+            throw err;
+        }
+        return true;
+    });
+}
+exports.exists = exists;
+function isDirectory(fsPath, useStat = false) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
+        return stats.isDirectory();
+    });
+}
+exports.isDirectory = isDirectory;
+/**
+ * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+ * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+ */
+function isRooted(p) {
+    p = normalizeSeparators(p);
+    if (!p) {
+        throw new Error('isRooted() parameter "p" cannot be empty');
+    }
+    if (exports.IS_WINDOWS) {
+        return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
+        ); // e.g. C: or C:\hello
+    }
+    return p.startsWith('/');
+}
+exports.isRooted = isRooted;
+/**
+ * Best effort attempt to determine whether a file exists and is executable.
+ * @param filePath    file path to check
+ * @param extensions  additional file extensions to try
+ * @return if file exists and is executable, returns the file path. otherwise empty string.
+ */
+function tryGetExecutablePath(filePath, extensions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let stats = undefined;
+        try {
+            // test file exists
+            stats = yield exports.stat(filePath);
+        }
+        catch (err) {
+            if (err.code !== 'ENOENT') {
+                // eslint-disable-next-line no-console
+                console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+            }
+        }
+        if (stats && stats.isFile()) {
+            if (exports.IS_WINDOWS) {
+                // on Windows, test for valid extension
+                const upperExt = path.extname(filePath).toUpperCase();
+                if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
+                    return filePath;
+                }
+            }
+            else {
+                if (isUnixExecutable(stats)) {
+                    return filePath;
+                }
+            }
+        }
+        // try each extension
+        const originalFilePath = filePath;
+        for (const extension of extensions) {
+            filePath = originalFilePath + extension;
+            stats = undefined;
+            try {
+                stats = yield exports.stat(filePath);
+            }
+            catch (err) {
+                if (err.code !== 'ENOENT') {
+                    // eslint-disable-next-line no-console
+                    console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+                }
+            }
+            if (stats && stats.isFile()) {
+                if (exports.IS_WINDOWS) {
+                    // preserve the case of the actual file (since an extension was appended)
+                    try {
+                        const directory = path.dirname(filePath);
+                        const upperName = path.basename(filePath).toUpperCase();
+                        for (const actualName of yield exports.readdir(directory)) {
+                            if (upperName === actualName.toUpperCase()) {
+                                filePath = path.join(directory, actualName);
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        // eslint-disable-next-line no-console
+                        console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+                    }
+                    return filePath;
+                }
+                else {
+                    if (isUnixExecutable(stats)) {
+                        return filePath;
+                    }
+                }
+            }
+        }
+        return '';
+    });
+}
+exports.tryGetExecutablePath = tryGetExecutablePath;
+function normalizeSeparators(p) {
+    p = p || '';
+    if (exports.IS_WINDOWS) {
+        // convert slashes on Windows
+        p = p.replace(/\//g, '\\');
+        // remove redundant slashes
+        return p.replace(/\\\\+/g, '\\');
+    }
+    // remove redundant slashes
+    return p.replace(/\/\/+/g, '/');
+}
+// on Mac/Linux, test the execute bit
+//     R   W  X  R  W X R W X
+//   256 128 64 32 16 8 4 2 1
+function isUnixExecutable(stats) {
+    return ((stats.mode & 1) > 0 ||
+        ((stats.mode & 8) > 0 && stats.gid === process.getgid()) ||
+        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
+}
+// Get the path of cmd.exe in windows
+function getCmdPath() {
+    var _a;
+    return (_a = process.env['COMSPEC']) !== null && _a !== void 0 ? _a : `cmd.exe`;
+}
+exports.getCmdPath = getCmdPath;
+//# sourceMappingURL=io-util.js.map
+
+/***/ }),
+
+/***/ 7436:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.findInPath = exports.which = exports.mkdirP = exports.rmRF = exports.mv = exports.cp = void 0;
+const assert_1 = __nccwpck_require__(9491);
+const path = __importStar(__nccwpck_require__(1017));
+const ioUtil = __importStar(__nccwpck_require__(1962));
+/**
+ * Copies a file or folder.
+ * Based off of shelljs - https://github.com/shelljs/shelljs/blob/9237f66c52e5daa40458f94f9565e18e8132f5a6/src/cp.js
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See CopyOptions.
+ */
+function cp(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { force, recursive, copySourceDirectory } = readCopyOptions(options);
+        const destStat = (yield ioUtil.exists(dest)) ? yield ioUtil.stat(dest) : null;
+        // Dest is an existing file, but not forcing
+        if (destStat && destStat.isFile() && !force) {
+            return;
+        }
+        // If dest is an existing directory, should copy inside.
+        const newDest = destStat && destStat.isDirectory() && copySourceDirectory
+            ? path.join(dest, path.basename(source))
+            : dest;
+        if (!(yield ioUtil.exists(source))) {
+            throw new Error(`no such file or directory: ${source}`);
+        }
+        const sourceStat = yield ioUtil.stat(source);
+        if (sourceStat.isDirectory()) {
+            if (!recursive) {
+                throw new Error(`Failed to copy. ${source} is a directory, but tried to copy without recursive flag.`);
+            }
+            else {
+                yield cpDirRecursive(source, newDest, 0, force);
+            }
+        }
+        else {
+            if (path.relative(source, newDest) === '') {
+                // a file cannot be copied to itself
+                throw new Error(`'${newDest}' and '${source}' are the same file`);
+            }
+            yield copyFile(source, newDest, force);
+        }
+    });
+}
+exports.cp = cp;
+/**
+ * Moves a path.
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See MoveOptions.
+ */
+function mv(source, dest, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield ioUtil.exists(dest)) {
+            let destExists = true;
+            if (yield ioUtil.isDirectory(dest)) {
+                // If dest is directory copy src into dest
+                dest = path.join(dest, path.basename(source));
+                destExists = yield ioUtil.exists(dest);
+            }
+            if (destExists) {
+                if (options.force == null || options.force) {
+                    yield rmRF(dest);
+                }
+                else {
+                    throw new Error('Destination already exists');
+                }
+            }
+        }
+        yield mkdirP(path.dirname(dest));
+        yield ioUtil.rename(source, dest);
+    });
+}
+exports.mv = mv;
+/**
+ * Remove a path recursively with force
+ *
+ * @param inputPath path to remove
+ */
+function rmRF(inputPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (ioUtil.IS_WINDOWS) {
+            // Check for invalid characters
+            // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+            if (/[*"<>|]/.test(inputPath)) {
+                throw new Error('File path must not contain `*`, `"`, `<`, `>` or `|` on Windows');
+            }
+        }
+        try {
+            // note if path does not exist, error is silent
+            yield ioUtil.rm(inputPath, {
+                force: true,
+                maxRetries: 3,
+                recursive: true,
+                retryDelay: 300
+            });
+        }
+        catch (err) {
+            throw new Error(`File was unable to be removed ${err}`);
+        }
+    });
+}
+exports.rmRF = rmRF;
+/**
+ * Make a directory.  Creates the full path with folders in between
+ * Will throw if it fails
+ *
+ * @param   fsPath        path to create
+ * @returns Promise<void>
+ */
+function mkdirP(fsPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        assert_1.ok(fsPath, 'a path argument must be provided');
+        yield ioUtil.mkdir(fsPath, { recursive: true });
+    });
+}
+exports.mkdirP = mkdirP;
+/**
+ * Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+ * If you check and the tool does not exist, it will throw.
+ *
+ * @param     tool              name of the tool
+ * @param     check             whether to check if tool exists
+ * @returns   Promise<string>   path to tool
+ */
+function which(tool, check) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // recursive when check=true
+        if (check) {
+            const result = yield which(tool, false);
+            if (!result) {
+                if (ioUtil.IS_WINDOWS) {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+                }
+                else {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+                }
+            }
+            return result;
+        }
+        const matches = yield findInPath(tool);
+        if (matches && matches.length > 0) {
+            return matches[0];
+        }
+        return '';
+    });
+}
+exports.which = which;
+/**
+ * Returns a list of all occurrences of the given tool on the system path.
+ *
+ * @returns   Promise<string[]>  the paths of the tool
+ */
+function findInPath(tool) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // build the list of extensions to try
+        const extensions = [];
+        if (ioUtil.IS_WINDOWS && process.env['PATHEXT']) {
+            for (const extension of process.env['PATHEXT'].split(path.delimiter)) {
+                if (extension) {
+                    extensions.push(extension);
+                }
+            }
+        }
+        // if it's rooted, return it if exists. otherwise return empty.
+        if (ioUtil.isRooted(tool)) {
+            const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
+            if (filePath) {
+                return [filePath];
+            }
+            return [];
+        }
+        // if any path separators, return empty
+        if (tool.includes(path.sep)) {
+            return [];
+        }
+        // build the list of directories
+        //
+        // Note, technically "where" checks the current directory on Windows. From a toolkit perspective,
+        // it feels like we should not do this. Checking the current directory seems like more of a use
+        // case of a shell, and the which() function exposed by the toolkit should strive for consistency
+        // across platforms.
+        const directories = [];
+        if (process.env.PATH) {
+            for (const p of process.env.PATH.split(path.delimiter)) {
+                if (p) {
+                    directories.push(p);
+                }
+            }
+        }
+        // find all matches
+        const matches = [];
+        for (const directory of directories) {
+            const filePath = yield ioUtil.tryGetExecutablePath(path.join(directory, tool), extensions);
+            if (filePath) {
+                matches.push(filePath);
+            }
+        }
+        return matches;
+    });
+}
+exports.findInPath = findInPath;
+function readCopyOptions(options) {
+    const force = options.force == null ? true : options.force;
+    const recursive = Boolean(options.recursive);
+    const copySourceDirectory = options.copySourceDirectory == null
+        ? true
+        : Boolean(options.copySourceDirectory);
+    return { force, recursive, copySourceDirectory };
+}
+function cpDirRecursive(sourceDir, destDir, currentDepth, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Ensure there is not a run away recursive copy
+        if (currentDepth >= 255)
+            return;
+        currentDepth++;
+        yield mkdirP(destDir);
+        const files = yield ioUtil.readdir(sourceDir);
+        for (const fileName of files) {
+            const srcFile = `${sourceDir}/${fileName}`;
+            const destFile = `${destDir}/${fileName}`;
+            const srcFileStat = yield ioUtil.lstat(srcFile);
+            if (srcFileStat.isDirectory()) {
+                // Recurse
+                yield cpDirRecursive(srcFile, destFile, currentDepth, force);
+            }
+            else {
+                yield copyFile(srcFile, destFile, force);
+            }
+        }
+        // Change the mode for the newly created directory
+        yield ioUtil.chmod(destDir, (yield ioUtil.stat(sourceDir)).mode);
+    });
+}
+// Buffered file copy
+function copyFile(srcFile, destFile, force) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if ((yield ioUtil.lstat(srcFile)).isSymbolicLink()) {
+            // unlink/re-link it
+            try {
+                yield ioUtil.lstat(destFile);
+                yield ioUtil.unlink(destFile);
+            }
+            catch (e) {
+                // Try to override file permission
+                if (e.code === 'EPERM') {
+                    yield ioUtil.chmod(destFile, '0666');
+                    yield ioUtil.unlink(destFile);
+                }
+                // other errors = it doesn't exist, no work to do
+            }
+            // Copy over symlink
+            const symlinkFull = yield ioUtil.readlink(srcFile);
+            yield ioUtil.symlink(symlinkFull, destFile, ioUtil.IS_WINDOWS ? 'junction' : null);
+        }
+        else if (!(yield ioUtil.exists(destFile)) || force) {
+            yield ioUtil.copyFile(srcFile, destFile);
+        }
+    });
+}
+//# sourceMappingURL=io.js.map
+
+/***/ }),
+
+/***/ 8662:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Util = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const core = __importStar(__nccwpck_require__(2186));
+const io = __importStar(__nccwpck_require__(7436));
+const sync_1 = __nccwpck_require__(4393);
+class Util {
+    static getInputList(name, opts) {
+        const res = [];
+        const items = core.getInput(name);
+        if (items == '') {
+            return res;
+        }
+        const records = (0, sync_1.parse)(items, {
+            columns: false,
+            relaxQuotes: true,
+            comment: '#',
+            relaxColumnCount: true,
+            skipEmptyLines: true,
+            quote: opts === null || opts === void 0 ? void 0 : opts.quote
+        });
+        for (const record of records) {
+            if (record.length == 1) {
+                if (opts === null || opts === void 0 ? void 0 : opts.ignoreComma) {
+                    res.push(record[0]);
+                }
+                else {
+                    res.push(...record[0].split(','));
+                }
+            }
+            else if (!(opts === null || opts === void 0 ? void 0 : opts.ignoreComma)) {
+                res.push(...record);
+            }
+            else {
+                res.push(record.join(','));
+            }
+        }
+        return res.filter(item => item).map(pat => pat.trim());
+    }
+    static asyncForEach(array, callback) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let index = 0; index < array.length; index++) {
+                yield callback(array[index], index, array);
+            }
+        });
+    }
+    static isValidUrl(url) {
+        try {
+            new URL(url);
+        }
+        catch (e) {
+            return false;
+        }
+        return true;
+    }
+    static powershellCommand(script, params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const powershellPath = yield io.which('powershell', true);
+            const escapedScript = script.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+            const escapedParams = [];
+            if (params) {
+                for (const key in params) {
+                    escapedParams.push(`-${key} '${params[key].replace(/'/g, "''").replace(/"|\n|\r/g, '')}'`);
+                }
+            }
+            return {
+                command: `"${powershellPath}"`,
+                args: ['-NoLogo', '-Sta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Unrestricted', '-Command', `& '${escapedScript}' ${escapedParams.join(' ')}`]
+            };
+        });
+    }
+    static isDirectory(p) {
+        try {
+            return fs_1.default.lstatSync(p).isDirectory();
+        }
+        catch (_) {
+            // noop
+        }
+        return false;
+    }
+}
+exports.Util = Util;
+//# sourceMappingURL=util.js.map
 
 /***/ }),
 
@@ -14295,348 +14952,6 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 /***/ }),
 
-/***/ 7129:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-// A linked list to keep track of recently-used-ness
-const Yallist = __nccwpck_require__(665)
-
-const MAX = Symbol('max')
-const LENGTH = Symbol('length')
-const LENGTH_CALCULATOR = Symbol('lengthCalculator')
-const ALLOW_STALE = Symbol('allowStale')
-const MAX_AGE = Symbol('maxAge')
-const DISPOSE = Symbol('dispose')
-const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
-const LRU_LIST = Symbol('lruList')
-const CACHE = Symbol('cache')
-const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
-
-const naiveLength = () => 1
-
-// lruList is a yallist where the head is the youngest
-// item, and the tail is the oldest.  the list contains the Hit
-// objects as the entries.
-// Each Hit object has a reference to its Yallist.Node.  This
-// never changes.
-//
-// cache is a Map (or PseudoMap) that matches the keys to
-// the Yallist.Node object.
-class LRUCache {
-  constructor (options) {
-    if (typeof options === 'number')
-      options = { max: options }
-
-    if (!options)
-      options = {}
-
-    if (options.max && (typeof options.max !== 'number' || options.max < 0))
-      throw new TypeError('max must be a non-negative number')
-    // Kind of weird to have a default max of Infinity, but oh well.
-    const max = this[MAX] = options.max || Infinity
-
-    const lc = options.length || naiveLength
-    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
-    this[ALLOW_STALE] = options.stale || false
-    if (options.maxAge && typeof options.maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-    this[MAX_AGE] = options.maxAge || 0
-    this[DISPOSE] = options.dispose
-    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
-    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
-    this.reset()
-  }
-
-  // resize the cache when the max changes.
-  set max (mL) {
-    if (typeof mL !== 'number' || mL < 0)
-      throw new TypeError('max must be a non-negative number')
-
-    this[MAX] = mL || Infinity
-    trim(this)
-  }
-  get max () {
-    return this[MAX]
-  }
-
-  set allowStale (allowStale) {
-    this[ALLOW_STALE] = !!allowStale
-  }
-  get allowStale () {
-    return this[ALLOW_STALE]
-  }
-
-  set maxAge (mA) {
-    if (typeof mA !== 'number')
-      throw new TypeError('maxAge must be a non-negative number')
-
-    this[MAX_AGE] = mA
-    trim(this)
-  }
-  get maxAge () {
-    return this[MAX_AGE]
-  }
-
-  // resize the cache when the lengthCalculator changes.
-  set lengthCalculator (lC) {
-    if (typeof lC !== 'function')
-      lC = naiveLength
-
-    if (lC !== this[LENGTH_CALCULATOR]) {
-      this[LENGTH_CALCULATOR] = lC
-      this[LENGTH] = 0
-      this[LRU_LIST].forEach(hit => {
-        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
-        this[LENGTH] += hit.length
-      })
-    }
-    trim(this)
-  }
-  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
-
-  get length () { return this[LENGTH] }
-  get itemCount () { return this[LRU_LIST].length }
-
-  rforEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].tail; walker !== null;) {
-      const prev = walker.prev
-      forEachStep(this, fn, walker, thisp)
-      walker = prev
-    }
-  }
-
-  forEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].head; walker !== null;) {
-      const next = walker.next
-      forEachStep(this, fn, walker, thisp)
-      walker = next
-    }
-  }
-
-  keys () {
-    return this[LRU_LIST].toArray().map(k => k.key)
-  }
-
-  values () {
-    return this[LRU_LIST].toArray().map(k => k.value)
-  }
-
-  reset () {
-    if (this[DISPOSE] &&
-        this[LRU_LIST] &&
-        this[LRU_LIST].length) {
-      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
-    }
-
-    this[CACHE] = new Map() // hash of items by key
-    this[LRU_LIST] = new Yallist() // list of items in order of use recency
-    this[LENGTH] = 0 // length of items in the list
-  }
-
-  dump () {
-    return this[LRU_LIST].map(hit =>
-      isStale(this, hit) ? false : {
-        k: hit.key,
-        v: hit.value,
-        e: hit.now + (hit.maxAge || 0)
-      }).toArray().filter(h => h)
-  }
-
-  dumpLru () {
-    return this[LRU_LIST]
-  }
-
-  set (key, value, maxAge) {
-    maxAge = maxAge || this[MAX_AGE]
-
-    if (maxAge && typeof maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-
-    const now = maxAge ? Date.now() : 0
-    const len = this[LENGTH_CALCULATOR](value, key)
-
-    if (this[CACHE].has(key)) {
-      if (len > this[MAX]) {
-        del(this, this[CACHE].get(key))
-        return false
-      }
-
-      const node = this[CACHE].get(key)
-      const item = node.value
-
-      // dispose of the old one before overwriting
-      // split out into 2 ifs for better coverage tracking
-      if (this[DISPOSE]) {
-        if (!this[NO_DISPOSE_ON_SET])
-          this[DISPOSE](key, item.value)
-      }
-
-      item.now = now
-      item.maxAge = maxAge
-      item.value = value
-      this[LENGTH] += len - item.length
-      item.length = len
-      this.get(key)
-      trim(this)
-      return true
-    }
-
-    const hit = new Entry(key, value, len, now, maxAge)
-
-    // oversized objects fall out of cache automatically.
-    if (hit.length > this[MAX]) {
-      if (this[DISPOSE])
-        this[DISPOSE](key, value)
-
-      return false
-    }
-
-    this[LENGTH] += hit.length
-    this[LRU_LIST].unshift(hit)
-    this[CACHE].set(key, this[LRU_LIST].head)
-    trim(this)
-    return true
-  }
-
-  has (key) {
-    if (!this[CACHE].has(key)) return false
-    const hit = this[CACHE].get(key).value
-    return !isStale(this, hit)
-  }
-
-  get (key) {
-    return get(this, key, true)
-  }
-
-  peek (key) {
-    return get(this, key, false)
-  }
-
-  pop () {
-    const node = this[LRU_LIST].tail
-    if (!node)
-      return null
-
-    del(this, node)
-    return node.value
-  }
-
-  del (key) {
-    del(this, this[CACHE].get(key))
-  }
-
-  load (arr) {
-    // reset the cache
-    this.reset()
-
-    const now = Date.now()
-    // A previous serialized cache has the most recent items first
-    for (let l = arr.length - 1; l >= 0; l--) {
-      const hit = arr[l]
-      const expiresAt = hit.e || 0
-      if (expiresAt === 0)
-        // the item was created without expiration in a non aged cache
-        this.set(hit.k, hit.v)
-      else {
-        const maxAge = expiresAt - now
-        // dont add already expired items
-        if (maxAge > 0) {
-          this.set(hit.k, hit.v, maxAge)
-        }
-      }
-    }
-  }
-
-  prune () {
-    this[CACHE].forEach((value, key) => get(this, key, false))
-  }
-}
-
-const get = (self, key, doUse) => {
-  const node = self[CACHE].get(key)
-  if (node) {
-    const hit = node.value
-    if (isStale(self, hit)) {
-      del(self, node)
-      if (!self[ALLOW_STALE])
-        return undefined
-    } else {
-      if (doUse) {
-        if (self[UPDATE_AGE_ON_GET])
-          node.value.now = Date.now()
-        self[LRU_LIST].unshiftNode(node)
-      }
-    }
-    return hit.value
-  }
-}
-
-const isStale = (self, hit) => {
-  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
-    return false
-
-  const diff = Date.now() - hit.now
-  return hit.maxAge ? diff > hit.maxAge
-    : self[MAX_AGE] && (diff > self[MAX_AGE])
-}
-
-const trim = self => {
-  if (self[LENGTH] > self[MAX]) {
-    for (let walker = self[LRU_LIST].tail;
-      self[LENGTH] > self[MAX] && walker !== null;) {
-      // We know that we're about to delete this one, and also
-      // what the next least recently used key will be, so just
-      // go ahead and set it now.
-      const prev = walker.prev
-      del(self, walker)
-      walker = prev
-    }
-  }
-}
-
-const del = (self, node) => {
-  if (node) {
-    const hit = node.value
-    if (self[DISPOSE])
-      self[DISPOSE](hit.key, hit.value)
-
-    self[LENGTH] -= hit.length
-    self[CACHE].delete(hit.key)
-    self[LRU_LIST].removeNode(node)
-  }
-}
-
-class Entry {
-  constructor (key, value, length, now, maxAge) {
-    this.key = key
-    this.value = value
-    this.length = length
-    this.now = now
-    this.maxAge = maxAge || 0
-  }
-}
-
-const forEachStep = (self, fn, node, thisp) => {
-  let hit = node.value
-  if (isStale(self, hit)) {
-    del(self, node)
-    if (!self[ALLOW_STALE])
-      hit = undefined
-  }
-  if (hit)
-    fn.call(thisp, hit.value, hit.key, self)
-}
-
-module.exports = LRUCache
-
-
-/***/ }),
-
 /***/ 467:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -16061,6 +16376,20 @@ const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) 
 };
 
 /**
+ * isSameProtocol reports whether the two provided URLs use the same protocol.
+ *
+ * Both domains must already be in canonical form.
+ * @param {string|URL} original
+ * @param {string|URL} destination
+ */
+const isSameProtocol = function isSameProtocol(destination, original) {
+	const orig = new URL$1(original).protocol;
+	const dest = new URL$1(destination).protocol;
+
+	return orig === dest;
+};
+
+/**
  * Fetch function
  *
  * @param   Mixed    url   Absolute url or Request instance
@@ -16091,7 +16420,7 @@ function fetch(url, opts) {
 			let error = new AbortError('The user aborted a request.');
 			reject(error);
 			if (request.body && request.body instanceof Stream.Readable) {
-				request.body.destroy(error);
+				destroyStream(request.body, error);
 			}
 			if (!response || !response.body) return;
 			response.body.emit('error', error);
@@ -16132,8 +16461,42 @@ function fetch(url, opts) {
 
 		req.on('error', function (err) {
 			reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+
 			finalize();
 		});
+
+		fixResponseChunkedTransferBadEnding(req, function (err) {
+			if (signal && signal.aborted) {
+				return;
+			}
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+		});
+
+		/* c8 ignore next 18 */
+		if (parseInt(process.version.substring(1)) < 14) {
+			// Before Node.js 14, pipeline() does not fully support async iterators and does not always
+			// properly handle when the socket close/end events are out of order.
+			req.on('socket', function (s) {
+				s.addListener('close', function (hadError) {
+					// if a data listener is still present we didn't end cleanly
+					const hasDataListener = s.listenerCount('data') > 0;
+
+					// if end happened before close but the socket didn't emit an error, do it now
+					if (response && hasDataListener && !hadError && !(signal && signal.aborted)) {
+						const err = new Error('Premature close');
+						err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+						response.body.emit('error', err);
+					}
+				});
+			});
+		}
 
 		req.on('response', function (res) {
 			clearTimeout(reqTimeout);
@@ -16206,7 +16569,7 @@ function fetch(url, opts) {
 							size: request.size
 						};
 
-						if (!isDomainOrSubdomain(request.url, locationURL)) {
+						if (!isDomainOrSubdomain(request.url, locationURL) || !isSameProtocol(request.url, locationURL)) {
 							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
 								requestOpts.headers.delete(name);
 							}
@@ -16299,6 +16662,13 @@ function fetch(url, opts) {
 					response = new Response(body, response_options);
 					resolve(response);
 				});
+				raw.on('end', function () {
+					// some old IIS servers return zero-length OK deflate responses, so 'data' is never emitted.
+					if (!response) {
+						response = new Response(body, response_options);
+						resolve(response);
+					}
+				});
 				return;
 			}
 
@@ -16318,6 +16688,41 @@ function fetch(url, opts) {
 		writeToStream(req, request);
 	});
 }
+function fixResponseChunkedTransferBadEnding(request, errorCallback) {
+	let socket;
+
+	request.on('socket', function (s) {
+		socket = s;
+	});
+
+	request.on('response', function (response) {
+		const headers = response.headers;
+
+		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
+			response.once('close', function (hadError) {
+				// if a data listener is still present we didn't end cleanly
+				const hasDataListener = socket.listenerCount('data') > 0;
+
+				if (hasDataListener && !hadError) {
+					const err = new Error('Premature close');
+					err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+					errorCallback(err);
+				}
+			});
+		}
+	});
+}
+
+function destroyStream(stream, err) {
+	if (stream.destroy) {
+		stream.destroy(err);
+	} else {
+		// node < 8
+		stream.emit('error', err);
+		stream.end();
+	}
+}
+
 /**
  * Redirect code matching
  *
@@ -16731,7 +17136,7 @@ class Range {
 }
 module.exports = Range
 
-const LRU = __nccwpck_require__(7129)
+const LRU = __nccwpck_require__(1196)
 const cache = new LRU({ max: 1000 })
 
 const parseOptions = __nccwpck_require__(785)
@@ -18150,6 +18555,798 @@ createToken('STAR', '(<|>)?=?\\s*\\*')
 // >=0.0.0 is like a star
 createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$')
 createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$')
+
+
+/***/ }),
+
+/***/ 1196:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+// A linked list to keep track of recently-used-ness
+const Yallist = __nccwpck_require__(220)
+
+const MAX = Symbol('max')
+const LENGTH = Symbol('length')
+const LENGTH_CALCULATOR = Symbol('lengthCalculator')
+const ALLOW_STALE = Symbol('allowStale')
+const MAX_AGE = Symbol('maxAge')
+const DISPOSE = Symbol('dispose')
+const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
+const LRU_LIST = Symbol('lruList')
+const CACHE = Symbol('cache')
+const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
+
+const naiveLength = () => 1
+
+// lruList is a yallist where the head is the youngest
+// item, and the tail is the oldest.  the list contains the Hit
+// objects as the entries.
+// Each Hit object has a reference to its Yallist.Node.  This
+// never changes.
+//
+// cache is a Map (or PseudoMap) that matches the keys to
+// the Yallist.Node object.
+class LRUCache {
+  constructor (options) {
+    if (typeof options === 'number')
+      options = { max: options }
+
+    if (!options)
+      options = {}
+
+    if (options.max && (typeof options.max !== 'number' || options.max < 0))
+      throw new TypeError('max must be a non-negative number')
+    // Kind of weird to have a default max of Infinity, but oh well.
+    const max = this[MAX] = options.max || Infinity
+
+    const lc = options.length || naiveLength
+    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
+    this[ALLOW_STALE] = options.stale || false
+    if (options.maxAge && typeof options.maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+    this[MAX_AGE] = options.maxAge || 0
+    this[DISPOSE] = options.dispose
+    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
+    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
+    this.reset()
+  }
+
+  // resize the cache when the max changes.
+  set max (mL) {
+    if (typeof mL !== 'number' || mL < 0)
+      throw new TypeError('max must be a non-negative number')
+
+    this[MAX] = mL || Infinity
+    trim(this)
+  }
+  get max () {
+    return this[MAX]
+  }
+
+  set allowStale (allowStale) {
+    this[ALLOW_STALE] = !!allowStale
+  }
+  get allowStale () {
+    return this[ALLOW_STALE]
+  }
+
+  set maxAge (mA) {
+    if (typeof mA !== 'number')
+      throw new TypeError('maxAge must be a non-negative number')
+
+    this[MAX_AGE] = mA
+    trim(this)
+  }
+  get maxAge () {
+    return this[MAX_AGE]
+  }
+
+  // resize the cache when the lengthCalculator changes.
+  set lengthCalculator (lC) {
+    if (typeof lC !== 'function')
+      lC = naiveLength
+
+    if (lC !== this[LENGTH_CALCULATOR]) {
+      this[LENGTH_CALCULATOR] = lC
+      this[LENGTH] = 0
+      this[LRU_LIST].forEach(hit => {
+        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
+        this[LENGTH] += hit.length
+      })
+    }
+    trim(this)
+  }
+  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
+
+  get length () { return this[LENGTH] }
+  get itemCount () { return this[LRU_LIST].length }
+
+  rforEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].tail; walker !== null;) {
+      const prev = walker.prev
+      forEachStep(this, fn, walker, thisp)
+      walker = prev
+    }
+  }
+
+  forEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].head; walker !== null;) {
+      const next = walker.next
+      forEachStep(this, fn, walker, thisp)
+      walker = next
+    }
+  }
+
+  keys () {
+    return this[LRU_LIST].toArray().map(k => k.key)
+  }
+
+  values () {
+    return this[LRU_LIST].toArray().map(k => k.value)
+  }
+
+  reset () {
+    if (this[DISPOSE] &&
+        this[LRU_LIST] &&
+        this[LRU_LIST].length) {
+      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
+    }
+
+    this[CACHE] = new Map() // hash of items by key
+    this[LRU_LIST] = new Yallist() // list of items in order of use recency
+    this[LENGTH] = 0 // length of items in the list
+  }
+
+  dump () {
+    return this[LRU_LIST].map(hit =>
+      isStale(this, hit) ? false : {
+        k: hit.key,
+        v: hit.value,
+        e: hit.now + (hit.maxAge || 0)
+      }).toArray().filter(h => h)
+  }
+
+  dumpLru () {
+    return this[LRU_LIST]
+  }
+
+  set (key, value, maxAge) {
+    maxAge = maxAge || this[MAX_AGE]
+
+    if (maxAge && typeof maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+
+    const now = maxAge ? Date.now() : 0
+    const len = this[LENGTH_CALCULATOR](value, key)
+
+    if (this[CACHE].has(key)) {
+      if (len > this[MAX]) {
+        del(this, this[CACHE].get(key))
+        return false
+      }
+
+      const node = this[CACHE].get(key)
+      const item = node.value
+
+      // dispose of the old one before overwriting
+      // split out into 2 ifs for better coverage tracking
+      if (this[DISPOSE]) {
+        if (!this[NO_DISPOSE_ON_SET])
+          this[DISPOSE](key, item.value)
+      }
+
+      item.now = now
+      item.maxAge = maxAge
+      item.value = value
+      this[LENGTH] += len - item.length
+      item.length = len
+      this.get(key)
+      trim(this)
+      return true
+    }
+
+    const hit = new Entry(key, value, len, now, maxAge)
+
+    // oversized objects fall out of cache automatically.
+    if (hit.length > this[MAX]) {
+      if (this[DISPOSE])
+        this[DISPOSE](key, value)
+
+      return false
+    }
+
+    this[LENGTH] += hit.length
+    this[LRU_LIST].unshift(hit)
+    this[CACHE].set(key, this[LRU_LIST].head)
+    trim(this)
+    return true
+  }
+
+  has (key) {
+    if (!this[CACHE].has(key)) return false
+    const hit = this[CACHE].get(key).value
+    return !isStale(this, hit)
+  }
+
+  get (key) {
+    return get(this, key, true)
+  }
+
+  peek (key) {
+    return get(this, key, false)
+  }
+
+  pop () {
+    const node = this[LRU_LIST].tail
+    if (!node)
+      return null
+
+    del(this, node)
+    return node.value
+  }
+
+  del (key) {
+    del(this, this[CACHE].get(key))
+  }
+
+  load (arr) {
+    // reset the cache
+    this.reset()
+
+    const now = Date.now()
+    // A previous serialized cache has the most recent items first
+    for (let l = arr.length - 1; l >= 0; l--) {
+      const hit = arr[l]
+      const expiresAt = hit.e || 0
+      if (expiresAt === 0)
+        // the item was created without expiration in a non aged cache
+        this.set(hit.k, hit.v)
+      else {
+        const maxAge = expiresAt - now
+        // dont add already expired items
+        if (maxAge > 0) {
+          this.set(hit.k, hit.v, maxAge)
+        }
+      }
+    }
+  }
+
+  prune () {
+    this[CACHE].forEach((value, key) => get(this, key, false))
+  }
+}
+
+const get = (self, key, doUse) => {
+  const node = self[CACHE].get(key)
+  if (node) {
+    const hit = node.value
+    if (isStale(self, hit)) {
+      del(self, node)
+      if (!self[ALLOW_STALE])
+        return undefined
+    } else {
+      if (doUse) {
+        if (self[UPDATE_AGE_ON_GET])
+          node.value.now = Date.now()
+        self[LRU_LIST].unshiftNode(node)
+      }
+    }
+    return hit.value
+  }
+}
+
+const isStale = (self, hit) => {
+  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
+    return false
+
+  const diff = Date.now() - hit.now
+  return hit.maxAge ? diff > hit.maxAge
+    : self[MAX_AGE] && (diff > self[MAX_AGE])
+}
+
+const trim = self => {
+  if (self[LENGTH] > self[MAX]) {
+    for (let walker = self[LRU_LIST].tail;
+      self[LENGTH] > self[MAX] && walker !== null;) {
+      // We know that we're about to delete this one, and also
+      // what the next least recently used key will be, so just
+      // go ahead and set it now.
+      const prev = walker.prev
+      del(self, walker)
+      walker = prev
+    }
+  }
+}
+
+const del = (self, node) => {
+  if (node) {
+    const hit = node.value
+    if (self[DISPOSE])
+      self[DISPOSE](hit.key, hit.value)
+
+    self[LENGTH] -= hit.length
+    self[CACHE].delete(hit.key)
+    self[LRU_LIST].removeNode(node)
+  }
+}
+
+class Entry {
+  constructor (key, value, length, now, maxAge) {
+    this.key = key
+    this.value = value
+    this.length = length
+    this.now = now
+    this.maxAge = maxAge || 0
+  }
+}
+
+const forEachStep = (self, fn, node, thisp) => {
+  let hit = node.value
+  if (isStale(self, hit)) {
+    del(self, node)
+    if (!self[ALLOW_STALE])
+      hit = undefined
+  }
+  if (hit)
+    fn.call(thisp, hit.value, hit.key, self)
+}
+
+module.exports = LRUCache
+
+
+/***/ }),
+
+/***/ 5327:
+/***/ ((module) => {
+
+"use strict";
+
+module.exports = function (Yallist) {
+  Yallist.prototype[Symbol.iterator] = function* () {
+    for (let walker = this.head; walker; walker = walker.next) {
+      yield walker.value
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 220:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+module.exports = Yallist
+
+Yallist.Node = Node
+Yallist.create = Yallist
+
+function Yallist (list) {
+  var self = this
+  if (!(self instanceof Yallist)) {
+    self = new Yallist()
+  }
+
+  self.tail = null
+  self.head = null
+  self.length = 0
+
+  if (list && typeof list.forEach === 'function') {
+    list.forEach(function (item) {
+      self.push(item)
+    })
+  } else if (arguments.length > 0) {
+    for (var i = 0, l = arguments.length; i < l; i++) {
+      self.push(arguments[i])
+    }
+  }
+
+  return self
+}
+
+Yallist.prototype.removeNode = function (node) {
+  if (node.list !== this) {
+    throw new Error('removing node which does not belong to this list')
+  }
+
+  var next = node.next
+  var prev = node.prev
+
+  if (next) {
+    next.prev = prev
+  }
+
+  if (prev) {
+    prev.next = next
+  }
+
+  if (node === this.head) {
+    this.head = next
+  }
+  if (node === this.tail) {
+    this.tail = prev
+  }
+
+  node.list.length--
+  node.next = null
+  node.prev = null
+  node.list = null
+
+  return next
+}
+
+Yallist.prototype.unshiftNode = function (node) {
+  if (node === this.head) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var head = this.head
+  node.list = this
+  node.next = head
+  if (head) {
+    head.prev = node
+  }
+
+  this.head = node
+  if (!this.tail) {
+    this.tail = node
+  }
+  this.length++
+}
+
+Yallist.prototype.pushNode = function (node) {
+  if (node === this.tail) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var tail = this.tail
+  node.list = this
+  node.prev = tail
+  if (tail) {
+    tail.next = node
+  }
+
+  this.tail = node
+  if (!this.head) {
+    this.head = node
+  }
+  this.length++
+}
+
+Yallist.prototype.push = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    push(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.unshift = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    unshift(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.pop = function () {
+  if (!this.tail) {
+    return undefined
+  }
+
+  var res = this.tail.value
+  this.tail = this.tail.prev
+  if (this.tail) {
+    this.tail.next = null
+  } else {
+    this.head = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.shift = function () {
+  if (!this.head) {
+    return undefined
+  }
+
+  var res = this.head.value
+  this.head = this.head.next
+  if (this.head) {
+    this.head.prev = null
+  } else {
+    this.tail = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.forEach = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.head, i = 0; walker !== null; i++) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.next
+  }
+}
+
+Yallist.prototype.forEachReverse = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.prev
+  }
+}
+
+Yallist.prototype.get = function (n) {
+  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.next
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.getReverse = function (n) {
+  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.prev
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.map = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.head; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.next
+  }
+  return res
+}
+
+Yallist.prototype.mapReverse = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.tail; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.prev
+  }
+  return res
+}
+
+Yallist.prototype.reduce = function (fn, initial) {
+  var acc
+  var walker = this.head
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.head) {
+    walker = this.head.next
+    acc = this.head.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = 0; walker !== null; i++) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.next
+  }
+
+  return acc
+}
+
+Yallist.prototype.reduceReverse = function (fn, initial) {
+  var acc
+  var walker = this.tail
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.tail) {
+    walker = this.tail.prev
+    acc = this.tail.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = this.length - 1; walker !== null; i--) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.prev
+  }
+
+  return acc
+}
+
+Yallist.prototype.toArray = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.head; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.next
+  }
+  return arr
+}
+
+Yallist.prototype.toArrayReverse = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.tail; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.prev
+  }
+  return arr
+}
+
+Yallist.prototype.slice = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
+    walker = walker.next
+  }
+  for (; walker !== null && i < to; i++, walker = walker.next) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.sliceReverse = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
+    walker = walker.prev
+  }
+  for (; walker !== null && i > from; i--, walker = walker.prev) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
+  if (start > this.length) {
+    start = this.length - 1
+  }
+  if (start < 0) {
+    start = this.length + start;
+  }
+
+  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
+    walker = walker.next
+  }
+
+  var ret = []
+  for (var i = 0; walker && i < deleteCount; i++) {
+    ret.push(walker.value)
+    walker = this.removeNode(walker)
+  }
+  if (walker === null) {
+    walker = this.tail
+  }
+
+  if (walker !== this.head && walker !== this.tail) {
+    walker = walker.prev
+  }
+
+  for (var i = 0; i < nodes.length; i++) {
+    walker = insert(this, walker, nodes[i])
+  }
+  return ret;
+}
+
+Yallist.prototype.reverse = function () {
+  var head = this.head
+  var tail = this.tail
+  for (var walker = head; walker !== null; walker = walker.prev) {
+    var p = walker.prev
+    walker.prev = walker.next
+    walker.next = p
+  }
+  this.head = tail
+  this.tail = head
+  return this
+}
+
+function insert (self, node, value) {
+  var inserted = node === self.head ?
+    new Node(value, null, node, self) :
+    new Node(value, node, node.next, self)
+
+  if (inserted.next === null) {
+    self.tail = inserted
+  }
+  if (inserted.prev === null) {
+    self.head = inserted
+  }
+
+  self.length++
+
+  return inserted
+}
+
+function push (self, item) {
+  self.tail = new Node(item, self.tail, null, self)
+  if (!self.head) {
+    self.head = self.tail
+  }
+  self.length++
+}
+
+function unshift (self, item) {
+  self.head = new Node(item, null, self.head, self)
+  if (!self.tail) {
+    self.tail = self.head
+  }
+  self.length++
+}
+
+function Node (value, prev, next, list) {
+  if (!(this instanceof Node)) {
+    return new Node(value, prev, next, list)
+  }
+
+  this.list = list
+  this.value = value
+
+  if (prev) {
+    prev.next = this
+    this.prev = prev
+  } else {
+    this.prev = null
+  }
+
+  if (next) {
+    next.prev = this
+    this.next = next
+  } else {
+    this.next = null
+  }
+}
+
+try {
+  // add if support for Symbol.iterator is present
+  __nccwpck_require__(5327)(Yallist)
+} catch (er) {}
 
 
 /***/ }),
@@ -25089,456 +26286,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 4091:
-/***/ ((module) => {
-
-"use strict";
-
-module.exports = function (Yallist) {
-  Yallist.prototype[Symbol.iterator] = function* () {
-    for (let walker = this.head; walker; walker = walker.next) {
-      yield walker.value
-    }
-  }
-}
-
-
-/***/ }),
-
-/***/ 665:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-module.exports = Yallist
-
-Yallist.Node = Node
-Yallist.create = Yallist
-
-function Yallist (list) {
-  var self = this
-  if (!(self instanceof Yallist)) {
-    self = new Yallist()
-  }
-
-  self.tail = null
-  self.head = null
-  self.length = 0
-
-  if (list && typeof list.forEach === 'function') {
-    list.forEach(function (item) {
-      self.push(item)
-    })
-  } else if (arguments.length > 0) {
-    for (var i = 0, l = arguments.length; i < l; i++) {
-      self.push(arguments[i])
-    }
-  }
-
-  return self
-}
-
-Yallist.prototype.removeNode = function (node) {
-  if (node.list !== this) {
-    throw new Error('removing node which does not belong to this list')
-  }
-
-  var next = node.next
-  var prev = node.prev
-
-  if (next) {
-    next.prev = prev
-  }
-
-  if (prev) {
-    prev.next = next
-  }
-
-  if (node === this.head) {
-    this.head = next
-  }
-  if (node === this.tail) {
-    this.tail = prev
-  }
-
-  node.list.length--
-  node.next = null
-  node.prev = null
-  node.list = null
-
-  return next
-}
-
-Yallist.prototype.unshiftNode = function (node) {
-  if (node === this.head) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var head = this.head
-  node.list = this
-  node.next = head
-  if (head) {
-    head.prev = node
-  }
-
-  this.head = node
-  if (!this.tail) {
-    this.tail = node
-  }
-  this.length++
-}
-
-Yallist.prototype.pushNode = function (node) {
-  if (node === this.tail) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var tail = this.tail
-  node.list = this
-  node.prev = tail
-  if (tail) {
-    tail.next = node
-  }
-
-  this.tail = node
-  if (!this.head) {
-    this.head = node
-  }
-  this.length++
-}
-
-Yallist.prototype.push = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    push(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.unshift = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    unshift(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.pop = function () {
-  if (!this.tail) {
-    return undefined
-  }
-
-  var res = this.tail.value
-  this.tail = this.tail.prev
-  if (this.tail) {
-    this.tail.next = null
-  } else {
-    this.head = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.shift = function () {
-  if (!this.head) {
-    return undefined
-  }
-
-  var res = this.head.value
-  this.head = this.head.next
-  if (this.head) {
-    this.head.prev = null
-  } else {
-    this.tail = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.forEach = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.head, i = 0; walker !== null; i++) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.next
-  }
-}
-
-Yallist.prototype.forEachReverse = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.prev
-  }
-}
-
-Yallist.prototype.get = function (n) {
-  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.next
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.getReverse = function (n) {
-  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.prev
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.map = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.head; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.next
-  }
-  return res
-}
-
-Yallist.prototype.mapReverse = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.tail; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.prev
-  }
-  return res
-}
-
-Yallist.prototype.reduce = function (fn, initial) {
-  var acc
-  var walker = this.head
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.head) {
-    walker = this.head.next
-    acc = this.head.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = 0; walker !== null; i++) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.next
-  }
-
-  return acc
-}
-
-Yallist.prototype.reduceReverse = function (fn, initial) {
-  var acc
-  var walker = this.tail
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.tail) {
-    walker = this.tail.prev
-    acc = this.tail.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = this.length - 1; walker !== null; i--) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.prev
-  }
-
-  return acc
-}
-
-Yallist.prototype.toArray = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.head; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.next
-  }
-  return arr
-}
-
-Yallist.prototype.toArrayReverse = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.tail; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.prev
-  }
-  return arr
-}
-
-Yallist.prototype.slice = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
-    walker = walker.next
-  }
-  for (; walker !== null && i < to; i++, walker = walker.next) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.sliceReverse = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
-    walker = walker.prev
-  }
-  for (; walker !== null && i > from; i--, walker = walker.prev) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
-  if (start > this.length) {
-    start = this.length - 1
-  }
-  if (start < 0) {
-    start = this.length + start;
-  }
-
-  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
-    walker = walker.next
-  }
-
-  var ret = []
-  for (var i = 0; walker && i < deleteCount; i++) {
-    ret.push(walker.value)
-    walker = this.removeNode(walker)
-  }
-  if (walker === null) {
-    walker = this.tail
-  }
-
-  if (walker !== this.head && walker !== this.tail) {
-    walker = walker.prev
-  }
-
-  for (var i = 0; i < nodes.length; i++) {
-    walker = insert(this, walker, nodes[i])
-  }
-  return ret;
-}
-
-Yallist.prototype.reverse = function () {
-  var head = this.head
-  var tail = this.tail
-  for (var walker = head; walker !== null; walker = walker.prev) {
-    var p = walker.prev
-    walker.prev = walker.next
-    walker.next = p
-  }
-  this.head = tail
-  this.tail = head
-  return this
-}
-
-function insert (self, node, value) {
-  var inserted = node === self.head ?
-    new Node(value, null, node, self) :
-    new Node(value, node, node.next, self)
-
-  if (inserted.next === null) {
-    self.tail = inserted
-  }
-  if (inserted.prev === null) {
-    self.head = inserted
-  }
-
-  self.length++
-
-  return inserted
-}
-
-function push (self, item) {
-  self.tail = new Node(item, self.tail, null, self)
-  if (!self.head) {
-    self.head = self.tail
-  }
-  self.length++
-}
-
-function unshift (self, item) {
-  self.head = new Node(item, null, self.head, self)
-  if (!self.tail) {
-    self.tail = self.head
-  }
-  self.length++
-}
-
-function Node (value, prev, next, list) {
-  if (!(this instanceof Node)) {
-    return new Node(value, prev, next, list)
-  }
-
-  this.list = list
-  this.value = value
-
-  if (prev) {
-    prev.next = this
-    this.prev = prev
-  } else {
-    this.prev = null
-  }
-
-  if (next) {
-    next.prev = this
-    this.next = next
-  } else {
-    this.next = null
-  }
-}
-
-try {
-  // add if support for Symbol.iterator is present
-  __nccwpck_require__(4091)(Yallist)
-} catch (er) {}
-
-
-/***/ }),
-
 /***/ 2877:
 /***/ ((module) => {
 
@@ -25664,6 +26411,1338 @@ module.exports = require("util");
 
 "use strict";
 module.exports = require("zlib");
+
+/***/ }),
+
+/***/ 4393:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+class CsvError extends Error {
+  constructor(code, message, options, ...contexts) {
+    if(Array.isArray(message)) message = message.join(' ').trim();
+    super(message);
+    if(Error.captureStackTrace !== undefined){
+      Error.captureStackTrace(this, CsvError);
+    }
+    this.code = code;
+    for(const context of contexts){
+      for(const key in context){
+        const value = context[key];
+        this[key] = Buffer.isBuffer(value) ? value.toString(options.encoding) : value == null ? value : JSON.parse(JSON.stringify(value));
+      }
+    }
+  }
+}
+
+const is_object = function(obj){
+  return (typeof obj === 'object' && obj !== null && !Array.isArray(obj));
+};
+
+const normalize_columns_array = function(columns){
+  const normalizedColumns = [];
+  for(let i = 0, l = columns.length; i < l; i++){
+    const column = columns[i];
+    if(column === undefined || column === null || column === false){
+      normalizedColumns[i] = { disabled: true };
+    }else if(typeof column === 'string'){
+      normalizedColumns[i] = { name: column };
+    }else if(is_object(column)){
+      if(typeof column.name !== 'string'){
+        throw new CsvError('CSV_OPTION_COLUMNS_MISSING_NAME', [
+          'Option columns missing name:',
+          `property "name" is required at position ${i}`,
+          'when column is an object literal'
+        ]);
+      }
+      normalizedColumns[i] = column;
+    }else {
+      throw new CsvError('CSV_INVALID_COLUMN_DEFINITION', [
+        'Invalid column definition:',
+        'expect a string or a literal object,',
+        `got ${JSON.stringify(column)} at position ${i}`
+      ]);
+    }
+  }
+  return normalizedColumns;
+};
+
+class ResizeableBuffer{
+  constructor(size=100){
+    this.size = size;
+    this.length = 0;
+    this.buf = Buffer.allocUnsafe(size);
+  }
+  prepend(val){
+    if(Buffer.isBuffer(val)){
+      const length = this.length + val.length;
+      if(length >= this.size){
+        this.resize();
+        if(length >= this.size){
+          throw Error('INVALID_BUFFER_STATE');
+        }
+      }
+      const buf = this.buf;
+      this.buf = Buffer.allocUnsafe(this.size);
+      val.copy(this.buf, 0);
+      buf.copy(this.buf, val.length);
+      this.length += val.length;
+    }else {
+      const length = this.length++;
+      if(length === this.size){
+        this.resize();
+      }
+      const buf = this.clone();
+      this.buf[0] = val;
+      buf.copy(this.buf,1, 0, length);
+    }
+  }
+  append(val){
+    const length = this.length++;
+    if(length === this.size){
+      this.resize();
+    }
+    this.buf[length] = val;
+  }
+  clone(){
+    return Buffer.from(this.buf.slice(0, this.length));
+  }
+  resize(){
+    const length = this.length;
+    this.size = this.size * 2;
+    const buf = Buffer.allocUnsafe(this.size);
+    this.buf.copy(buf,0, 0, length);
+    this.buf = buf;
+  }
+  toString(encoding){
+    if(encoding){
+      return this.buf.slice(0, this.length).toString(encoding);
+    }else {
+      return Uint8Array.prototype.slice.call(this.buf.slice(0, this.length));
+    }
+  }
+  toJSON(){
+    return this.toString('utf8');
+  }
+  reset(){
+    this.length = 0;
+  }
+}
+
+// white space characters
+// https://en.wikipedia.org/wiki/Whitespace_character
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#Types
+// \f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
+const np = 12;
+const cr$1 = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
+const nl$1 = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
+const space = 32;
+const tab = 9;
+
+const init_state = function(options){
+  return {
+    bomSkipped: false,
+    bufBytesStart: 0,
+    castField: options.cast_function,
+    commenting: false,
+    // Current error encountered by a record
+    error: undefined,
+    enabled: options.from_line === 1,
+    escaping: false,
+    escapeIsQuote: Buffer.isBuffer(options.escape) && Buffer.isBuffer(options.quote) && Buffer.compare(options.escape, options.quote) === 0,
+    // columns can be `false`, `true`, `Array`
+    expectedRecordLength: Array.isArray(options.columns) ? options.columns.length : undefined,
+    field: new ResizeableBuffer(20),
+    firstLineToHeaders: options.cast_first_line_to_header,
+    needMoreDataSize: Math.max(
+      // Skip if the remaining buffer smaller than comment
+      options.comment !== null ? options.comment.length : 0,
+      // Skip if the remaining buffer can be delimiter
+      ...options.delimiter.map((delimiter) => delimiter.length),
+      // Skip if the remaining buffer can be escape sequence
+      options.quote !== null ? options.quote.length : 0,
+    ),
+    previousBuf: undefined,
+    quoting: false,
+    stop: false,
+    rawBuffer: new ResizeableBuffer(100),
+    record: [],
+    recordHasError: false,
+    record_length: 0,
+    recordDelimiterMaxLength: options.record_delimiter.length === 0 ? 0 : Math.max(...options.record_delimiter.map((v) => v.length)),
+    trimChars: [Buffer.from(' ', options.encoding)[0], Buffer.from('\t', options.encoding)[0]],
+    wasQuoting: false,
+    wasRowDelimiter: false,
+    timchars: [
+      Buffer.from(Buffer.from([cr$1], 'utf8').toString(), options.encoding),
+      Buffer.from(Buffer.from([nl$1], 'utf8').toString(), options.encoding),
+      Buffer.from(Buffer.from([np], 'utf8').toString(), options.encoding),
+      Buffer.from(Buffer.from([space], 'utf8').toString(), options.encoding),
+      Buffer.from(Buffer.from([tab], 'utf8').toString(), options.encoding),
+    ]
+  };
+};
+
+const underscore = function(str){
+  return str.replace(/([A-Z])/g, function(_, match){
+    return '_' + match.toLowerCase();
+  });
+};
+
+const normalize_options = function(opts){
+  const options = {};
+  // Merge with user options
+  for(const opt in opts){
+    options[underscore(opt)] = opts[opt];
+  }
+  // Normalize option `encoding`
+  // Note: defined first because other options depends on it
+  // to convert chars/strings into buffers.
+  if(options.encoding === undefined || options.encoding === true){
+    options.encoding = 'utf8';
+  }else if(options.encoding === null || options.encoding === false){
+    options.encoding = null;
+  }else if(typeof options.encoding !== 'string' && options.encoding !== null){
+    throw new CsvError('CSV_INVALID_OPTION_ENCODING', [
+      'Invalid option encoding:',
+      'encoding must be a string or null to return a buffer,',
+      `got ${JSON.stringify(options.encoding)}`
+    ], options);
+  }
+  // Normalize option `bom`
+  if(options.bom === undefined || options.bom === null || options.bom === false){
+    options.bom = false;
+  }else if(options.bom !== true){
+    throw new CsvError('CSV_INVALID_OPTION_BOM', [
+      'Invalid option bom:', 'bom must be true,',
+      `got ${JSON.stringify(options.bom)}`
+    ], options);
+  }
+  // Normalize option `cast`
+  options.cast_function = null;
+  if(options.cast === undefined || options.cast === null || options.cast === false || options.cast === ''){
+    options.cast = undefined;
+  }else if(typeof options.cast === 'function'){
+    options.cast_function = options.cast;
+    options.cast = true;
+  }else if(options.cast !== true){
+    throw new CsvError('CSV_INVALID_OPTION_CAST', [
+      'Invalid option cast:', 'cast must be true or a function,',
+      `got ${JSON.stringify(options.cast)}`
+    ], options);
+  }
+  // Normalize option `cast_date`
+  if(options.cast_date === undefined || options.cast_date === null || options.cast_date === false || options.cast_date === ''){
+    options.cast_date = false;
+  }else if(options.cast_date === true){
+    options.cast_date = function(value){
+      const date = Date.parse(value);
+      return !isNaN(date) ? new Date(date) : value;
+    };
+  }else if (typeof options.cast_date !== 'function'){
+    throw new CsvError('CSV_INVALID_OPTION_CAST_DATE', [
+      'Invalid option cast_date:', 'cast_date must be true or a function,',
+      `got ${JSON.stringify(options.cast_date)}`
+    ], options);
+  }
+  // Normalize option `columns`
+  options.cast_first_line_to_header = null;
+  if(options.columns === true){
+    // Fields in the first line are converted as-is to columns
+    options.cast_first_line_to_header = undefined;
+  }else if(typeof options.columns === 'function'){
+    options.cast_first_line_to_header = options.columns;
+    options.columns = true;
+  }else if(Array.isArray(options.columns)){
+    options.columns = normalize_columns_array(options.columns);
+  }else if(options.columns === undefined || options.columns === null || options.columns === false){
+    options.columns = false;
+  }else {
+    throw new CsvError('CSV_INVALID_OPTION_COLUMNS', [
+      'Invalid option columns:',
+      'expect an array, a function or true,',
+      `got ${JSON.stringify(options.columns)}`
+    ], options);
+  }
+  // Normalize option `group_columns_by_name`
+  if(options.group_columns_by_name === undefined || options.group_columns_by_name === null || options.group_columns_by_name === false){
+    options.group_columns_by_name = false;
+  }else if(options.group_columns_by_name !== true){
+    throw new CsvError('CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME', [
+      'Invalid option group_columns_by_name:',
+      'expect an boolean,',
+      `got ${JSON.stringify(options.group_columns_by_name)}`
+    ], options);
+  }else if(options.columns === false){
+    throw new CsvError('CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME', [
+      'Invalid option group_columns_by_name:',
+      'the `columns` mode must be activated.'
+    ], options);
+  }
+  // Normalize option `comment`
+  if(options.comment === undefined || options.comment === null || options.comment === false || options.comment === ''){
+    options.comment = null;
+  }else {
+    if(typeof options.comment === 'string'){
+      options.comment = Buffer.from(options.comment, options.encoding);
+    }
+    if(!Buffer.isBuffer(options.comment)){
+      throw new CsvError('CSV_INVALID_OPTION_COMMENT', [
+        'Invalid option comment:',
+        'comment must be a buffer or a string,',
+        `got ${JSON.stringify(options.comment)}`
+      ], options);
+    }
+  }
+  // Normalize option `delimiter`
+  const delimiter_json = JSON.stringify(options.delimiter);
+  if(!Array.isArray(options.delimiter)) options.delimiter = [options.delimiter];
+  if(options.delimiter.length === 0){
+    throw new CsvError('CSV_INVALID_OPTION_DELIMITER', [
+      'Invalid option delimiter:',
+      'delimiter must be a non empty string or buffer or array of string|buffer,',
+      `got ${delimiter_json}`
+    ], options);
+  }
+  options.delimiter = options.delimiter.map(function(delimiter){
+    if(delimiter === undefined || delimiter === null || delimiter === false){
+      return Buffer.from(',', options.encoding);
+    }
+    if(typeof delimiter === 'string'){
+      delimiter = Buffer.from(delimiter, options.encoding);
+    }
+    if(!Buffer.isBuffer(delimiter) || delimiter.length === 0){
+      throw new CsvError('CSV_INVALID_OPTION_DELIMITER', [
+        'Invalid option delimiter:',
+        'delimiter must be a non empty string or buffer or array of string|buffer,',
+        `got ${delimiter_json}`
+      ], options);
+    }
+    return delimiter;
+  });
+  // Normalize option `escape`
+  if(options.escape === undefined || options.escape === true){
+    options.escape = Buffer.from('"', options.encoding);
+  }else if(typeof options.escape === 'string'){
+    options.escape = Buffer.from(options.escape, options.encoding);
+  }else if (options.escape === null || options.escape === false){
+    options.escape = null;
+  }
+  if(options.escape !== null){
+    if(!Buffer.isBuffer(options.escape)){
+      throw new Error(`Invalid Option: escape must be a buffer, a string or a boolean, got ${JSON.stringify(options.escape)}`);
+    }
+  }
+  // Normalize option `from`
+  if(options.from === undefined || options.from === null){
+    options.from = 1;
+  }else {
+    if(typeof options.from === 'string' && /\d+/.test(options.from)){
+      options.from = parseInt(options.from);
+    }
+    if(Number.isInteger(options.from)){
+      if(options.from < 0){
+        throw new Error(`Invalid Option: from must be a positive integer, got ${JSON.stringify(opts.from)}`);
+      }
+    }else {
+      throw new Error(`Invalid Option: from must be an integer, got ${JSON.stringify(options.from)}`);
+    }
+  }
+  // Normalize option `from_line`
+  if(options.from_line === undefined || options.from_line === null){
+    options.from_line = 1;
+  }else {
+    if(typeof options.from_line === 'string' && /\d+/.test(options.from_line)){
+      options.from_line = parseInt(options.from_line);
+    }
+    if(Number.isInteger(options.from_line)){
+      if(options.from_line <= 0){
+        throw new Error(`Invalid Option: from_line must be a positive integer greater than 0, got ${JSON.stringify(opts.from_line)}`);
+      }
+    }else {
+      throw new Error(`Invalid Option: from_line must be an integer, got ${JSON.stringify(opts.from_line)}`);
+    }
+  }
+  // Normalize options `ignore_last_delimiters`
+  if(options.ignore_last_delimiters === undefined || options.ignore_last_delimiters === null){
+    options.ignore_last_delimiters = false;
+  }else if(typeof options.ignore_last_delimiters === 'number'){
+    options.ignore_last_delimiters = Math.floor(options.ignore_last_delimiters);
+    if(options.ignore_last_delimiters === 0){
+      options.ignore_last_delimiters = false;
+    }
+  }else if(typeof options.ignore_last_delimiters !== 'boolean'){
+    throw new CsvError('CSV_INVALID_OPTION_IGNORE_LAST_DELIMITERS', [
+      'Invalid option `ignore_last_delimiters`:',
+      'the value must be a boolean value or an integer,',
+      `got ${JSON.stringify(options.ignore_last_delimiters)}`
+    ], options);
+  }
+  if(options.ignore_last_delimiters === true && options.columns === false){
+    throw new CsvError('CSV_IGNORE_LAST_DELIMITERS_REQUIRES_COLUMNS', [
+      'The option `ignore_last_delimiters`',
+      'requires the activation of the `columns` option'
+    ], options);
+  }
+  // Normalize option `info`
+  if(options.info === undefined || options.info === null || options.info === false){
+    options.info = false;
+  }else if(options.info !== true){
+    throw new Error(`Invalid Option: info must be true, got ${JSON.stringify(options.info)}`);
+  }
+  // Normalize option `max_record_size`
+  if(options.max_record_size === undefined || options.max_record_size === null || options.max_record_size === false){
+    options.max_record_size = 0;
+  }else if(Number.isInteger(options.max_record_size) && options.max_record_size >= 0);else if(typeof options.max_record_size === 'string' && /\d+/.test(options.max_record_size)){
+    options.max_record_size = parseInt(options.max_record_size);
+  }else {
+    throw new Error(`Invalid Option: max_record_size must be a positive integer, got ${JSON.stringify(options.max_record_size)}`);
+  }
+  // Normalize option `objname`
+  if(options.objname === undefined || options.objname === null || options.objname === false){
+    options.objname = undefined;
+  }else if(Buffer.isBuffer(options.objname)){
+    if(options.objname.length === 0){
+      throw new Error(`Invalid Option: objname must be a non empty buffer`);
+    }
+    if(options.encoding === null);else {
+      options.objname = options.objname.toString(options.encoding);
+    }
+  }else if(typeof options.objname === 'string'){
+    if(options.objname.length === 0){
+      throw new Error(`Invalid Option: objname must be a non empty string`);
+    }
+    // Great, nothing to do
+  }else if(typeof options.objname === 'number');else {
+    throw new Error(`Invalid Option: objname must be a string or a buffer, got ${options.objname}`);
+  }
+  if(options.objname !== undefined){
+    if(typeof options.objname === 'number'){
+      if(options.columns !== false){
+        throw Error('Invalid Option: objname index cannot be combined with columns or be defined as a field');
+      }
+    }else { // A string or a buffer
+      if(options.columns === false){
+        throw Error('Invalid Option: objname field must be combined with columns or be defined as an index');
+      }
+    }
+  }
+  // Normalize option `on_record`
+  if(options.on_record === undefined || options.on_record === null){
+    options.on_record = undefined;
+  }else if(typeof options.on_record !== 'function'){
+    throw new CsvError('CSV_INVALID_OPTION_ON_RECORD', [
+      'Invalid option `on_record`:',
+      'expect a function,',
+      `got ${JSON.stringify(options.on_record)}`
+    ], options);
+  }
+  // Normalize option `quote`
+  if(options.quote === null || options.quote === false || options.quote === ''){
+    options.quote = null;
+  }else {
+    if(options.quote === undefined || options.quote === true){
+      options.quote = Buffer.from('"', options.encoding);
+    }else if(typeof options.quote === 'string'){
+      options.quote = Buffer.from(options.quote, options.encoding);
+    }
+    if(!Buffer.isBuffer(options.quote)){
+      throw new Error(`Invalid Option: quote must be a buffer or a string, got ${JSON.stringify(options.quote)}`);
+    }
+  }
+  // Normalize option `raw`
+  if(options.raw === undefined || options.raw === null || options.raw === false){
+    options.raw = false;
+  }else if(options.raw !== true){
+    throw new Error(`Invalid Option: raw must be true, got ${JSON.stringify(options.raw)}`);
+  }
+  // Normalize option `record_delimiter`
+  if(options.record_delimiter === undefined){
+    options.record_delimiter = [];
+  }else if(typeof options.record_delimiter === 'string' || Buffer.isBuffer(options.record_delimiter)){
+    if(options.record_delimiter.length === 0){
+      throw new CsvError('CSV_INVALID_OPTION_RECORD_DELIMITER', [
+        'Invalid option `record_delimiter`:',
+        'value must be a non empty string or buffer,',
+        `got ${JSON.stringify(options.record_delimiter)}`
+      ], options);
+    }
+    options.record_delimiter = [options.record_delimiter];
+  }else if(!Array.isArray(options.record_delimiter)){
+    throw new CsvError('CSV_INVALID_OPTION_RECORD_DELIMITER', [
+      'Invalid option `record_delimiter`:',
+      'value must be a string, a buffer or array of string|buffer,',
+      `got ${JSON.stringify(options.record_delimiter)}`
+    ], options);
+  }
+  options.record_delimiter = options.record_delimiter.map(function(rd, i){
+    if(typeof rd !== 'string' && ! Buffer.isBuffer(rd)){
+      throw new CsvError('CSV_INVALID_OPTION_RECORD_DELIMITER', [
+        'Invalid option `record_delimiter`:',
+        'value must be a string, a buffer or array of string|buffer',
+        `at index ${i},`,
+        `got ${JSON.stringify(rd)}`
+      ], options);
+    }else if(rd.length === 0){
+      throw new CsvError('CSV_INVALID_OPTION_RECORD_DELIMITER', [
+        'Invalid option `record_delimiter`:',
+        'value must be a non empty string or buffer',
+        `at index ${i},`,
+        `got ${JSON.stringify(rd)}`
+      ], options);
+    }
+    if(typeof rd === 'string'){
+      rd = Buffer.from(rd, options.encoding);
+    }
+    return rd;
+  });
+  // Normalize option `relax_column_count`
+  if(typeof options.relax_column_count === 'boolean');else if(options.relax_column_count === undefined || options.relax_column_count === null){
+    options.relax_column_count = false;
+  }else {
+    throw new Error(`Invalid Option: relax_column_count must be a boolean, got ${JSON.stringify(options.relax_column_count)}`);
+  }
+  if(typeof options.relax_column_count_less === 'boolean');else if(options.relax_column_count_less === undefined || options.relax_column_count_less === null){
+    options.relax_column_count_less = false;
+  }else {
+    throw new Error(`Invalid Option: relax_column_count_less must be a boolean, got ${JSON.stringify(options.relax_column_count_less)}`);
+  }
+  if(typeof options.relax_column_count_more === 'boolean');else if(options.relax_column_count_more === undefined || options.relax_column_count_more === null){
+    options.relax_column_count_more = false;
+  }else {
+    throw new Error(`Invalid Option: relax_column_count_more must be a boolean, got ${JSON.stringify(options.relax_column_count_more)}`);
+  }
+  // Normalize option `relax_quotes`
+  if(typeof options.relax_quotes === 'boolean');else if(options.relax_quotes === undefined || options.relax_quotes === null){
+    options.relax_quotes = false;
+  }else {
+    throw new Error(`Invalid Option: relax_quotes must be a boolean, got ${JSON.stringify(options.relax_quotes)}`);
+  }
+  // Normalize option `skip_empty_lines`
+  if(typeof options.skip_empty_lines === 'boolean');else if(options.skip_empty_lines === undefined || options.skip_empty_lines === null){
+    options.skip_empty_lines = false;
+  }else {
+    throw new Error(`Invalid Option: skip_empty_lines must be a boolean, got ${JSON.stringify(options.skip_empty_lines)}`);
+  }
+  // Normalize option `skip_records_with_empty_values`
+  if(typeof options.skip_records_with_empty_values === 'boolean');else if(options.skip_records_with_empty_values === undefined || options.skip_records_with_empty_values === null){
+    options.skip_records_with_empty_values = false;
+  }else {
+    throw new Error(`Invalid Option: skip_records_with_empty_values must be a boolean, got ${JSON.stringify(options.skip_records_with_empty_values)}`);
+  }
+  // Normalize option `skip_records_with_error`
+  if(typeof options.skip_records_with_error === 'boolean');else if(options.skip_records_with_error === undefined || options.skip_records_with_error === null){
+    options.skip_records_with_error = false;
+  }else {
+    throw new Error(`Invalid Option: skip_records_with_error must be a boolean, got ${JSON.stringify(options.skip_records_with_error)}`);
+  }
+  // Normalize option `rtrim`
+  if(options.rtrim === undefined || options.rtrim === null || options.rtrim === false){
+    options.rtrim = false;
+  }else if(options.rtrim !== true){
+    throw new Error(`Invalid Option: rtrim must be a boolean, got ${JSON.stringify(options.rtrim)}`);
+  }
+  // Normalize option `ltrim`
+  if(options.ltrim === undefined || options.ltrim === null || options.ltrim === false){
+    options.ltrim = false;
+  }else if(options.ltrim !== true){
+    throw new Error(`Invalid Option: ltrim must be a boolean, got ${JSON.stringify(options.ltrim)}`);
+  }
+  // Normalize option `trim`
+  if(options.trim === undefined || options.trim === null || options.trim === false){
+    options.trim = false;
+  }else if(options.trim !== true){
+    throw new Error(`Invalid Option: trim must be a boolean, got ${JSON.stringify(options.trim)}`);
+  }
+  // Normalize options `trim`, `ltrim` and `rtrim`
+  if(options.trim === true && opts.ltrim !== false){
+    options.ltrim = true;
+  }else if(options.ltrim !== true){
+    options.ltrim = false;
+  }
+  if(options.trim === true && opts.rtrim !== false){
+    options.rtrim = true;
+  }else if(options.rtrim !== true){
+    options.rtrim = false;
+  }
+  // Normalize option `to`
+  if(options.to === undefined || options.to === null){
+    options.to = -1;
+  }else {
+    if(typeof options.to === 'string' && /\d+/.test(options.to)){
+      options.to = parseInt(options.to);
+    }
+    if(Number.isInteger(options.to)){
+      if(options.to <= 0){
+        throw new Error(`Invalid Option: to must be a positive integer greater than 0, got ${JSON.stringify(opts.to)}`);
+      }
+    }else {
+      throw new Error(`Invalid Option: to must be an integer, got ${JSON.stringify(opts.to)}`);
+    }
+  }
+  // Normalize option `to_line`
+  if(options.to_line === undefined || options.to_line === null){
+    options.to_line = -1;
+  }else {
+    if(typeof options.to_line === 'string' && /\d+/.test(options.to_line)){
+      options.to_line = parseInt(options.to_line);
+    }
+    if(Number.isInteger(options.to_line)){
+      if(options.to_line <= 0){
+        throw new Error(`Invalid Option: to_line must be a positive integer greater than 0, got ${JSON.stringify(opts.to_line)}`);
+      }
+    }else {
+      throw new Error(`Invalid Option: to_line must be an integer, got ${JSON.stringify(opts.to_line)}`);
+    }
+  }
+  return options;
+};
+
+const isRecordEmpty = function(record){
+  return record.every((field) => field == null || field.toString && field.toString().trim() === '');
+};
+
+const cr = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
+const nl = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
+
+const boms = {
+  // Note, the following are equals:
+  // Buffer.from("\ufeff")
+  // Buffer.from([239, 187, 191])
+  // Buffer.from('EFBBBF', 'hex')
+  'utf8': Buffer.from([239, 187, 191]),
+  // Note, the following are equals:
+  // Buffer.from "\ufeff", 'utf16le
+  // Buffer.from([255, 254])
+  'utf16le': Buffer.from([255, 254])
+};
+
+const transform = function(original_options = {}) {
+  const info = {
+    bytes: 0,
+    comment_lines: 0,
+    empty_lines: 0,
+    invalid_field_length: 0,
+    lines: 1,
+    records: 0
+  };
+  const options = normalize_options(original_options);
+  return {
+    info: info,
+    original_options: original_options,
+    options: options,
+    state: init_state(options),
+    __needMoreData: function(i, bufLen, end){
+      if(end) return false;
+      const {encoding, escape, quote} = this.options;
+      const {quoting, needMoreDataSize, recordDelimiterMaxLength} = this.state;
+      const numOfCharLeft = bufLen - i - 1;
+      const requiredLength = Math.max(
+        needMoreDataSize,
+        // Skip if the remaining buffer smaller than record delimiter
+        // If "record_delimiter" is yet to be discovered:
+        // 1. It is equals to `[]` and "recordDelimiterMaxLength" equals `0`
+        // 2. We set the length to windows line ending in the current encoding
+        // Note, that encoding is known from user or bom discovery at that point
+        // recordDelimiterMaxLength,
+        recordDelimiterMaxLength === 0 ? Buffer.from('\r\n', encoding).length : recordDelimiterMaxLength,
+        // Skip if remaining buffer can be an escaped quote
+        quoting ? ((escape === null ? 0 : escape.length) + quote.length) : 0,
+        // Skip if remaining buffer can be record delimiter following the closing quote
+        quoting ? (quote.length + recordDelimiterMaxLength) : 0,
+      );
+      return numOfCharLeft < requiredLength;
+    },
+    // Central parser implementation
+    parse: function(nextBuf, end, push, close){
+      const {bom, encoding, from_line, ltrim, max_record_size,raw, relax_quotes, rtrim, skip_empty_lines, to, to_line} = this.options;
+      let {comment, escape, quote, record_delimiter} = this.options;
+      const {bomSkipped, previousBuf, rawBuffer, escapeIsQuote} = this.state;
+      let buf;
+      if(previousBuf === undefined){
+        if(nextBuf === undefined){
+          // Handle empty string
+          close();
+          return;
+        }else {
+          buf = nextBuf;
+        }
+      }else if(previousBuf !== undefined && nextBuf === undefined){
+        buf = previousBuf;
+      }else {
+        buf = Buffer.concat([previousBuf, nextBuf]);
+      }
+      // Handle UTF BOM
+      if(bomSkipped === false){
+        if(bom === false){
+          this.state.bomSkipped = true;
+        }else if(buf.length < 3){
+          // No enough data
+          if(end === false){
+            // Wait for more data
+            this.state.previousBuf = buf;
+            return;
+          }
+        }else {
+          for(const encoding in boms){
+            if(boms[encoding].compare(buf, 0, boms[encoding].length) === 0){
+              // Skip BOM
+              const bomLength = boms[encoding].length;
+              this.state.bufBytesStart += bomLength;
+              buf = buf.slice(bomLength);
+              // Renormalize original options with the new encoding
+              this.options = normalize_options({...this.original_options, encoding: encoding});
+              // Options will re-evaluate the Buffer with the new encoding
+              ({comment, escape, quote } = this.options);
+              break;
+            }
+          }
+          this.state.bomSkipped = true;
+        }
+      }
+      const bufLen = buf.length;
+      let pos;
+      for(pos = 0; pos < bufLen; pos++){
+        // Ensure we get enough space to look ahead
+        // There should be a way to move this out of the loop
+        if(this.__needMoreData(pos, bufLen, end)){
+          break;
+        }
+        if(this.state.wasRowDelimiter === true){
+          this.info.lines++;
+          this.state.wasRowDelimiter = false;
+        }
+        if(to_line !== -1 && this.info.lines > to_line){
+          this.state.stop = true;
+          close();
+          return;
+        }
+        // Auto discovery of record_delimiter, unix, mac and windows supported
+        if(this.state.quoting === false && record_delimiter.length === 0){
+          const record_delimiterCount = this.__autoDiscoverRecordDelimiter(buf, pos);
+          if(record_delimiterCount){
+            record_delimiter = this.options.record_delimiter;
+          }
+        }
+        const chr = buf[pos];
+        if(raw === true){
+          rawBuffer.append(chr);
+        }
+        if((chr === cr || chr === nl) && this.state.wasRowDelimiter === false){
+          this.state.wasRowDelimiter = true;
+        }
+        // Previous char was a valid escape char
+        // treat the current char as a regular char
+        if(this.state.escaping === true){
+          this.state.escaping = false;
+        }else {
+          // Escape is only active inside quoted fields
+          // We are quoting, the char is an escape chr and there is a chr to escape
+          // if(escape !== null && this.state.quoting === true && chr === escape && pos + 1 < bufLen){
+          if(escape !== null && this.state.quoting === true && this.__isEscape(buf, pos, chr) && pos + escape.length < bufLen){
+            if(escapeIsQuote){
+              if(this.__isQuote(buf, pos+escape.length)){
+                this.state.escaping = true;
+                pos += escape.length - 1;
+                continue;
+              }
+            }else {
+              this.state.escaping = true;
+              pos += escape.length - 1;
+              continue;
+            }
+          }
+          // Not currently escaping and chr is a quote
+          // TODO: need to compare bytes instead of single char
+          if(this.state.commenting === false && this.__isQuote(buf, pos)){
+            if(this.state.quoting === true){
+              const nextChr = buf[pos+quote.length];
+              const isNextChrTrimable = rtrim && this.__isCharTrimable(buf, pos+quote.length);
+              const isNextChrComment = comment !== null && this.__compareBytes(comment, buf, pos+quote.length, nextChr);
+              const isNextChrDelimiter = this.__isDelimiter(buf, pos+quote.length, nextChr);
+              const isNextChrRecordDelimiter = record_delimiter.length === 0 ? this.__autoDiscoverRecordDelimiter(buf, pos+quote.length) : this.__isRecordDelimiter(nextChr, buf, pos+quote.length);
+              // Escape a quote
+              // Treat next char as a regular character
+              if(escape !== null && this.__isEscape(buf, pos, chr) && this.__isQuote(buf, pos + escape.length)){
+                pos += escape.length - 1;
+              }else if(!nextChr || isNextChrDelimiter || isNextChrRecordDelimiter || isNextChrComment || isNextChrTrimable){
+                this.state.quoting = false;
+                this.state.wasQuoting = true;
+                pos += quote.length - 1;
+                continue;
+              }else if(relax_quotes === false){
+                const err = this.__error(
+                  new CsvError('CSV_INVALID_CLOSING_QUOTE', [
+                    'Invalid Closing Quote:',
+                    `got "${String.fromCharCode(nextChr)}"`,
+                    `at line ${this.info.lines}`,
+                    'instead of delimiter, record delimiter, trimable character',
+                    '(if activated) or comment',
+                  ], this.options, this.__infoField())
+                );
+                if(err !== undefined) return err;
+              }else {
+                this.state.quoting = false;
+                this.state.wasQuoting = true;
+                this.state.field.prepend(quote);
+                pos += quote.length - 1;
+              }
+            }else {
+              if(this.state.field.length !== 0){
+                // In relax_quotes mode, treat opening quote preceded by chrs as regular
+                if(relax_quotes === false){
+                  const info = this.__infoField();
+                  const bom = Object.keys(boms).map(b => boms[b].equals(this.state.field.toString()) ? b : false).filter(Boolean)[0];
+                  const err = this.__error(
+                    new CsvError('INVALID_OPENING_QUOTE', [
+                      'Invalid Opening Quote:',
+                      `a quote is found on field ${JSON.stringify(info.column)} at line ${info.lines}, value is ${JSON.stringify(this.state.field.toString(encoding))}`,
+                      bom ? `(${bom} bom)` : undefined
+                    ], this.options, info, {
+                      field: this.state.field,
+                    })
+                  );
+                  if(err !== undefined) return err;
+                }
+              }else {
+                this.state.quoting = true;
+                pos += quote.length - 1;
+                continue;
+              }
+            }
+          }
+          if(this.state.quoting === false){
+            const recordDelimiterLength = this.__isRecordDelimiter(chr, buf, pos);
+            if(recordDelimiterLength !== 0){
+              // Do not emit comments which take a full line
+              const skipCommentLine = this.state.commenting && (this.state.wasQuoting === false && this.state.record.length === 0 && this.state.field.length === 0);
+              if(skipCommentLine){
+                this.info.comment_lines++;
+                // Skip full comment line
+              }else {
+                // Activate records emition if above from_line
+                if(this.state.enabled === false && this.info.lines + (this.state.wasRowDelimiter === true ? 1: 0) >= from_line){
+                  this.state.enabled = true;
+                  this.__resetField();
+                  this.__resetRecord();
+                  pos += recordDelimiterLength - 1;
+                  continue;
+                }
+                // Skip if line is empty and skip_empty_lines activated
+                if(skip_empty_lines === true && this.state.wasQuoting === false && this.state.record.length === 0 && this.state.field.length === 0){
+                  this.info.empty_lines++;
+                  pos += recordDelimiterLength - 1;
+                  continue;
+                }
+                this.info.bytes = this.state.bufBytesStart + pos;
+                const errField = this.__onField();
+                if(errField !== undefined) return errField;
+                this.info.bytes = this.state.bufBytesStart + pos + recordDelimiterLength;
+                const errRecord = this.__onRecord(push);
+                if(errRecord !== undefined) return errRecord;
+                if(to !== -1 && this.info.records >= to){
+                  this.state.stop = true;
+                  close();
+                  return;
+                }
+              }
+              this.state.commenting = false;
+              pos += recordDelimiterLength - 1;
+              continue;
+            }
+            if(this.state.commenting){
+              continue;
+            }
+            const commentCount = comment === null ? 0 : this.__compareBytes(comment, buf, pos, chr);
+            if(commentCount !== 0){
+              this.state.commenting = true;
+              continue;
+            }
+            const delimiterLength = this.__isDelimiter(buf, pos, chr);
+            if(delimiterLength !== 0){
+              this.info.bytes = this.state.bufBytesStart + pos;
+              const errField = this.__onField();
+              if(errField !== undefined) return errField;
+              pos += delimiterLength - 1;
+              continue;
+            }
+          }
+        }
+        if(this.state.commenting === false){
+          if(max_record_size !== 0 && this.state.record_length + this.state.field.length > max_record_size){
+            return this.__error(
+              new CsvError('CSV_MAX_RECORD_SIZE', [
+                'Max Record Size:',
+                'record exceed the maximum number of tolerated bytes',
+                `of ${max_record_size}`,
+                `at line ${this.info.lines}`,
+              ], this.options, this.__infoField())
+            );
+          }
+        }
+        const lappend = ltrim === false || this.state.quoting === true || this.state.field.length !== 0 || !this.__isCharTrimable(buf, pos);
+        // rtrim in non quoting is handle in __onField
+        const rappend = rtrim === false || this.state.wasQuoting === false;
+        if(lappend === true && rappend === true){
+          this.state.field.append(chr);
+        }else if(rtrim === true && !this.__isCharTrimable(buf, pos)){
+          return this.__error(
+            new CsvError('CSV_NON_TRIMABLE_CHAR_AFTER_CLOSING_QUOTE', [
+              'Invalid Closing Quote:',
+              'found non trimable byte after quote',
+              `at line ${this.info.lines}`,
+            ], this.options, this.__infoField())
+          );
+        }else {
+          if(lappend === false){
+            pos += this.__isCharTrimable(buf, pos) - 1;
+          }
+          continue;
+        }
+      }
+      if(end === true){
+        // Ensure we are not ending in a quoting state
+        if(this.state.quoting === true){
+          const err = this.__error(
+            new CsvError('CSV_QUOTE_NOT_CLOSED', [
+              'Quote Not Closed:',
+              `the parsing is finished with an opening quote at line ${this.info.lines}`,
+            ], this.options, this.__infoField())
+          );
+          if(err !== undefined) return err;
+        }else {
+          // Skip last line if it has no characters
+          if(this.state.wasQuoting === true || this.state.record.length !== 0 || this.state.field.length !== 0){
+            this.info.bytes = this.state.bufBytesStart + pos;
+            const errField = this.__onField();
+            if(errField !== undefined) return errField;
+            const errRecord = this.__onRecord(push);
+            if(errRecord !== undefined) return errRecord;
+          }else if(this.state.wasRowDelimiter === true){
+            this.info.empty_lines++;
+          }else if(this.state.commenting === true){
+            this.info.comment_lines++;
+          }
+        }
+      }else {
+        this.state.bufBytesStart += pos;
+        this.state.previousBuf = buf.slice(pos);
+      }
+      if(this.state.wasRowDelimiter === true){
+        this.info.lines++;
+        this.state.wasRowDelimiter = false;
+      }
+    },
+    __onRecord: function(push){
+      const {columns, group_columns_by_name, encoding, info, from, relax_column_count, relax_column_count_less, relax_column_count_more, raw, skip_records_with_empty_values} = this.options;
+      const {enabled, record} = this.state;
+      if(enabled === false){
+        return this.__resetRecord();
+      }
+      // Convert the first line into column names
+      const recordLength = record.length;
+      if(columns === true){
+        if(skip_records_with_empty_values === true && isRecordEmpty(record)){
+          this.__resetRecord();
+          return;
+        }
+        return this.__firstLineToColumns(record);
+      }
+      if(columns === false && this.info.records === 0){
+        this.state.expectedRecordLength = recordLength;
+      }
+      if(recordLength !== this.state.expectedRecordLength){
+        const err = columns === false ?
+          new CsvError('CSV_RECORD_INCONSISTENT_FIELDS_LENGTH', [
+            'Invalid Record Length:',
+            `expect ${this.state.expectedRecordLength},`,
+            `got ${recordLength} on line ${this.info.lines}`,
+          ], this.options, this.__infoField(), {
+            record: record,
+          })
+          :
+          new CsvError('CSV_RECORD_INCONSISTENT_COLUMNS', [
+            'Invalid Record Length:',
+            `columns length is ${columns.length},`, // rename columns
+            `got ${recordLength} on line ${this.info.lines}`,
+          ], this.options, this.__infoField(), {
+            record: record,
+          });
+        if(relax_column_count === true ||
+          (relax_column_count_less === true && recordLength < this.state.expectedRecordLength) ||
+          (relax_column_count_more === true && recordLength > this.state.expectedRecordLength)){
+          this.info.invalid_field_length++;
+          this.state.error = err;
+        // Error is undefined with skip_records_with_error
+        }else {
+          const finalErr = this.__error(err);
+          if(finalErr) return finalErr;
+        }
+      }
+      if(skip_records_with_empty_values === true && isRecordEmpty(record)){
+        this.__resetRecord();
+        return;
+      }
+      if(this.state.recordHasError === true){
+        this.__resetRecord();
+        this.state.recordHasError = false;
+        return;
+      }
+      this.info.records++;
+      if(from === 1 || this.info.records >= from){
+        const {objname} = this.options;
+        // With columns, records are object
+        if(columns !== false){
+          const obj = {};
+          // Transform record array to an object
+          for(let i = 0, l = record.length; i < l; i++){
+            if(columns[i] === undefined || columns[i].disabled) continue;
+            // Turn duplicate columns into an array
+            if (group_columns_by_name === true && obj[columns[i].name] !== undefined) {
+              if (Array.isArray(obj[columns[i].name])) {
+                obj[columns[i].name] = obj[columns[i].name].concat(record[i]);
+              } else {
+                obj[columns[i].name] = [obj[columns[i].name], record[i]];
+              }
+            } else {
+              obj[columns[i].name] = record[i];
+            }
+          }
+          // Without objname (default)
+          if(raw === true || info === true){
+            const extRecord = Object.assign(
+              {record: obj},
+              (raw === true ? {raw: this.state.rawBuffer.toString(encoding)}: {}),
+              (info === true ? {info: this.__infoRecord()}: {})
+            );
+            const err = this.__push(
+              objname === undefined ? extRecord : [obj[objname], extRecord]
+              , push);
+            if(err){
+              return err;
+            }
+          }else {
+            const err = this.__push(
+              objname === undefined ? obj : [obj[objname], obj]
+              , push);
+            if(err){
+              return err;
+            }
+          }
+        // Without columns, records are array
+        }else {
+          if(raw === true || info === true){
+            const extRecord = Object.assign(
+              {record: record},
+              raw === true ? {raw: this.state.rawBuffer.toString(encoding)}: {},
+              info === true ? {info: this.__infoRecord()}: {}
+            );
+            const err = this.__push(
+              objname === undefined ? extRecord : [record[objname], extRecord]
+              , push);
+            if(err){
+              return err;
+            }
+          }else {
+            const err = this.__push(
+              objname === undefined ? record : [record[objname], record]
+              , push);
+            if(err){
+              return err;
+            }
+          }
+        }
+      }
+      this.__resetRecord();
+    },
+    __firstLineToColumns: function(record){
+      const {firstLineToHeaders} = this.state;
+      try{
+        const headers = firstLineToHeaders === undefined ? record : firstLineToHeaders.call(null, record);
+        if(!Array.isArray(headers)){
+          return this.__error(
+            new CsvError('CSV_INVALID_COLUMN_MAPPING', [
+              'Invalid Column Mapping:',
+              'expect an array from column function,',
+              `got ${JSON.stringify(headers)}`
+            ], this.options, this.__infoField(), {
+              headers: headers,
+            })
+          );
+        }
+        const normalizedHeaders = normalize_columns_array(headers);
+        this.state.expectedRecordLength = normalizedHeaders.length;
+        this.options.columns = normalizedHeaders;
+        this.__resetRecord();
+        return;
+      }catch(err){
+        return err;
+      }
+    },
+    __resetRecord: function(){
+      if(this.options.raw === true){
+        this.state.rawBuffer.reset();
+      }
+      this.state.error = undefined;
+      this.state.record = [];
+      this.state.record_length = 0;
+    },
+    __onField: function(){
+      const {cast, encoding, rtrim, max_record_size} = this.options;
+      const {enabled, wasQuoting} = this.state;
+      // Short circuit for the from_line options
+      if(enabled === false){
+        return this.__resetField();
+      }
+      let field = this.state.field.toString(encoding);
+      if(rtrim === true && wasQuoting === false){
+        field = field.trimRight();
+      }
+      if(cast === true){
+        const [err, f] = this.__cast(field);
+        if(err !== undefined) return err;
+        field = f;
+      }
+      this.state.record.push(field);
+      // Increment record length if record size must not exceed a limit
+      if(max_record_size !== 0 && typeof field === 'string'){
+        this.state.record_length += field.length;
+      }
+      this.__resetField();
+    },
+    __resetField: function(){
+      this.state.field.reset();
+      this.state.wasQuoting = false;
+    },
+    __push: function(record, push){
+      const {on_record} = this.options;
+      if(on_record !== undefined){
+        const info = this.__infoRecord();
+        try{
+          record = on_record.call(null, record, info);
+        }catch(err){
+          return err;
+        }
+        if(record === undefined || record === null){ return; }
+      }
+      push(record);
+    },
+    // Return a tuple with the error and the casted value
+    __cast: function(field){
+      const {columns, relax_column_count} = this.options;
+      const isColumns = Array.isArray(columns);
+      // Dont loose time calling cast
+      // because the final record is an object
+      // and this field can't be associated to a key present in columns
+      if(isColumns === true && relax_column_count && this.options.columns.length <= this.state.record.length){
+        return [undefined, undefined];
+      }
+      if(this.state.castField !== null){
+        try{
+          const info = this.__infoField();
+          return [undefined, this.state.castField.call(null, field, info)];
+        }catch(err){
+          return [err];
+        }
+      }
+      if(this.__isFloat(field)){
+        return [undefined, parseFloat(field)];
+      }else if(this.options.cast_date !== false){
+        const info = this.__infoField();
+        return [undefined, this.options.cast_date.call(null, field, info)];
+      }
+      return [undefined, field];
+    },
+    // Helper to test if a character is a space or a line delimiter
+    __isCharTrimable: function(buf, pos){
+      const isTrim = (buf, pos) => {
+        const {timchars} = this.state;
+        loop1: for(let i = 0; i < timchars.length; i++){
+          const timchar = timchars[i];
+          for(let j = 0; j < timchar.length; j++){
+            if(timchar[j] !== buf[pos+j]) continue loop1;
+          }
+          return timchar.length;
+        }
+        return 0;
+      };
+      return isTrim(buf, pos);
+    },
+    // Keep it in case we implement the `cast_int` option
+    // __isInt(value){
+    //   // return Number.isInteger(parseInt(value))
+    //   // return !isNaN( parseInt( obj ) );
+    //   return /^(\-|\+)?[1-9][0-9]*$/.test(value)
+    // }
+    __isFloat: function(value){
+      return (value - parseFloat(value) + 1) >= 0; // Borrowed from jquery
+    },
+    __compareBytes: function(sourceBuf, targetBuf, targetPos, firstByte){
+      if(sourceBuf[0] !== firstByte) return 0;
+      const sourceLength = sourceBuf.length;
+      for(let i = 1; i < sourceLength; i++){
+        if(sourceBuf[i] !== targetBuf[targetPos+i]) return 0;
+      }
+      return sourceLength;
+    },
+    __isDelimiter: function(buf, pos, chr){
+      const {delimiter, ignore_last_delimiters} = this.options;
+      if(ignore_last_delimiters === true && this.state.record.length === this.options.columns.length - 1){
+        return 0;
+      }else if(ignore_last_delimiters !== false && typeof ignore_last_delimiters === 'number' && this.state.record.length === ignore_last_delimiters - 1){
+        return 0;
+      }
+      loop1: for(let i = 0; i < delimiter.length; i++){
+        const del = delimiter[i];
+        if(del[0] === chr){
+          for(let j = 1; j < del.length; j++){
+            if(del[j] !== buf[pos+j]) continue loop1;
+          }
+          return del.length;
+        }
+      }
+      return 0;
+    },
+    __isRecordDelimiter: function(chr, buf, pos){
+      const {record_delimiter} = this.options;
+      const recordDelimiterLength = record_delimiter.length;
+      loop1: for(let i = 0; i < recordDelimiterLength; i++){
+        const rd = record_delimiter[i];
+        const rdLength = rd.length;
+        if(rd[0] !== chr){
+          continue;
+        }
+        for(let j = 1; j < rdLength; j++){
+          if(rd[j] !== buf[pos+j]){
+            continue loop1;
+          }
+        }
+        return rd.length;
+      }
+      return 0;
+    },
+    __isEscape: function(buf, pos, chr){
+      const {escape} = this.options;
+      if(escape === null) return false;
+      const l = escape.length;
+      if(escape[0] === chr){
+        for(let i = 0; i < l; i++){
+          if(escape[i] !== buf[pos+i]){
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    },
+    __isQuote: function(buf, pos){
+      const {quote} = this.options;
+      if(quote === null) return false;
+      const l = quote.length;
+      for(let i = 0; i < l; i++){
+        if(quote[i] !== buf[pos+i]){
+          return false;
+        }
+      }
+      return true;
+    },
+    __autoDiscoverRecordDelimiter: function(buf, pos){
+      const { encoding } = this.options;
+      // Note, we don't need to cache this information in state,
+      // It is only called on the first line until we find out a suitable
+      // record delimiter.
+      const rds = [
+        // Important, the windows line ending must be before mac os 9
+        Buffer.from('\r\n', encoding),
+        Buffer.from('\n', encoding),
+        Buffer.from('\r', encoding),
+      ];
+      loop: for(let i = 0; i < rds.length; i++){
+        const l = rds[i].length;
+        for(let j = 0; j < l; j++){
+          if(rds[i][j] !== buf[pos + j]){
+            continue loop;
+          }
+        }
+        this.options.record_delimiter.push(rds[i]);
+        this.state.recordDelimiterMaxLength = rds[i].length;
+        return rds[i].length;
+      }
+      return 0;
+    },
+    __error: function(msg){
+      const {encoding, raw, skip_records_with_error} = this.options;
+      const err = typeof msg === 'string' ? new Error(msg) : msg;
+      if(skip_records_with_error){
+        this.state.recordHasError = true;
+        if(this.options.on_skip !== undefined){
+          this.options.on_skip(err, raw ? this.state.rawBuffer.toString(encoding) : undefined);
+        }
+        // this.emit('skip', err, raw ? this.state.rawBuffer.toString(encoding) : undefined);
+        return undefined;
+      }else {
+        return err;
+      }
+    },
+    __infoDataSet: function(){
+      return {
+        ...this.info,
+        columns: this.options.columns
+      };
+    },
+    __infoRecord: function(){
+      const {columns, raw, encoding} = this.options;
+      return {
+        ...this.__infoDataSet(),
+        error: this.state.error,
+        header: columns === true,
+        index: this.state.record.length,
+        raw: raw ? this.state.rawBuffer.toString(encoding) : undefined
+      };
+    },
+    __infoField: function(){
+      const {columns} = this.options;
+      const isColumns = Array.isArray(columns);
+      return {
+        ...this.__infoRecord(),
+        column: isColumns === true ?
+          (columns.length > this.state.record.length ?
+            columns[this.state.record.length].name :
+            null
+          ) :
+          this.state.record.length,
+        quoting: this.state.wasQuoting,
+      };
+    }
+  };
+};
+
+const parse = function(data, opts={}){
+  if(typeof data === 'string'){
+    data = Buffer.from(data);
+  }
+  const records = opts && opts.objname ? {} : [];
+  const parser = transform(opts);
+  const push = (record) => {
+    if(parser.options.objname === undefined)
+      records.push(record);
+    else {
+      records[record[0]] = record[1];
+    }
+  };
+  const close = () => {};
+  const err1 = parser.parse(data, false, push, close);
+  if(err1 !== undefined) throw err1;
+  const err2 = parser.parse(undefined, true, push, close);
+  if(err2 !== undefined) throw err2;
+  return records;
+};
+
+exports.CsvError = CsvError;
+exports.parse = parse;
+
 
 /***/ }),
 

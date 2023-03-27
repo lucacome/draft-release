@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import {Util} from '@docker/actions-toolkit/lib/util'
 
 export interface Inputs {
   githubToken: string
@@ -6,6 +7,7 @@ export interface Inputs {
   minorLabel: string
   header: string
   footer: string
+  variables: string[]
 }
 
 export function getInputs(): Inputs {
@@ -15,5 +17,6 @@ export function getInputs(): Inputs {
     minorLabel: core.getInput('minor-label'),
     header: core.getInput('notes-header'),
     footer: core.getInput('notes-footer'),
+    variables: Util.getInputList('variables'),
   }
 }

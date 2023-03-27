@@ -13,13 +13,23 @@ jobs:
       - uses: ./
         id: draft-release
         with:
+          variables: |
+            helm-chart=v0.1.1
+            foo=bar
+            my-variable=My Variable
           notes-header: |
             ## Welcome to the {{version}} release of Draft Release
               This is some text to welcome you to the release {{version-number}}.
+            ## Helm Chart
+              The Helm Chart version for this release is {{helm-chart}}.
+            ## My Variable
+              The value of my variable is {{my-variable}}.
           notes-footer: |
             ## Upgrade
             - For Docker, use the {{version}} image from Docker Hub.
             - For Binaries use the {{version-number}} release from GitHub.
+            - For Helm Chart, use the {{helm-chart}} version.
+            - For foo use the {{foo}} version.
 
       - run: |
           echo "Version: ${{ steps.draft-release.outputs.version }}"
