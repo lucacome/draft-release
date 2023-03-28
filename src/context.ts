@@ -8,6 +8,7 @@ export interface Inputs {
   header: string
   footer: string
   variables: string[]
+  collapseAfter: number
 }
 
 export function getInputs(): Inputs {
@@ -18,5 +19,6 @@ export function getInputs(): Inputs {
     header: core.getInput('notes-header'),
     footer: core.getInput('notes-footer'),
     variables: Util.getInputList('variables'),
+    collapseAfter: parseInt(core.getInput('collapse-after'), 10),
   }
 }

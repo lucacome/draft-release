@@ -10,6 +10,7 @@ describe('getVersionIncrease', () => {
     header: '',
     footer: '',
     variables: [],
+    collapseAfter: 0,
   }
 
   test('should return patch with empty labels (bug)', async () => {

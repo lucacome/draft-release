@@ -26,6 +26,10 @@ inputs:
     description: 'List of variables to use in the header and footer'
     default: ''
     required: false
+  collapse-after:
+    description: 'Number of lines required for the section to be collapsed'
+    default: '0'
+    required: false
 outputs:
   version:
     description: 'The version of the release'

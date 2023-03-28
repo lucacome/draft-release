@@ -41,6 +41,7 @@ function getInputs() {
         header: core.getInput('notes-header'),
         footer: core.getInput('notes-footer'),
         variables: util_1.Util.getInputList('variables'),
+        collapseAfter: parseInt(core.getInput('collapse-after'), 10),
     };
 }
 exports.getInputs = getInputs;
@@ -196,6 +197,7 @@ function generateReleaseNotes(client, inputs, latestRelease, nextRelease) {
         }, {});
         // variables to replace in header and footer
         const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', '') }, variables);
+        body = collapseSections(body, inputs.collapseAfter);
         if (inputs.header) {
             const header = handlebars.compile(inputs.header)(data);
             body = `${header}\n\n${body}`;
@@ -217,6 +219,59 @@ function parseNotes(notes, major, minor) {
     return notesType;
 }
 exports.parseNotes = parseNotes;
+function collapseSections(markdownText, n) {
+    if (n < 1) {
+        return markdownText;
+    }
+    const beforeText = `<details><summary>{count} changes</summary>\n\n`;
+    const afterText = `\n</details>\n`;
+    const processed = markdownText.split('\n').reduce((acc, line) => {
+        if (line.startsWith('###')) {
+            if (acc.inSection) {
+                acc.result +=
+                    acc.itemCount > n
+                        ? acc.sectionHeader + beforeText.replace('{count}', acc.itemCount.toString()) + acc.sectionContent + afterText + '\n'
+                        : acc.sectionHeader + acc.sectionContent;
+            }
+            acc.sectionHeader = line + '\n';
+            acc.sectionContent = '';
+            acc.inSection = true;
+            acc.itemCount = 0;
+        }
+        else if (acc.inSection && line.startsWith('* ')) {
+            acc.itemCount++;
+            acc.sectionContent += line + '\n';
+        }
+        else {
+            if (acc.inSection) {
+                acc.result +=
+                    acc.itemCount > n
+                        ? acc.sectionHeader + beforeText.replace('{count}', acc.itemCount.toString()) + acc.sectionContent + afterText + '\n'
+                        : acc.sectionHeader + acc.sectionContent;
+                acc.inSection = false;
+            }
+            acc.result += line + '\n';
+        }
+        return acc;
+    }, {
+        result: '',
+        inSection: false,
+        itemCount: 0,
+        sectionContent: '',
+        sectionHeader: '',
+    });
+    if (processed.inSection) {
+        processed.result +=
+            processed.itemCount > n
+                ? processed.sectionHeader +
+                    beforeText.replace('{count}', processed.itemCount.toString()) +
+                    processed.sectionContent +
+                    afterText +
+                    '\n'
+                : processed.sectionHeader + processed.sectionContent;
+    }
+    return processed.result.trim();
+}
 
 
 /***/ }),
