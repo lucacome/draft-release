@@ -36,3 +36,4 @@ jobs:
           echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
           echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
           echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
+          echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"

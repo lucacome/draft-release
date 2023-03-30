@@ -32,7 +32,12 @@ type ReleaseYAML = {
   }
 }
 
-async function getCategories(): Promise<{title: string; labels: string[]}[]> {
+export interface Category {
+  title: string
+  labels: string[]
+}
+
+export async function getCategories(): Promise<Category[]> {
   const content = await fsPromises.readFile('.github/release.yml', 'utf8')
   const doc = yaml.load(content) as ReleaseYAML
   return doc.changelog.categories.map((category) => {

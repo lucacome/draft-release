@@ -1,8 +1,9 @@
 import {describe, expect, test, it} from '@jest/globals'
-import {parseNotes, generateReleaseNotes} from '../src/notes'
+import {parseNotes, generateReleaseNotes, splitMarkdownSections} from '../src/notes'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
 import {helpers} from 'handlebars'
+import {Category} from '../src/version'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -143,7 +144,7 @@ describe('generateReleaseNotes', () => {
 * doc 2
 * doc 3
 
-### 🧹 Chores
+### 🔨 Maintenance
 * chore 1
 * chore 2
 * chore 3
@@ -171,5 +172,73 @@ describe('generateReleaseNotes', () => {
 
     // assert that the result doesn't contain a collapsed section for 3 items
     expect(notes).not.toContain('<details><summary>3 changes</summary>')
+  })
+})
+
+const markdown = `
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 🐛 Bug Fixes
+* Bump anchore/sbom-action from 0.13.1 to 0.13.4 by @dependabot in https://github.com/somerepo/pull/200
+### 🧪 Tests
+* update by @lucacome in https://github.com/somerepo/pull/205
+### 🔨 Maintenance
+* Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 by @dependabot in https://github.com/somerepo/pull/175
+* Bump actions/setup-go from 3 to 4 by @dependabot in https://github.com/somerepo/pull/198
+
+**Full Changelog**: https://github.com/somerepo/compare/v5.0.4...v5.0.5`
+
+describe('splitMarkdownSections', () => {
+  it('splits sections correctly', async () => {
+    const expectedOutput = {
+      bug: ['* Bump anchore/sbom-action from 0.13.1 to 0.13.4 by @dependabot in https://github.com/somerepo/pull/200'],
+      tests: ['* update by @lucacome in https://github.com/somerepo/pull/205'],
+      chore: [
+        '* Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 by @dependabot in https://github.com/somerepo/pull/175',
+        '* Bump actions/setup-go from 3 to 4 by @dependabot in https://github.com/somerepo/pull/198',
+      ],
+      dependencies: [],
+      '*': [],
+      documentation: [],
+      enhancement: [],
+      change: [],
+    }
+    const categories = [
+      {
+        title: 'Others', // default category
+        labels: ['*'],
+      },
+      {
+        title: '🐛 Bug Fixes',
+        labels: ['bug'],
+      },
+      {
+        title: '🧪 Tests',
+        labels: ['tests'],
+      },
+      {
+        title: '🔨 Maintenance',
+        labels: ['chore'],
+      },
+      {
+        title: '📦 Dependencies',
+        labels: ['dependencies'],
+      },
+      {
+        title: '📝 Documentation',
+        labels: ['documentation'],
+      },
+      {
+        title: '🚀 Features',
+        labels: ['enhancement'],
+      },
+      {
+        title: '💣 Breaking Changes',
+        labels: ['change'],
+      },
+    ]
+    const result = await splitMarkdownSections(markdown, categories)
+    expect(result).toEqual(expectedOutput)
   })
 })

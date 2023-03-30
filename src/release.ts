@@ -95,7 +95,8 @@ export async function createOrUpdateRelease(
 
   core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${versionIncrease}`)
   core.info(`latestRelease: ${latestRelease}`)
-  core.info(`ReleaseNotes: ${newReleaseNotes}`)
+  core.info(`releaseNotes: ${newReleaseNotes}`)
+  core.info(`releaseURL: ' ${response.data?.html_url}`)
   core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`)
   core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
   core.endGroup()

@@ -180,31 +180,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseNotes = exports.generateReleaseNotes = void 0;
+exports.splitMarkdownSections = exports.parseNotes = exports.generateReleaseNotes = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const semver = __importStar(__nccwpck_require__(1383));
 const handlebars = __importStar(__nccwpck_require__(7492));
+const version_1 = __nccwpck_require__(8217);
 function generateReleaseNotes(client, inputs, latestRelease, nextRelease) {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
         const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: context.ref.replace('refs/heads/', '') }));
         let body = notes.data.body;
-        // get all the variables from inputs.variables
-        const variables = inputs.variables.reduce((acc, variable) => {
-            const [key, value] = variable.split('=');
-            acc[key] = value;
-            return acc;
-        }, {});
-        // variables to replace in header and footer
-        const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', '') }, variables);
-        body = collapseSections(body, inputs.collapseAfter);
-        if (inputs.header) {
-            const header = handlebars.compile(inputs.header)(data);
-            body = `${header}\n\n${body}`;
+        let sections = {};
+        try {
+            // get all the variables from inputs.variables
+            const variables = inputs.variables.reduce((acc, variable) => {
+                const [key, value] = variable.split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+            // variables to replace in header and footer
+            const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', '') }, variables);
+            const categories = yield (0, version_1.getCategories)();
+            sections = yield splitMarkdownSections(body, categories);
+            body = yield collapseSections(body, sections, categories, inputs.collapseAfter);
+            if (inputs.header) {
+                const header = handlebars.compile(inputs.header)(data);
+                body = `${header}\n\n${body}`;
+            }
+            if (inputs.footer) {
+                const footer = handlebars.compile(inputs.footer)(data);
+                body = `${body}\n\n${footer}`;
+            }
+            core.setOutput('release-sections', sections);
         }
-        if (inputs.footer) {
-            const footer = handlebars.compile(inputs.footer)(data);
-            body = `${body}\n\n${footer}`;
+        catch (e) {
+            core.error(`Error while generating release notes: ${e}`);
         }
         return body;
     });
@@ -219,59 +230,98 @@ function parseNotes(notes, major, minor) {
     return notesType;
 }
 exports.parseNotes = parseNotes;
-function collapseSections(markdownText, n) {
-    if (n < 1) {
-        return markdownText;
-    }
-    const beforeText = `<details><summary>{count} changes</summary>\n\n`;
-    const afterText = `\n</details>\n`;
-    const processed = markdownText.split('\n').reduce((acc, line) => {
-        if (line.startsWith('###')) {
-            if (acc.inSection) {
-                acc.result +=
-                    acc.itemCount > n
-                        ? acc.sectionHeader + beforeText.replace('{count}', acc.itemCount.toString()) + acc.sectionContent + afterText + '\n'
-                        : acc.sectionHeader + acc.sectionContent;
+function collapseSections(markdown, sectionData, categories, n) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (n < 1) {
+            return markdown;
+        }
+        const beforeTextTemplate = `<details><summary>{count} changes</summary>\n\n`;
+        const afterText = `\n</details>\n`;
+        const sectionsToAddText = categories
+            .map((category) => category.labels)
+            .flat()
+            .filter((label) => sectionData[label] && sectionData[label].length > n);
+        if (!sectionsToAddText.length) {
+            return markdown;
+        }
+        const lines = markdown.split('\n');
+        const modifiedLines = [];
+        let insideSection = false;
+        let currentLabel = null;
+        let itemCount = 0;
+        for (const line of lines) {
+            const titleMatch = line.match(/###\s(.+)/);
+            if (titleMatch) {
+                if (insideSection && currentLabel && sectionsToAddText.includes(currentLabel)) {
+                    modifiedLines.push(afterText);
+                }
+                const title = titleMatch[1];
+                const category = categories.find((cat) => cat.title === title);
+                if (category) {
+                    const labels = category.labels;
+                    currentLabel = labels[0];
+                    itemCount = 0;
+                    insideSection = true;
+                    if (labels.some((label) => sectionsToAddText.includes(label))) {
+                        const beforeText = beforeTextTemplate.replace('{count}', String(sectionData[currentLabel].length));
+                        modifiedLines.push(line, beforeText);
+                    }
+                    else {
+                        modifiedLines.push(line);
+                    }
+                    continue;
+                }
             }
-            acc.sectionHeader = line + '\n';
-            acc.sectionContent = '';
-            acc.inSection = true;
-            acc.itemCount = 0;
-        }
-        else if (acc.inSection && line.startsWith('* ')) {
-            acc.itemCount++;
-            acc.sectionContent += line + '\n';
-        }
-        else {
-            if (acc.inSection) {
-                acc.result +=
-                    acc.itemCount > n
-                        ? acc.sectionHeader + beforeText.replace('{count}', acc.itemCount.toString()) + acc.sectionContent + afterText + '\n'
-                        : acc.sectionHeader + acc.sectionContent;
-                acc.inSection = false;
+            if (insideSection && line.trim() !== '') {
+                itemCount++;
+                if (currentLabel && itemCount === sectionData[currentLabel].length && sectionsToAddText.includes(currentLabel)) {
+                    modifiedLines.push(line, afterText);
+                    insideSection = false;
+                }
+                else {
+                    modifiedLines.push(line);
+                }
             }
-            acc.result += line + '\n';
+            else {
+                modifiedLines.push(line);
+            }
         }
-        return acc;
-    }, {
-        result: '',
-        inSection: false,
-        itemCount: 0,
-        sectionContent: '',
-        sectionHeader: '',
+        return modifiedLines.join('\n');
     });
-    if (processed.inSection) {
-        processed.result +=
-            processed.itemCount > n
-                ? processed.sectionHeader +
-                    beforeText.replace('{count}', processed.itemCount.toString()) +
-                    processed.sectionContent +
-                    afterText +
-                    '\n'
-                : processed.sectionHeader + processed.sectionContent;
-    }
-    return processed.result.trim();
 }
+function splitMarkdownSections(markdown, categories) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const lines = markdown.split('\n');
+        const sections = {};
+        categories.forEach((category) => {
+            category.labels.forEach((label) => {
+                sections[label] = [];
+            });
+        });
+        let currentLabel = '';
+        lines.forEach((line) => {
+            const trimmedLine = line.trim();
+            if (!trimmedLine)
+                return; // Ignore empty lines
+            const sectionMatch = trimmedLine.match(/###\s(.+)/);
+            if (sectionMatch) {
+                const sectionName = sectionMatch[1];
+                const matchedCategory = categories.find((category) => category.title === sectionName);
+                if (matchedCategory) {
+                    currentLabel = matchedCategory.labels[0];
+                }
+                else {
+                    currentLabel = '';
+                }
+            }
+            else if (currentLabel !== '' && trimmedLine.startsWith('* ')) {
+                sections[currentLabel].push(trimmedLine);
+            }
+        });
+        return sections;
+    });
+}
+exports.splitMarkdownSections = splitMarkdownSections;
 
 
 /***/ }),
@@ -356,7 +406,7 @@ function getRelease(client) {
 }
 exports.getRelease = getRelease;
 function createOrUpdateRelease(client, inputs, releases, latestRelease, versionIncrease) {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
         const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, latestRelease, versionIncrease);
@@ -368,13 +418,14 @@ function createOrUpdateRelease(client, inputs, releases, latestRelease, versionI
             : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseDraft.id })));
         core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${versionIncrease}`);
         core.info(`latestRelease: ${latestRelease}`);
-        core.info(`ReleaseNotes: ${newReleaseNotes}`);
+        core.info(`releaseNotes: ${newReleaseNotes}`);
+        core.info(`releaseURL: ' ${(_a = response.data) === null || _a === void 0 ? void 0 : _a.html_url}`);
         core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
         core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`);
         core.endGroup();
         core.setOutput('release-notes', newReleaseNotes);
-        core.setOutput('release-id', (_a = response.data) === null || _a === void 0 ? void 0 : _a.id);
-        core.setOutput('release-url', (_b = response.data) === null || _b === void 0 ? void 0 : _b.html_url);
+        core.setOutput('release-id', (_b = response.data) === null || _b === void 0 ? void 0 : _b.id);
+        core.setOutput('release-url', (_c = response.data) === null || _c === void 0 ? void 0 : _c.html_url);
     });
 }
 exports.createOrUpdateRelease = createOrUpdateRelease;
@@ -420,7 +471,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getVersionIncrease = void 0;
+exports.getVersionIncrease = exports.getCategories = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const yaml = __importStar(__nccwpck_require__(1917));
 const semver = __importStar(__nccwpck_require__(1383));
@@ -437,6 +488,7 @@ function getCategories() {
         });
     });
 }
+exports.getCategories = getCategories;
 // function that returns tile for matching label
 function getTitleForLabel(label) {
     return __awaiter(this, void 0, void 0, function* () {
