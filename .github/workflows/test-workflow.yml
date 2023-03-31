@@ -19,6 +19,7 @@ jobs:
             my-variable=My Variable
           notes-header: |
             ## Welcome to the {{version}} release of Draft Release
+              The previous release was {{previous-version}}.
               This is some text to welcome you to the release {{version-number}}.
             ## Helm Chart
               The Helm Chart version for this release is {{helm-chart}}.
@@ -33,6 +34,7 @@ jobs:
 
       - run: |
           echo "Version: ${{ steps.draft-release.outputs.version }}"
+          echo "Previous Version: ${{ steps.draft-release.outputs.previous-version }}"
           echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
           echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
           echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"

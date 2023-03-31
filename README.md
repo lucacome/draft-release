@@ -44,15 +44,19 @@ jobs:
 | Name | Type | Description |
 | --- | --- | --- |
 | `version` | `string` | The version number of the next release. |
+| `previous-version` | `string` | The version number of the previous release. |
 | `release-id` | `string` | The ID of the next release. |
 | `release-notes` | `string` | The release notes of the next release. |
 | `release-url` | `string` | The URL of the next release. |
+| `release-sections` | `JSON` | A JSON object containing the release sections and the pull requests in each section. |
 
 ## Header and Footer
 
-The header and footer have two special placeholders that will be replaced with the version number of the next release:
+The header and footer have four special placeholders that will be replaced with the version number of the next release:
 - `{{version}}` will be replaced with the version number of the next release.
 - `{{version-number}}` will be replaced with the version number of the next release without the `v` prefix.
+- `{{previous-version}}` will be replaced with the version number of the previous release.
+- `{{previous-version-number}}` will be replaced with the version number of the previous release without the `v` prefix.
 
 Additionally, you can use the `variables` input to define additional variables that can be used in the header and footer. These variables should be provided as a list of key-value pairs, using the format key=variable, with each pair separated by a new line. The key represents the variable name, while the value corresponds to the variable's assigned value. The variables can be used in the header and footer by using the syntax `{{variable-name}}`.
 

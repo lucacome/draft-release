@@ -41,6 +41,8 @@ export async function generateReleaseNotes(
     const data = {
       version: nextRelease,
       'version-number': nextRelease.replace('v', ''),
+      'previous-version': latestRelease,
+      'previous-version-number': latestRelease.replace('v', ''),
       ...variables,
     }
     const categories = await getCategories()

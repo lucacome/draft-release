@@ -110,6 +110,7 @@ function run() {
             const inputs = (0, context_1.getInputs)();
             const client = github.getOctokit(inputs.githubToken);
             const [releases, latestRelease] = yield (0, release_1.getRelease)(client);
+            core.setOutput('previous-version', latestRelease);
             core.startGroup(`Releases`);
             core.info(`Latest release: ${latestRelease}`);
             core.info(`Found ${releases.length} release(s):`);
@@ -200,7 +201,7 @@ function generateReleaseNotes(client, inputs, latestRelease, nextRelease) {
                 return acc;
             }, {});
             // variables to replace in header and footer
-            const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', '') }, variables);
+            const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', ''), 'previous-version': latestRelease, 'previous-version-number': latestRelease.replace('v', '') }, variables);
             const categories = yield (0, version_1.getCategories)();
             sections = yield splitMarkdownSections(body, categories);
             body = yield collapseSections(body, sections, categories, inputs.collapseAfter);

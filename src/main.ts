@@ -23,6 +23,7 @@ async function run(): Promise<void> {
     const client = github.getOctokit(inputs.githubToken)
 
     const [releases, latestRelease] = await getRelease(client)
+    core.setOutput('previous-version', latestRelease)
 
     core.startGroup(`Releases`)
     core.info(`Latest release: ${latestRelease}`)

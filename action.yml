@@ -33,12 +33,16 @@ inputs:
 outputs:
   version:
     description: 'The version of the release'
+  previous-version:
+    description: 'The version of the previous release'
   release-notes:
     description: 'The release notes for the release'
   release-url:
     description: 'The URL of the release'
   release-id:
     description: 'The ID of the release'
+  release-sections:
+    description: 'The sections of the release in JSON format'
 runs:
   using: 'node16'
   main: 'dist/index.js'
