@@ -53,10 +53,12 @@ export async function generateReleaseNotes(
     if (inputs.header) {
       const header = handlebars.compile(inputs.header)(data)
       body = `${header}\n\n${body}`
+      core.setOutput('release-header', header)
     }
     if (inputs.footer) {
       const footer = handlebars.compile(inputs.footer)(data)
       body = `${body}\n\n${footer}`
+      core.setOutput('release-footer', footer)
     }
     core.setOutput('release-sections', sections)
   } catch (e) {

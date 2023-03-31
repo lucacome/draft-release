@@ -43,6 +43,10 @@ outputs:
     description: 'The ID of the release'
   release-sections:
     description: 'The sections of the release in JSON format'
+  release-header:
+    description: 'The header of the release'
+  release-footer:
+    description: 'The footer of the release'
 runs:
   using: 'node16'
   main: 'dist/index.js'
