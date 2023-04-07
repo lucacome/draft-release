@@ -3,6 +3,7 @@ import * as yaml from 'js-yaml'
 import * as semver from 'semver'
 import {Inputs} from './context'
 import {parseNotes} from './notes'
+import {ReleaseData} from './release'
 
 // yaml type definition for release.yml
 // changelog:
@@ -62,10 +63,10 @@ async function getTitleForLabel(label: string): Promise<string> {
 }
 
 // function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
-export async function getVersionIncrease(latestRelease: string, inputs: Inputs, notes: string): Promise<string> {
+export async function getVersionIncrease(releaseData: ReleaseData, inputs: Inputs, notes: string): Promise<string> {
   const majorTitle = await getTitleForLabel(inputs.majorLabel)
   const minorTitle = await getTitleForLabel(inputs.minorLabel)
   const version = parseNotes(notes, majorTitle, minorTitle) as semver.ReleaseType
 
-  return semver.inc(latestRelease, version) || ''
+  return semver.inc(releaseData.latestRelease, version) || ''
 }

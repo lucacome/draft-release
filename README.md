@@ -4,7 +4,13 @@ This action creates a draft release for the next version to be released. It read
 
 To use this action, you need to create a release file in `.github/release.yml` as shown in the GitHub documentation for [creating a release file](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes).
 
+> **Note:**
+>
+> This action requires read and write access to the repository's releases. You might need to change the permissions granted to the GITHUB_TOKEN or use a personal token with the appropriate permissions.
+
 To decide whether the next release should be a major or minor release, the action looks at the labels of the pull requests merged since the last release. If there is at least one pull request with the label specified in the `major-label` input, the next release will be a major release. Otherwise, if there is at least one pull request with the label specified in the `minor-label` input, the next release will be a minor release. Otherwise, the next release will be a patch release.
+
+When the action is triggered on a tag push, the action will create a release with the version number specified in the tag.
 
 ## Simple Usage
 
@@ -48,7 +54,7 @@ jobs:
 | `release-id` | `string` | The ID of the next release. |
 | `release-notes` | `string` | The release notes of the next release. |
 | `release-url` | `string` | The URL of the next release. |
-| `release-sections` | `JSON` | A JSON object containing the release sections and the pull requests in each section. |
+| `release-sections` | `string` | A JSON output containing the release sections and the pull requests in each section. |
 
 ## Header and Footer
 
@@ -71,6 +77,9 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
 
 jobs:
   draft-release:

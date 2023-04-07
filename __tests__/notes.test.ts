@@ -82,8 +82,12 @@ describe('generateReleaseNotes', () => {
       variables: ['foo=bar', 'baz=qux'],
       collapseAfter: 0,
     }
-    const latestRelease = 'v1.0.0'
-    const nextRelease = 'v1.1.0'
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
 
     const mockResponse: any = {
       data: {
@@ -95,7 +99,7 @@ describe('generateReleaseNotes', () => {
     mockNotes.mockResolvedValue(mockResponse)
 
     // call the function
-    const notes = await generateReleaseNotes(gh, inputs, latestRelease, nextRelease)
+    const notes = await generateReleaseNotes(gh, inputs, releaseData)
 
     // assert the result
     expect(typeof notes).toEqual('string')
@@ -115,8 +119,12 @@ describe('generateReleaseNotes', () => {
       collapseAfter: 3,
     }
 
-    const latestRelease = 'v1.0.0'
-    const nextRelease = 'v1.1.0'
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
 
     const mockResponse: any = {
       data: {
@@ -160,7 +168,7 @@ describe('generateReleaseNotes', () => {
     mockNotes.mockResolvedValue(mockResponse)
 
     // call the function
-    const notes = await generateReleaseNotes(gh, inputs, latestRelease, nextRelease)
+    const notes = await generateReleaseNotes(gh, inputs, releaseData)
 
     // assert the result
     expect(typeof notes).toEqual('string')

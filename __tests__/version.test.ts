@@ -13,24 +13,32 @@ describe('getVersionIncrease', () => {
     collapseAfter: 0,
   }
 
+  const releaseData = {
+    releases: [],
+    latestRelease: '1.0.0',
+    branch: 'main',
+    nextRelease: '1.0.1',
+  }
+
   test('should return patch with empty labels (bug)', async () => {
-    let version = await getVersionIncrease('1.0.0', fakeInputs, '### 🐛 Bug Fixes')
+    let version = await getVersionIncrease(releaseData, fakeInputs, '### 🐛 Bug Fixes')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (feature)', async () => {
-    let version = await getVersionIncrease('1.0.0', fakeInputs, '### 🚀 Features')
+    let version = await getVersionIncrease(releaseData, fakeInputs, '### 🚀 Features')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (change)', async () => {
-    let version = await getVersionIncrease('1.0.0', fakeInputs, '### 💣 Breaking Changes')
+    let version = await getVersionIncrease(releaseData, fakeInputs, '### 💣 Breaking Changes')
     expect(version).toEqual('1.0.1')
   })
 
   test('should return minor', async () => {
     fakeInputs.minorLabel = 'enhancement'
     fakeInputs.majorLabel = 'change'
+
     let version = await getVersionIncrease(
-      '1.0.0',
+      releaseData,
       fakeInputs,
       `
             ### 🚀 Features
@@ -45,7 +53,7 @@ describe('getVersionIncrease', () => {
     fakeInputs.minorLabel = 'bug'
     fakeInputs.majorLabel = 'change'
     let version = await getVersionIncrease(
-      '1.0.0',
+      releaseData,
       fakeInputs,
       `
             ### 💣 Breaking Changes

@@ -4,6 +4,7 @@ import * as semver from 'semver'
 import * as handlebars from 'handlebars'
 import {Inputs} from './context'
 import {getCategories, Category} from './version'
+import {ReleaseData} from './release'
 
 interface VariableObject {
   [key: string]: string
@@ -15,21 +16,24 @@ type SectionData = {
 export async function generateReleaseNotes(
   client: ReturnType<typeof github.getOctokit>,
   inputs: Inputs,
-  latestRelease: string,
-  nextRelease: string,
+  releaseData: ReleaseData,
 ): Promise<string> {
   const context = github.context
-  const notes = await client.rest.repos.generateReleaseNotes({
-    ...context.repo,
-    tag_name: nextRelease,
-    previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
-    target_commitish: context.ref.replace('refs/heads/', ''),
-  })
-
-  let body = notes.data.body
+  const latestRelease = releaseData.latestRelease
+  const nextRelease = releaseData.nextRelease
+  let body = ''
   let sections: SectionData = {}
 
   try {
+    const notes = await client.rest.repos.generateReleaseNotes({
+      ...context.repo,
+      tag_name: nextRelease,
+      previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
+      target_commitish: releaseData.branch,
+    })
+
+    body = notes.data.body
+
     // get all the variables from inputs.variables
     const variables: VariableObject = inputs.variables.reduce((acc: VariableObject, variable: string) => {
       const [key, value] = variable.split('=')
@@ -53,14 +57,14 @@ export async function generateReleaseNotes(
     if (inputs.header) {
       const header = handlebars.compile(inputs.header)(data)
       body = `${header}\n\n${body}`
-      core.setOutput('release-header', header)
+      core.setOutput('release-header', header?.trim())
     }
     if (inputs.footer) {
       const footer = handlebars.compile(inputs.footer)(data)
       body = `${body}\n\n${footer}`
-      core.setOutput('release-footer', footer)
+      core.setOutput('release-footer', footer?.trim())
     }
-    core.setOutput('release-sections', sections)
+    core.setOutput('release-sections', JSON.stringify(sections))
   } catch (e) {
     core.error(`Error while generating release notes: ${e}`)
   }
