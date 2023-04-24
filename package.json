@@ -1,8 +1,6 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
-  "private": true,
-  "description": "TypeScript template action",
+  "name": "lucacome-draft-release",
+  "description": "GitHub Action to create a draft release",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -19,10 +17,11 @@
   },
   "keywords": [
     "actions",
-    "node",
-    "setup"
+    "release",
+    "notes",
+    "draft"
   ],
-  "author": "",
+  "author": "Luca Comellini",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.0",
