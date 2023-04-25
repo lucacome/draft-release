@@ -4379,14 +4379,26 @@ class Util {
             }
         });
     }
-    static isValidUrl(url) {
+    static isValidURL(urlStr) {
+        let url;
         try {
-            new URL(url);
+            url = new URL(urlStr);
         }
         catch (e) {
             return false;
         }
-        return true;
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    }
+    static isValidRef(refStr) {
+        if (Util.isValidURL(refStr)) {
+            return true;
+        }
+        for (const prefix of ['git://', 'github.com/', 'git@']) {
+            if (refStr.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
     static powershellCommand(script, params) {
         return __awaiter(this, void 0, void 0, function* () {
