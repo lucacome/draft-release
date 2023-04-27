@@ -42,6 +42,7 @@ function getInputs() {
         footer: core.getInput('notes-footer'),
         variables: util_1.Util.getInputList('variables'),
         collapseAfter: parseInt(core.getInput('collapse-after'), 10),
+        publish: core.getBooleanInput('publish'),
     };
 }
 exports.getInputs = getInputs;
@@ -430,7 +431,7 @@ function createOrUpdateRelease(client, inputs, releaseData) {
             core.info(`No release draft found for tag ${nextRelease}. Skipping release creation/update.`);
             return;
         }
-        const draft = releaseData.branch !== 'tag';
+        const draft = releaseData.branch !== 'tag' || !inputs.publish;
         releaseData.branch = (releaseData.branch === 'tag' && (releaseDraft === null || releaseDraft === void 0 ? void 0 : releaseDraft.target_commitish)) || releaseData.branch;
         core.debug(`releaseData.branch: ${releaseData.branch}`);
         const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, releaseData);

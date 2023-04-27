@@ -82,7 +82,7 @@ export async function createOrUpdateRelease(
     return
   }
 
-  const draft = releaseData.branch !== 'tag'
+  const draft = releaseData.branch !== 'tag' || !inputs.publish
   releaseData.branch = (releaseData.branch === 'tag' && releaseDraft?.target_commitish) || releaseData.branch
   core.debug(`releaseData.branch: ${releaseData.branch}`)
   const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData)

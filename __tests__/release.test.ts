@@ -139,6 +139,7 @@ describe('createOrUpdateRelease', () => {
     footer: 'footer',
     variables: [],
     collapseAfter: 0,
+    publish: false,
   }
   beforeEach(() => {
     jest.clearAllMocks()

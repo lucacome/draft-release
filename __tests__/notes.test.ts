@@ -81,6 +81,7 @@ describe('generateReleaseNotes', () => {
       footer: 'footer with version {{version}} and baz {{baz}}',
       variables: ['foo=bar', 'baz=qux'],
       collapseAfter: 0,
+      publish: false,
     }
     const releaseData = {
       releases: [],
@@ -117,6 +118,7 @@ describe('generateReleaseNotes', () => {
       footer: 'footer with version {{version}}',
       variables: [],
       collapseAfter: 3,
+      publish: false,
     }
 
     const releaseData = {

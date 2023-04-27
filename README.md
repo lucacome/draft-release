@@ -44,6 +44,7 @@ jobs:
 | `notes-header` | `string` | The header to use for the release notes. |
 | `notes-footer` | `string` | The footer to use for the release notes. |
 | `variables` | `list` | A list of variables to use in the header and footer. |
+| `publish` | `boolean` | Whether to publish the release. (default `false`) |
 
 ## Outputs
 

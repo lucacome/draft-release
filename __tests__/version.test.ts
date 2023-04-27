@@ -11,6 +11,7 @@ describe('getVersionIncrease', () => {
     footer: '',
     variables: [],
     collapseAfter: 0,
+    publish: false,
   }
 
   const releaseData = {

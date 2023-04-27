@@ -30,6 +30,10 @@ inputs:
     description: 'Number of lines required for the section to be collapsed'
     default: '0'
     required: false
+  publish:
+    description: 'Whether to publish the release'
+    default: 'false'
+    required: false
 outputs:
   version:
     description: 'The version of the release'

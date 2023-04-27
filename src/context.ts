@@ -9,6 +9,7 @@ export interface Inputs {
   footer: string
   variables: string[]
   collapseAfter: number
+  publish: boolean
 }
 
 export function getInputs(): Inputs {
@@ -20,5 +21,6 @@ export function getInputs(): Inputs {
     footer: core.getInput('notes-footer'),
     variables: Util.getInputList('variables'),
     collapseAfter: parseInt(core.getInput('collapse-after'), 10),
+    publish: core.getBooleanInput('publish'),
   }
 }
