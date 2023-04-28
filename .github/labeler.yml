@@ -1,0 +1,20 @@
+enhancement:
+  - head-branch: ['^feature/', '^feat/', '^enhancement/', '^enh/']
+
+bug:
+  - head-branch: ['^fix/', '^bug/']
+
+chore:
+  - head-branch: ['^chore/']
+
+tests:
+  - head-branch: ['^tests/', '^test/']
+  - changed-files: ['__tests__/**/*']
+
+documentation:
+  - head-branch: ['^docs/', '^doc/']
+  - changed-files: '**/*.md'
+
+dependencies:
+  - head-branch: ['^deps/', '^dep/', '^dependabot/']
+  - changed-files: ['package.json', 'package-lock.json']
