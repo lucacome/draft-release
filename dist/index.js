@@ -325,6 +325,9 @@ function splitMarkdownSections(markdown, categories) {
             else if (currentLabel !== '' && trimmedLine.startsWith('* ')) {
                 sections[currentLabel].push(trimmedLine);
             }
+            else {
+                currentLabel = '';
+            }
         });
         return sections;
     });
@@ -439,10 +442,15 @@ function createOrUpdateRelease(client, inputs, releaseData) {
         const response = yield (releaseDraft === undefined
             ? client.rest.repos.createRelease(Object.assign({}, releaseParams))
             : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseDraft.id })));
+        const separator = '----------------------------------';
         core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`);
+        core.info(separator);
         core.info(`latestRelease: ${releaseData.latestRelease}`);
+        core.info(separator);
         core.info(`releaseNotes: ${newReleaseNotes}`);
-        core.info(`releaseURL: ' ${(_a = response.data) === null || _a === void 0 ? void 0 : _a.html_url}`);
+        core.info(separator);
+        core.info(`releaseURL: ${(_a = response.data) === null || _a === void 0 ? void 0 : _a.html_url}`);
+        core.info(separator);
         core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
         core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`);
         core.endGroup();

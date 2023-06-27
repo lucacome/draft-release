@@ -105,10 +105,15 @@ export async function createOrUpdateRelease(
         release_id: releaseDraft.id,
       }))
 
+  const separator = '----------------------------------'
   core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`)
+  core.info(separator)
   core.info(`latestRelease: ${releaseData.latestRelease}`)
+  core.info(separator)
   core.info(`releaseNotes: ${newReleaseNotes}`)
-  core.info(`releaseURL: ' ${response.data?.html_url}`)
+  core.info(separator)
+  core.info(`releaseURL: ${response.data?.html_url}`)
+  core.info(separator)
   core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`)
   core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
   core.endGroup()

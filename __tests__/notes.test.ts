@@ -162,6 +162,9 @@ describe('generateReleaseNotes', () => {
 * chore 5
 * chore 6
 
+## New Contributors
+* foo bar
+
 **Full Changelog**: https://github.com/somewhere/compare/v5.0.4...v5.0.5`,
       },
     }
@@ -194,8 +197,11 @@ const markdown = `
 ### 🧪 Tests
 * update by @lucacome in https://github.com/somerepo/pull/205
 ### 🔨 Maintenance
+
 * Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 by @dependabot in https://github.com/somerepo/pull/175
 * Bump actions/setup-go from 3 to 4 by @dependabot in https://github.com/somerepo/pull/198
+## New Contributors
+* foo
 
 **Full Changelog**: https://github.com/somerepo/compare/v5.0.4...v5.0.5`
 

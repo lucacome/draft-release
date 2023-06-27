@@ -180,6 +180,8 @@ export async function splitMarkdownSections(markdown: string, categories: Catego
       }
     } else if (currentLabel !== '' && trimmedLine.startsWith('* ')) {
       sections[currentLabel].push(trimmedLine)
+    } else {
+      currentLabel = ''
     }
   })
 
