@@ -4350,7 +4350,7 @@ class Util {
         const records = (0, sync_1.parse)(items, {
             columns: false,
             relaxQuotes: true,
-            comment: '#',
+            comment: opts === null || opts === void 0 ? void 0 : opts.comment,
             relaxColumnCount: true,
             skipEmptyLines: true,
             quote: opts === null || opts === void 0 ? void 0 : opts.quote
