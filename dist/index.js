@@ -4434,6 +4434,26 @@ class Util {
         }
         return false;
     }
+    static trimPrefix(str, suffix) {
+        if (!str || !suffix) {
+            return str;
+        }
+        const index = str.indexOf(suffix);
+        if (index !== 0) {
+            return str;
+        }
+        return str.substring(suffix.length);
+    }
+    static trimSuffix(str, suffix) {
+        if (!str || !suffix) {
+            return str;
+        }
+        const index = str.lastIndexOf(suffix);
+        if (index === -1 || index + suffix.length !== str.length) {
+            return str;
+        }
+        return str.substring(0, index);
+    }
 }
 exports.Util = Util;
 //# sourceMappingURL=util.js.map
