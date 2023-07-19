@@ -4,9 +4,11 @@ This action creates a draft release for the next version to be released. It read
 
 To use this action, you need to create a release file in `.github/release.yml` as shown in the GitHub documentation for [creating a release file](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes).
 
-> **Note:**
+> **Note**
 >
-> This action requires read and write access to the repository's releases. You might need to change the permissions granted to the GITHUB_TOKEN or use a personal token with the appropriate permissions.
+> This action requires read and write access to the repository's releases, this usually means `contents: write` permissions for the job running the action.
+>
+> You might need to change the permissions granted to the GITHUB_TOKEN or use a personal token with the appropriate permissions.
 
 To decide whether the next release should be a major or minor release, the action looks at the labels of the pull requests merged since the last release. If there is at least one pull request with the label specified in the `major-label` input, the next release will be a major release. Otherwise, if there is at least one pull request with the label specified in the `minor-label` input, the next release will be a minor release. Otherwise, the next release will be a patch release.
 
@@ -81,13 +83,17 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
+permissions:
+  contents: read
 
 jobs:
   draft-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v0.1.0
+      - uses: lucacome/draft-release@v0.2.1
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -110,12 +116,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   draft-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v0.1.0
+      - uses: lucacome/draft-release@v0.2.1
         id: draft-release
         with:
           minor-label: 'enhancement'
@@ -123,3 +134,4 @@ jobs:
 
       - name: Get Version Number
         run: echo ${{ steps.draft-release.outputs.version }}
+```
