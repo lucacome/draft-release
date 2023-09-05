@@ -21,7 +21,7 @@ jobs:
         id: dependabot-metadata
         uses: dependabot/fetch-metadata@v1
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn' }}
         with:
           ref: ${{ github.head_ref }}
