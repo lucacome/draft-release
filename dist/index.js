@@ -3098,15 +3098,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -3126,21 +3117,21 @@ class Util {
         const records = (0, sync_1.parse)(items, {
             columns: false,
             relaxQuotes: true,
-            comment: opts === null || opts === void 0 ? void 0 : opts.comment,
+            comment: opts?.comment,
             relaxColumnCount: true,
             skipEmptyLines: true,
-            quote: opts === null || opts === void 0 ? void 0 : opts.quote
+            quote: opts?.quote
         });
         for (const record of records) {
             if (record.length == 1) {
-                if (opts === null || opts === void 0 ? void 0 : opts.ignoreComma) {
+                if (opts?.ignoreComma) {
                     res.push(record[0]);
                 }
                 else {
                     res.push(...record[0].split(','));
                 }
             }
-            else if (!(opts === null || opts === void 0 ? void 0 : opts.ignoreComma)) {
+            else if (!opts?.ignoreComma) {
                 res.push(...record);
             }
             else {
@@ -3149,12 +3140,10 @@ class Util {
         }
         return res.filter(item => item).map(pat => pat.trim());
     }
-    static asyncForEach(array, callback) {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let index = 0; index < array.length; index++) {
-                yield callback(array[index], index, array);
-            }
-        });
+    static async asyncForEach(array, callback) {
+        for (let index = 0; index < array.length; index++) {
+            await callback(array[index], index, array);
+        }
     }
     static isValidURL(urlStr) {
         let url;
@@ -3177,21 +3166,19 @@ class Util {
         }
         return false;
     }
-    static powershellCommand(script, params) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const powershellPath = yield io.which('powershell', true);
-            const escapedScript = script.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-            const escapedParams = [];
-            if (params) {
-                for (const key in params) {
-                    escapedParams.push(`-${key} '${params[key].replace(/'/g, "''").replace(/"|\n|\r/g, '')}'`);
-                }
+    static async powershellCommand(script, params) {
+        const powershellPath = await io.which('powershell', true);
+        const escapedScript = script.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+        const escapedParams = [];
+        if (params) {
+            for (const key in params) {
+                escapedParams.push(`-${key} '${params[key].replace(/'/g, "''").replace(/"|\n|\r/g, '')}'`);
             }
-            return {
-                command: `"${powershellPath}"`,
-                args: ['-NoLogo', '-Sta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Unrestricted', '-Command', `& '${escapedScript}' ${escapedParams.join(' ')}`]
-            };
-        });
+        }
+        return {
+            command: `"${powershellPath}"`,
+            args: ['-NoLogo', '-Sta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Unrestricted', '-Command', `& '${escapedScript}' ${escapedParams.join(' ')}`]
+        };
     }
     static isDirectory(p) {
         try {
@@ -3221,6 +3208,9 @@ class Util {
             return str;
         }
         return str.substring(0, index);
+    }
+    static sleep(seconds) {
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
     }
 }
 exports.Util = Util;
@@ -27018,6 +27008,16 @@ const normalize_options = function(opts){
       ], options);
     }
   }
+  // Normalize option `comment_no_infix`
+  if(options.comment_no_infix === undefined || options.comment_no_infix === null || options.comment_no_infix === false){
+    options.comment_no_infix = false;
+  }else if(options.comment_no_infix !== true){
+    throw new CsvError('CSV_INVALID_OPTION_COMMENT', [
+      'Invalid option comment_no_infix:',
+      'value must be a boolean,',
+      `got ${JSON.stringify(options.comment_no_infix)}`
+    ], options);
+  }
   // Normalize option `delimiter`
   const delimiter_json = JSON.stringify(options.delimiter);
   if(!Array.isArray(options.delimiter)) options.delimiter = [options.delimiter];
@@ -27379,7 +27379,7 @@ const transform = function(original_options = {}) {
     },
     // Central parser implementation
     parse: function(nextBuf, end, push, close){
-      const {bom, encoding, from_line, ltrim, max_record_size,raw, relax_quotes, rtrim, skip_empty_lines, to, to_line} = this.options;
+      const {bom, comment_no_infix, encoding, from_line, ltrim, max_record_size,raw, relax_quotes, rtrim, skip_empty_lines, to, to_line} = this.options;
       let {comment, escape, quote, record_delimiter} = this.options;
       const {bomSkipped, previousBuf, rawBuffer, escapeIsQuote} = this.state;
       let buf;
@@ -27578,7 +27578,7 @@ const transform = function(original_options = {}) {
               continue;
             }
             const commentCount = comment === null ? 0 : this.__compareBytes(comment, buf, pos, chr);
-            if(commentCount !== 0){
+            if(commentCount !== 0 && (comment_no_infix === false || this.state.field.length === 0)){
               this.state.commenting = true;
               continue;
             }
