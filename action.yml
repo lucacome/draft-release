@@ -52,7 +52,7 @@ outputs:
   release-footer:
     description: 'The footer of the release'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
 
 branding:
