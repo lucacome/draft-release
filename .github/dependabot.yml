@@ -9,3 +9,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      npm-dev-dependencies:
+        dependency-type: 'development'
