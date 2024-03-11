@@ -423,8 +423,8 @@ function getRelease(client) {
 }
 exports.getRelease = getRelease;
 function createOrUpdateRelease(client, inputs, releaseData) {
-    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d;
         const context = github.context;
         const releases = releaseData.releases;
         const nextRelease = releaseData.nextRelease;
