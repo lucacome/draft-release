@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Fetch Dependabot metadata
         id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v1
+        uses: dependabot/fetch-metadata@v2
 
       - uses: actions/checkout@v4
         if: ${{ steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn' }}
