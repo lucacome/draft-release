@@ -82,6 +82,8 @@ describe('generateReleaseNotes', () => {
       variables: ['foo=bar', 'baz=qux'],
       collapseAfter: 0,
       publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
     }
     const releaseData = {
       releases: [],
@@ -119,6 +121,8 @@ describe('generateReleaseNotes', () => {
       variables: [],
       collapseAfter: 3,
       publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
     }
 
     const releaseData = {

@@ -46,6 +46,7 @@ async function run(): Promise<void> {
     core.setOutput('version', releaseData.nextRelease)
 
     // create or update release
+
     await createOrUpdateRelease(client, inputs, releaseData)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

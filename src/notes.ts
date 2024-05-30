@@ -21,6 +21,7 @@ export async function generateReleaseNotes(
   const context = github.context
   const latestRelease = releaseData.latestRelease
   const nextRelease = releaseData.nextRelease
+  const configPath = inputs.configPath
   let body = ''
   let sections: SectionData = {}
 
@@ -30,6 +31,7 @@ export async function generateReleaseNotes(
       tag_name: nextRelease,
       previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
       target_commitish: releaseData.branch,
+      configuration_file_path: configPath,
     })
 
     body = notes.data.body
@@ -49,7 +51,7 @@ export async function generateReleaseNotes(
       'previous-version-number': latestRelease.replace('v', ''),
       ...variables,
     }
-    const categories = await getCategories()
+    const categories = await getCategories(inputs)
     sections = await splitMarkdownSections(body, categories)
 
     body = await collapseSections(body, sections, categories, inputs.collapseAfter)

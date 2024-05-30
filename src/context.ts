@@ -10,6 +10,8 @@ export interface Inputs {
   variables: string[]
   collapseAfter: number
   publish: boolean
+  configPath: string
+  dryRun: boolean
 }
 
 export function getInputs(): Inputs {
@@ -22,5 +24,7 @@ export function getInputs(): Inputs {
     variables: Util.getInputList('variables'),
     collapseAfter: parseInt(core.getInput('collapse-after'), 10),
     publish: core.getBooleanInput('publish'),
+    configPath: core.getInput('config-path'),
+    dryRun: core.getBooleanInput('dry-run'),
   }
 }

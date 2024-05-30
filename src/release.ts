@@ -87,23 +87,26 @@ export async function createOrUpdateRelease(
   core.debug(`releaseData.branch: ${releaseData.branch}`)
   const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData)
 
-  const releaseParams = {
-    ...context.repo,
-    tag_name: nextRelease,
-    name: nextRelease,
-    target_commitish: releaseData.branch,
-    body: newReleaseNotes,
-    draft: draft,
-  }
+  let response
+  if (!inputs.dryRun) {
+    const releaseParams = {
+      ...context.repo,
+      tag_name: nextRelease,
+      name: nextRelease,
+      target_commitish: releaseData.branch,
+      body: newReleaseNotes,
+      draft: draft,
+    }
 
-  const response = await (releaseDraft === undefined
-    ? client.rest.repos.createRelease({
-        ...releaseParams,
-      })
-    : client.rest.repos.updateRelease({
-        ...releaseParams,
-        release_id: releaseDraft.id,
-      }))
+    response = await (releaseDraft === undefined
+      ? client.rest.repos.createRelease({
+          ...releaseParams,
+        })
+      : client.rest.repos.updateRelease({
+          ...releaseParams,
+          release_id: releaseDraft.id,
+        }))
+  }
 
   const separator = '----------------------------------'
   core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`)
@@ -112,13 +115,13 @@ export async function createOrUpdateRelease(
   core.info(separator)
   core.info(`releaseNotes: ${newReleaseNotes}`)
   core.info(separator)
-  core.info(`releaseURL: ${response.data?.html_url}`)
+  core.info(`releaseURL: ${response?.data?.html_url}`)
   core.info(separator)
   core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`)
-  core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`)
+  core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`)
   core.endGroup()
 
   core.setOutput('release-notes', newReleaseNotes?.trim())
-  core.setOutput('release-id', response.data?.id)
-  core.setOutput('release-url', response.data?.html_url?.trim())
+  core.setOutput('release-id', response?.data?.id)
+  core.setOutput('release-url', response?.data?.html_url?.trim())
 }

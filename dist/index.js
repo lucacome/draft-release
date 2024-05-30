@@ -43,6 +43,8 @@ function getInputs() {
         variables: util_1.Util.getInputList('variables'),
         collapseAfter: parseInt(core.getInput('collapse-after'), 10),
         publish: core.getBooleanInput('publish'),
+        configPath: core.getInput('config-path'),
+        dryRun: core.getBooleanInput('dry-run'),
     };
 }
 exports.getInputs = getInputs;
@@ -194,10 +196,11 @@ function generateReleaseNotes(client, inputs, releaseData) {
         const context = github.context;
         const latestRelease = releaseData.latestRelease;
         const nextRelease = releaseData.nextRelease;
+        const configPath = inputs.configPath;
         let body = '';
         let sections = {};
         try {
-            const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: releaseData.branch }));
+            const notes = yield client.rest.repos.generateReleaseNotes(Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '', target_commitish: releaseData.branch, configuration_file_path: configPath }));
             body = notes.data.body;
             // get all the variables from inputs.variables
             const variables = inputs.variables.reduce((acc, variable) => {
@@ -207,7 +210,7 @@ function generateReleaseNotes(client, inputs, releaseData) {
             }, {});
             // variables to replace in header and footer
             const data = Object.assign({ version: nextRelease, 'version-number': nextRelease.replace('v', ''), 'previous-version': latestRelease, 'previous-version-number': latestRelease.replace('v', '') }, variables);
-            const categories = yield (0, version_1.getCategories)();
+            const categories = yield (0, version_1.getCategories)(inputs);
             sections = yield splitMarkdownSections(body, categories);
             body = yield collapseSections(body, sections, categories, inputs.collapseAfter);
             if (inputs.header) {
@@ -438,10 +441,13 @@ function createOrUpdateRelease(client, inputs, releaseData) {
         releaseData.branch = (releaseData.branch === 'tag' && (releaseDraft === null || releaseDraft === void 0 ? void 0 : releaseDraft.target_commitish)) || releaseData.branch;
         core.debug(`releaseData.branch: ${releaseData.branch}`);
         const newReleaseNotes = yield (0, notes_1.generateReleaseNotes)(client, inputs, releaseData);
-        const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, name: nextRelease, target_commitish: releaseData.branch, body: newReleaseNotes, draft: draft });
-        const response = yield (releaseDraft === undefined
-            ? client.rest.repos.createRelease(Object.assign({}, releaseParams))
-            : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseDraft.id })));
+        let response;
+        if (!inputs.dryRun) {
+            const releaseParams = Object.assign(Object.assign({}, context.repo), { tag_name: nextRelease, name: nextRelease, target_commitish: releaseData.branch, body: newReleaseNotes, draft: draft });
+            response = yield (releaseDraft === undefined
+                ? client.rest.repos.createRelease(Object.assign({}, releaseParams))
+                : client.rest.repos.updateRelease(Object.assign(Object.assign({}, releaseParams), { release_id: releaseDraft.id })));
+        }
         const separator = '----------------------------------';
         core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`);
         core.info(separator);
@@ -449,14 +455,14 @@ function createOrUpdateRelease(client, inputs, releaseData) {
         core.info(separator);
         core.info(`releaseNotes: ${newReleaseNotes}`);
         core.info(separator);
-        core.info(`releaseURL: ${(_a = response.data) === null || _a === void 0 ? void 0 : _a.html_url}`);
+        core.info(`releaseURL: ${(_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.html_url}`);
         core.info(separator);
         core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
-        core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response.data, null, 2)}`);
+        core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response === null || response === void 0 ? void 0 : response.data, null, 2)}`);
         core.endGroup();
         core.setOutput('release-notes', newReleaseNotes === null || newReleaseNotes === void 0 ? void 0 : newReleaseNotes.trim());
-        core.setOutput('release-id', (_b = response.data) === null || _b === void 0 ? void 0 : _b.id);
-        core.setOutput('release-url', (_d = (_c = response.data) === null || _c === void 0 ? void 0 : _c.html_url) === null || _d === void 0 ? void 0 : _d.trim());
+        core.setOutput('release-id', (_b = response === null || response === void 0 ? void 0 : response.data) === null || _b === void 0 ? void 0 : _b.id);
+        core.setOutput('release-url', (_d = (_c = response === null || response === void 0 ? void 0 : response.data) === null || _c === void 0 ? void 0 : _c.html_url) === null || _d === void 0 ? void 0 : _d.trim());
     });
 }
 exports.createOrUpdateRelease = createOrUpdateRelease;
@@ -507,9 +513,9 @@ const fs_1 = __nccwpck_require__(7147);
 const yaml = __importStar(__nccwpck_require__(1917));
 const semver = __importStar(__nccwpck_require__(1383));
 const notes_1 = __nccwpck_require__(376);
-function getCategories() {
+function getCategories(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        const content = yield fs_1.promises.readFile('.github/release.yml', 'utf8');
+        const content = yield fs_1.promises.readFile(inputs.configPath, 'utf8');
         const doc = yaml.load(content);
         return doc.changelog.categories.map((category) => {
             return {
@@ -521,12 +527,12 @@ function getCategories() {
 }
 exports.getCategories = getCategories;
 // function that returns tile for matching label
-function getTitleForLabel(label) {
+function getTitleForLabel(inputs, label) {
     return __awaiter(this, void 0, void 0, function* () {
         if (label === '') {
             return '';
         }
-        const categories = yield getCategories();
+        const categories = yield getCategories(inputs);
         const category = categories.find((category) => category.labels.includes(label));
         if (category === undefined) {
             return '';
@@ -537,8 +543,8 @@ function getTitleForLabel(label) {
 // function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
 function getVersionIncrease(releaseData, inputs, notes) {
     return __awaiter(this, void 0, void 0, function* () {
-        const majorTitle = yield getTitleForLabel(inputs.majorLabel);
-        const minorTitle = yield getTitleForLabel(inputs.minorLabel);
+        const majorTitle = yield getTitleForLabel(inputs, inputs.majorLabel);
+        const minorTitle = yield getTitleForLabel(inputs, inputs.minorLabel);
         const version = (0, notes_1.parseNotes)(notes, majorTitle, minorTitle);
         return semver.inc(releaseData.latestRelease, version) || '';
     });
