@@ -12,12 +12,15 @@ chore:
 
 tests:
   - head-branch: ['^tests/', '^test/']
-  - changed-files: ['__tests__/**/*']
+  - changed-files:
+      - any-glob-to-any-file: ['__tests__/**/*']
 
 documentation:
   - head-branch: ['^docs/', '^doc/']
-  - changed-files: '**/*.md'
+  - changed-files:
+      - any-glob-to-any-file: '**/*.md'
 
 dependencies:
   - head-branch: ['^deps/', '^dep/', '^dependabot/']
-  - changed-files: ['package.json', 'package-lock.json']
+  - changed-files:
+      - any-glob-to-any-file: ['package.json', 'package-lock.json']

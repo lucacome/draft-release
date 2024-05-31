@@ -33,35 +33,35 @@ jobs:
         with:
           minor-label: 'enhancement'
           major-label: 'change'
-
 ```
 
 ## Inputs
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `github-token` | `string` | The GitHub token to use for the release. (default `github.token`) |
-| `minor-label` | `string` | The label to use for minor releases. (default `enhancement`) |
-| `major-label` | `string` | The label to use for major releases. (default `change`) |
-| `notes-header` | `string` | The header to use for the release notes. |
-| `notes-footer` | `string` | The footer to use for the release notes. |
-| `variables` | `list` | A list of variables to use in the header and footer. |
-| `publish` | `boolean` | Whether to publish the release. (default `false`) |
+| Name           | Type      | Description                                                       |
+| -------------- | --------- | ----------------------------------------------------------------- |
+| `github-token` | `string`  | The GitHub token to use for the release. (default `github.token`) |
+| `minor-label`  | `string`  | The label to use for minor releases. (default `enhancement`)      |
+| `major-label`  | `string`  | The label to use for major releases. (default `change`)           |
+| `notes-header` | `string`  | The header to use for the release notes.                          |
+| `notes-footer` | `string`  | The footer to use for the release notes.                          |
+| `variables`    | `list`    | A list of variables to use in the header and footer.              |
+| `publish`      | `boolean` | Whether to publish the release. (default `false`)                 |
 
 ## Outputs
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `version` | `string` | The version number of the next release. |
-| `previous-version` | `string` | The version number of the previous release. |
-| `release-id` | `string` | The ID of the next release. |
-| `release-notes` | `string` | The release notes of the next release. |
-| `release-url` | `string` | The URL of the next release. |
+| Name               | Type     | Description                                                                          |
+| ------------------ | -------- | ------------------------------------------------------------------------------------ |
+| `version`          | `string` | The version number of the next release.                                              |
+| `previous-version` | `string` | The version number of the previous release.                                          |
+| `release-id`       | `string` | The ID of the next release.                                                          |
+| `release-notes`    | `string` | The release notes of the next release.                                               |
+| `release-url`      | `string` | The URL of the next release.                                                         |
 | `release-sections` | `string` | A JSON output containing the release sections and the pull requests in each section. |
 
 ## Header and Footer
 
 The header and footer have four special placeholders that will be replaced with the version number of the next release:
+
 - `{{version}}` will be replaced with the version number of the next release.
 - `{{version-number}}` will be replaced with the version number of the next release without the `v` prefix.
 - `{{previous-version}}` will be replaced with the version number of the previous release.
