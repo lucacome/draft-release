@@ -7,7 +7,6 @@ on:
       - main
 
 jobs:
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -18,3 +17,27 @@ jobs:
           npm run format-check
       - run: |
           npm run lint
+
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: reviewdog/action-actionlint@v1
+        with:
+          actionlint_flags: -shellcheck ""
+
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          config: .markdownlint-cli2.yaml
+          globs: '**/*.md'
+          fix: false
