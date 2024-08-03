@@ -3191,6 +3191,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Util = void 0;
 const crypto_1 = __importDefault(__nccwpck_require__(6113));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
 const sync_1 = __nccwpck_require__(4393);
@@ -3340,6 +3341,19 @@ class Util {
     static generateRandomString(length = 10) {
         const bytes = crypto_1.default.randomBytes(Math.ceil(length / 2));
         return bytes.toString('hex').slice(0, length);
+    }
+    static stringToUnicodeEntities(str) {
+        return Array.from(str)
+            .map(char => `&#x${char.charCodeAt(0).toString(16)};`)
+            .join('');
+    }
+    static countLines(input) {
+        return input.split(/\r\n|\r|\n/).length;
+    }
+    static isPathRelativeTo(parentPath, childPath) {
+        const rpp = path_1.default.resolve(parentPath);
+        const rcp = path_1.default.resolve(childPath);
+        return rcp.startsWith(rpp.endsWith(path_1.default.sep) ? rpp : `${rpp}${path_1.default.sep}`);
     }
 }
 exports.Util = Util;
@@ -16754,6 +16768,8 @@ const Range = __nccwpck_require__(9828)
 /***/ 9828:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+const SPACE_CHARACTERS = /\s+/g
+
 // hoisted class for cyclic dependency
 class Range {
   constructor (range, options) {
@@ -16774,7 +16790,7 @@ class Range {
       // just put it in the set and return
       this.raw = range.value
       this.set = [[range]]
-      this.format()
+      this.formatted = undefined
       return this
     }
 
@@ -16785,10 +16801,7 @@ class Range {
     // First reduce all whitespace as much as possible so we do not have to rely
     // on potentially slow regexes like \s*. This is then stored and used for
     // future error messages as well.
-    this.raw = range
-      .trim()
-      .split(/\s+/)
-      .join(' ')
+    this.raw = range.trim().replace(SPACE_CHARACTERS, ' ')
 
     // First, split on ||
     this.set = this.raw
@@ -16822,14 +16835,29 @@ class Range {
       }
     }
 
-    this.format()
+    this.formatted = undefined
+  }
+
+  get range () {
+    if (this.formatted === undefined) {
+      this.formatted = ''
+      for (let i = 0; i < this.set.length; i++) {
+        if (i > 0) {
+          this.formatted += '||'
+        }
+        const comps = this.set[i]
+        for (let k = 0; k < comps.length; k++) {
+          if (k > 0) {
+            this.formatted += ' '
+          }
+          this.formatted += comps[k].toString().trim()
+        }
+      }
+    }
+    return this.formatted
   }
 
   format () {
-    this.range = this.set
-      .map((comps) => comps.join(' ').trim())
-      .join('||')
-      .trim()
     return this.range
   }
 
