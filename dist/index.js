@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getInputs = void 0;
+exports.getInputs = getInputs;
 const core = __importStar(__nccwpck_require__(2186));
 const util_1 = __nccwpck_require__(8662);
 function getInputs() {
@@ -47,7 +47,6 @@ function getInputs() {
         dryRun: core.getBooleanInput('dry-run'),
     };
 }
-exports.getInputs = getInputs;
 
 
 /***/ }),
@@ -185,7 +184,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.splitMarkdownSections = exports.parseNotes = exports.generateReleaseNotes = void 0;
+exports.generateReleaseNotes = generateReleaseNotes;
+exports.parseNotes = parseNotes;
+exports.splitMarkdownSections = splitMarkdownSections;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const semver = __importStar(__nccwpck_require__(1383));
@@ -231,7 +232,6 @@ function generateReleaseNotes(client, inputs, releaseData) {
         return body;
     });
 }
-exports.generateReleaseNotes = generateReleaseNotes;
 function parseNotes(notes, major, minor) {
     let notesType;
     // if minor is empty, default to patch else search for minor in notes
@@ -240,7 +240,6 @@ function parseNotes(notes, major, minor) {
     !major ? notesType : (notesType = notes.includes(`### ${major}`) ? 'major' : notesType);
     return notesType;
 }
-exports.parseNotes = parseNotes;
 function collapseSections(markdown, sectionData, categories, n) {
     return __awaiter(this, void 0, void 0, function* () {
         if (n < 1) {
@@ -335,7 +334,6 @@ function splitMarkdownSections(markdown, categories) {
         return sections;
     });
 }
-exports.splitMarkdownSections = splitMarkdownSections;
 
 
 /***/ }),
@@ -378,7 +376,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createOrUpdateRelease = exports.getRelease = void 0;
+exports.getRelease = getRelease;
+exports.createOrUpdateRelease = createOrUpdateRelease;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const notes_1 = __nccwpck_require__(376);
@@ -424,7 +423,6 @@ function getRelease(client) {
         return releaseResponse;
     });
 }
-exports.getRelease = getRelease;
 function createOrUpdateRelease(client, inputs, releaseData) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d;
@@ -465,7 +463,6 @@ function createOrUpdateRelease(client, inputs, releaseData) {
         core.setOutput('release-url', (_d = (_c = response === null || response === void 0 ? void 0 : response.data) === null || _c === void 0 ? void 0 : _c.html_url) === null || _d === void 0 ? void 0 : _d.trim());
     });
 }
-exports.createOrUpdateRelease = createOrUpdateRelease;
 
 
 /***/ }),
@@ -508,7 +505,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getVersionIncrease = exports.getCategories = void 0;
+exports.getCategories = getCategories;
+exports.getVersionIncrease = getVersionIncrease;
 const fs_1 = __nccwpck_require__(7147);
 const yaml = __importStar(__nccwpck_require__(1917));
 const semver = __importStar(__nccwpck_require__(1383));
@@ -525,7 +523,6 @@ function getCategories(inputs) {
         });
     });
 }
-exports.getCategories = getCategories;
 // function that returns tile for matching label
 function getTitleForLabel(inputs, label) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -549,7 +546,6 @@ function getVersionIncrease(releaseData, inputs, notes) {
         return semver.inc(releaseData.latestRelease, version) || '';
     });
 }
-exports.getVersionIncrease = getVersionIncrease;
 
 
 /***/ }),
@@ -3191,6 +3187,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Util = void 0;
 const crypto_1 = __importDefault(__nccwpck_require__(6113));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
 const sync_1 = __nccwpck_require__(4393);
@@ -3340,6 +3337,19 @@ class Util {
     static generateRandomString(length = 10) {
         const bytes = crypto_1.default.randomBytes(Math.ceil(length / 2));
         return bytes.toString('hex').slice(0, length);
+    }
+    static stringToUnicodeEntities(str) {
+        return Array.from(str)
+            .map(char => `&#x${char.charCodeAt(0).toString(16)};`)
+            .join('');
+    }
+    static countLines(input) {
+        return input.split(/\r\n|\r|\n/).length;
+    }
+    static isPathRelativeTo(parentPath, childPath) {
+        const rpp = path_1.default.resolve(parentPath);
+        const rcp = path_1.default.resolve(childPath);
+        return rcp.startsWith(rpp.endsWith(path_1.default.sep) ? rpp : `${rpp}${path_1.default.sep}`);
     }
 }
 exports.Util = Util;
