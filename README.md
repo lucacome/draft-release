@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v0.1.0
+      - uses: lucacome/draft-release@v1.1.1
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -93,7 +93,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v0.2.1
+      - uses: lucacome/draft-release@v1.1.1
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -126,7 +126,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v0.2.1
+      - uses: lucacome/draft-release@v1.1.1
         id: draft-release
         with:
           minor-label: 'enhancement'
