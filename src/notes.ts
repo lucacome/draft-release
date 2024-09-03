@@ -75,13 +75,15 @@ export async function generateReleaseNotes(
 }
 
 export function parseNotes(notes: string, major: string, minor: string): string {
-  let notesType
+  let notesType = 'patch'
 
-  // if minor is empty, default to patch else search for minor in notes
-  !minor ? (notesType = 'patch') : (notesType = notes.includes(`### ${minor}`) ? 'minor' : 'patch')
+  if (minor && notes.includes(`### ${minor}`)) {
+    notesType = 'minor'
+  }
 
-  // if major is empty, default to what was found else search for major in notes
-  !major ? notesType : (notesType = notes.includes(`### ${major}`) ? 'major' : notesType)
+  if (major && notes.includes(`### ${major}`)) {
+    notesType = 'major'
+  }
 
   return notesType
 }
