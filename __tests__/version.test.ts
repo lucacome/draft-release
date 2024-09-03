@@ -3,7 +3,7 @@ import {getVersionIncrease} from '../src/version'
 import {Inputs} from '../src/context'
 
 describe('getVersionIncrease', () => {
-  let fakeInputs: Inputs = {
+  const fakeInputs: Inputs = {
     majorLabel: '',
     minorLabel: '',
     githubToken: '',
@@ -24,15 +24,15 @@ describe('getVersionIncrease', () => {
   }
 
   test('should return patch with empty labels (bug)', async () => {
-    let version = await getVersionIncrease(releaseData, fakeInputs, '### 🐛 Bug Fixes')
+    const version = await getVersionIncrease(releaseData, fakeInputs, '### 🐛 Bug Fixes')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (feature)', async () => {
-    let version = await getVersionIncrease(releaseData, fakeInputs, '### 🚀 Features')
+    const version = await getVersionIncrease(releaseData, fakeInputs, '### 🚀 Features')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (change)', async () => {
-    let version = await getVersionIncrease(releaseData, fakeInputs, '### 💣 Breaking Changes')
+    const version = await getVersionIncrease(releaseData, fakeInputs, '### 💣 Breaking Changes')
     expect(version).toEqual('1.0.1')
   })
 
@@ -40,7 +40,7 @@ describe('getVersionIncrease', () => {
     fakeInputs.minorLabel = 'enhancement'
     fakeInputs.majorLabel = 'change'
 
-    let version = await getVersionIncrease(
+    const version = await getVersionIncrease(
       releaseData,
       fakeInputs,
       `
@@ -55,7 +55,7 @@ describe('getVersionIncrease', () => {
   test('should return major', async () => {
     fakeInputs.minorLabel = 'bug'
     fakeInputs.majorLabel = 'change'
-    let version = await getVersionIncrease(
+    const version = await getVersionIncrease(
       releaseData,
       fakeInputs,
       `

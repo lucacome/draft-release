@@ -2,8 +2,6 @@ import {describe, expect, test, it} from '@jest/globals'
 import {parseNotes, generateReleaseNotes, splitMarkdownSections} from '../src/notes'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
-import {helpers} from 'handlebars'
-import {Category} from '../src/version'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -11,20 +9,20 @@ jest.mock('@actions/github')
 let gh: ReturnType<typeof github.getOctokit>
 
 describe('parseNotes', () => {
-  test('should return patch with empty labels', () => {
-    let version = parseNotes('### 🐛 Bug Fixes', '', '')
+  test('should return patch for bug fixes and empty labels', () => {
+    const version = parseNotes('### 🐛 Bug Fixes', '', '')
     expect(version).toEqual('patch')
   })
-  test('should return patch with empty labels', () => {
-    let version = parseNotes('### 🚀 Features', '', '')
+  test('should return patch for features and empty labels', () => {
+    const version = parseNotes('### 🚀 Features', '', '')
     expect(version).toEqual('patch')
   })
   test('should return patch if minor and major are not in notes', () => {
-    let version = parseNotes('### 🚀 Features', '💣 Breaking Changes', '🐛 Bug Fixes')
+    const version = parseNotes('### 🚀 Features', '💣 Breaking Changes', '🐛 Bug Fixes')
     expect(version).toEqual('patch')
   })
   test('should return minor', () => {
-    let version = parseNotes(
+    const version = parseNotes(
       `
             ### 🚀 Features
             some feaures
@@ -38,7 +36,7 @@ describe('parseNotes', () => {
     expect(version).toEqual('minor')
   })
   test('should return minor if major is empty', () => {
-    let version = parseNotes(
+    const version = parseNotes(
       `
             ### 💣 Breaking Changes
             some breaking changes
@@ -52,7 +50,7 @@ describe('parseNotes', () => {
     expect(version).toEqual('minor')
   })
   test('should return major', () => {
-    let version = parseNotes(
+    const version = parseNotes(
       `
             ### 💣 Breaking Changes
             some breaking changes
@@ -91,7 +89,7 @@ describe('generateReleaseNotes', () => {
       branch: 'main',
       nextRelease: 'v1.1.0',
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       data: {
         body: 'This is the body',
@@ -131,7 +129,7 @@ describe('generateReleaseNotes', () => {
       branch: 'main',
       nextRelease: 'v1.1.0',
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       data: {
         body: `## What's Changed

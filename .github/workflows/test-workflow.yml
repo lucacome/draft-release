@@ -7,7 +7,7 @@ on:
 jobs:
 
   test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./
@@ -41,7 +41,7 @@ jobs:
           echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"
 
   test-dry-run-config:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-22.04
       steps:
         - uses: actions/checkout@v4
         - uses: ./

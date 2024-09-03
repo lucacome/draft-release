@@ -2,8 +2,6 @@ import {getRelease, createOrUpdateRelease, ReleaseData} from '../src/release'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
 
-const fs = jest.requireActual('fs')
-
 jest.mock('@actions/core')
 jest.mock('@actions/github')
 
@@ -16,6 +14,7 @@ describe('getRelease', () => {
   })
 
   it('should return the latest release when multiple releases exist', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
       status: 200,
@@ -48,6 +47,7 @@ describe('getRelease', () => {
   })
 
   it('should return the latest for the current branch', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
       status: 200,
@@ -80,6 +80,7 @@ describe('getRelease', () => {
   })
 
   it('should return the latest non-draft release', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
       status: 200,
@@ -112,6 +113,7 @@ describe('getRelease', () => {
   })
 
   it('should return v0.0.0 when no releases exist', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
       status: 200,
@@ -129,7 +131,9 @@ describe('getRelease', () => {
 })
 
 describe('createOrUpdateRelease', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockResponse: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockNotes: any
   const inputs: Inputs = {
     githubToken: '_',
@@ -178,6 +182,7 @@ describe('createOrUpdateRelease', () => {
   })
 
   it('should create a new release draft', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockInputCreate: any = {
       headers: {},
       status: 200,
@@ -207,12 +212,13 @@ describe('createOrUpdateRelease', () => {
       nextRelease: 'v1.0.1',
     }
 
-    const response = await createOrUpdateRelease(gh, inputs, releaseData)
+    await createOrUpdateRelease(gh, inputs, releaseData)
 
     expect(mockReleases).toHaveBeenCalledTimes(1)
   })
 
   it('should update an existing release draft', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockInputUpdate: any = {
       headers: {},
       status: 200,
@@ -248,7 +254,7 @@ describe('createOrUpdateRelease', () => {
     const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
     mockReleaseNotes.mockResolvedValue(mockNotes)
 
-    const response = await createOrUpdateRelease(gh, inputs, releaseData)
+    await createOrUpdateRelease(gh, inputs, releaseData)
 
     expect(mockReleases).toHaveBeenCalledTimes(1)
   })

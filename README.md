@@ -26,7 +26,7 @@ on:
 
 jobs:
   draft-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: lucacome/draft-release@v1.1.1
@@ -88,7 +88,7 @@ permissions:
 
 jobs:
   draft-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -121,7 +121,7 @@ permissions:
 
 jobs:
   draft-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
