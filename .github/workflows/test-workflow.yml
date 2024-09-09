@@ -9,7 +9,7 @@ jobs:
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: ./
         id: draft-release
         with:
@@ -43,7 +43,7 @@ jobs:
   test-dry-run-config:
       runs-on: ubuntu-22.04
       steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         - uses: ./
           id: draft-release
           with:

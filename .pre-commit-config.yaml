@@ -18,3 +18,11 @@ repos:
         args: [--autofix, --no-sort-keys, --no-ensure-ascii]
       - id: mixed-line-ending
         args: [--fix=lf]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.3
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.38.0
+    hooks:
+      - id: eslint
