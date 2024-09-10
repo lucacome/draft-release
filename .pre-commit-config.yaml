@@ -23,6 +23,6 @@ repos:
     hooks:
       - id: gitleaks
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.56.0
+    rev: v9.10.0
     hooks:
       - id: eslint
