@@ -13,11 +13,29 @@ defaults:
     shell: bash
 
 jobs:
-  build:
-    if: ${{ github.actor == 'renovate[bot]' }}
+  check:
     runs-on: ubuntu-22.04
+    outputs:
+      javascript: ${{ steps.filter.outputs.javascript }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Check for changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            javascript:
+              - 'package.json'
+              - 'yarn.lock'
+  build:
+    if: ${{ github.actor == 'renovate[bot]' && needs.check.outputs.javascript == 'true' }}
+    runs-on: ubuntu-22.04
+    needs: check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.COMMIT_PAT }}
@@ -29,10 +47,10 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Install dependencies
-        run: yarn install
+        run: corepack yarn install
 
       - name: Run build
-        run: yarn build
+        run: corepack yarn build
 
       - name: Commit changes
         id: commit
