@@ -1,9 +1,9 @@
 import {promises as fsPromises} from 'fs'
 import * as yaml from 'js-yaml'
 import * as semver from 'semver'
-import {Inputs} from './context'
-import {parseNotes} from './notes'
-import {ReleaseData} from './release'
+import {Inputs} from './context.js'
+import {parseNotes} from './notes.js'
+import {ReleaseData} from './release.js'
 
 // yaml type definition for release.yml
 // changelog:

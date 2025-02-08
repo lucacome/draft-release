@@ -1,6 +1,7 @@
 import {getRelease, createOrUpdateRelease, ReleaseData} from '../src/release'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
+import {jest} from '@jest/globals'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
