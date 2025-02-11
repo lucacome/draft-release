@@ -1,11 +1,11 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
-import {getRelease, createOrUpdateRelease} from './release'
-import {generateReleaseNotes} from './notes'
-import {getVersionIncrease} from './version'
-import {getInputs, Inputs} from './context'
+import {getRelease, createOrUpdateRelease} from './release.js'
+import {generateReleaseNotes} from './notes.js'
+import {getVersionIncrease} from './version.js'
+import {getInputs, Inputs} from './context.js'
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   try {
     const context = github.context
     core.startGroup(`Context info`)
@@ -53,5 +53,3 @@ async function run(): Promise<void> {
   }
   return
 }
-
-run()

@@ -1,8 +1,8 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import {components as OctoOpenApiTypes} from '@octokit/openapi-types'
-import {generateReleaseNotes} from './notes'
-import {Inputs} from './context'
+import {generateReleaseNotes} from './notes.js'
+import {Inputs} from './context.js'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 

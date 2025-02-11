@@ -2,9 +2,9 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as semver from 'semver'
 import * as handlebars from 'handlebars'
-import {Inputs} from './context'
-import {getCategories, Category} from './version'
-import {ReleaseData} from './release'
+import {Inputs} from './context.js'
+import {getCategories, Category} from './version.js'
+import {ReleaseData} from './release.js'
 
 interface VariableObject {
   [key: string]: string
