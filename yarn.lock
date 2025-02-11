@@ -1924,7 +1924,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.10.10":
+"@types/node@npm:*, @types/node@npm:^22.13.1":
   version: 22.13.1
   resolution: "@types/node@npm:22.13.1"
   dependencies:
@@ -5314,7 +5314,7 @@ __metadata:
     "@rollup/plugin-typescript": "npm:^12.1.2"
     "@types/jest": "npm:^29.5.14"
     "@types/js-yaml": "npm:^4.0.9"
-    "@types/node": "npm:^22.10.10"
+    "@types/node": "npm:^22.13.1"
     "@types/semver": "npm:^7.5.8"
     "@typescript-eslint/eslint-plugin": "npm:^8.23.0"
     "@typescript-eslint/parser": "npm:^8.23.0"
