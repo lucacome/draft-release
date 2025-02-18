@@ -683,9 +683,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.53.0":
-  version: 0.53.0
-  resolution: "@docker/actions-toolkit@npm:0.53.0"
+"@docker/actions-toolkit@npm:^0.54.0":
+  version: 0.54.0
+  resolution: "@docker/actions-toolkit@npm:0.54.0"
   dependencies:
     "@actions/artifact": "npm:^2.2.1"
     "@actions/cache": "npm:^4.0.0"
@@ -705,10 +705,10 @@ __metadata:
     he: "npm:^1.2.0"
     js-yaml: "npm:^4.1.0"
     jwt-decode: "npm:^4.0.0"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.1"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/a6e8a2cd2e6bf65e534267f3073adfd4c384697dbe989b70ca53f2108eed49ec489223092bdc27a89f6f3c1740f21454a059c6ece3089d1a08931979a55d3d53
+  checksum: 10c0/098de64af1619bfe972be74cc2e9edf372fa5482c6f517bd4e8241228f7eb9e0c0db73b2a217feb89844d85d1c280c405e473ab6325925586a9ccdb8b99f4f40
   languageName: node
   linkType: hard
 
@@ -5305,7 +5305,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@actions/github": "npm:^6.0.0"
-    "@docker/actions-toolkit": "npm:^0.53.0"
+    "@docker/actions-toolkit": "npm:^0.54.0"
     "@eslint/compat": "npm:^1.2.6"
     "@eslint/js": "npm:^9.20.0"
     "@jest/globals": "npm:^29.7.0"
