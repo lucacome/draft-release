@@ -22,3 +22,6 @@ repos:
     rev: v8.23.3
     hooks:
       - id: gitleaks
+
+ci:
+  autoupdate_schedule: quarterly # Renovate is used for more frequent updates and there's no way to disable autoupdate
