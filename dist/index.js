@@ -45475,7 +45475,7 @@ async function groupDependencyUpdates(sections) {
                     const prUrl = pattern.getPRUrl(match);
                     if (!updateGroups.has(key)) {
                         updateGroups.set(key, {
-                            originalName: pattern.getOriginalName(match),
+                            originalDependencyName: pattern.getOriginalName(match),
                             latestVersion: pattern.getLatestVersion?.(match) || '',
                             initialVersion: pattern.getInitialVersion?.(match) || '',
                             allPRs: new Set([prUrl]),
@@ -45486,104 +45486,27 @@ async function groupDependencyUpdates(sections) {
                     else {
                         const group = updateGroups.get(key);
                         group.allPRs.add(prUrl);
-                        // Version comparison logic for all dependency updates
-                        const latestVersion = pattern.getLatestVersion?.(match) || '';
                         // Special handling for Dependabot initial version tracking
                         if (pattern.name === 'dependabot') {
                             const initialVersion = pattern.getInitialVersion?.(match) || '';
                             // Always keep the earliest initial version
                             if (initialVersion && group.initialVersion) {
-                                try {
-                                    if (semverExports.valid(initialVersion) && semverExports.valid(group.initialVersion)) {
-                                        // If both are valid semver, compare and keep the smallest
-                                        if (semverExports.lt(initialVersion, group.initialVersion)) {
-                                            coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (lower)`);
-                                            group.initialVersion = initialVersion;
-                                        }
-                                    }
-                                    else {
-                                        // For non-semver versions, try to extract numbers for comparison
-                                        const initNumbers = initialVersion.match(/\d+/g) || [];
-                                        const groupInitNumbers = group.initialVersion.match(/\d+/g) || [];
-                                        // Simple heuristic: compare the first number in each
-                                        if (initNumbers.length > 0 && groupInitNumbers.length > 0) {
-                                            const firstInitNumber = initNumbers[0];
-                                            const firstGroupNumber = groupInitNumbers[0];
-                                            if (firstInitNumber && firstGroupNumber) {
-                                                // Ensure neither is undefined
-                                                const parsedInit = parseInt(firstInitNumber);
-                                                const parsedGroup = parseInt(firstGroupNumber);
-                                                if (parsedInit < parsedGroup) {
-                                                    coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (numeric comparison)`);
-                                                    group.initialVersion = initialVersion;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (err) {
-                                    // In case of comparison error, don't update the initial version
-                                    coreExports.debug(`Initial version comparison failed: ${err}. Keeping existing.`);
+                                if (isEarlierVersion(initialVersion, group.initialVersion)) {
+                                    coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (lower)`);
+                                    group.initialVersion = initialVersion;
                                 }
                             }
                             else if (initialVersion) {
                                 group.initialVersion = initialVersion;
                             }
                         }
-                        // Version comparison for latest version - for both Renovate and Dependabot
+                        // Version comparison for latest version - for all dependency types
+                        const latestVersion = pattern.getLatestVersion?.(match) || '';
                         if (latestVersion && group.latestVersion) {
-                            try {
-                                // Try to clean the versions if they're valid semver
-                                if (semverExports.valid(latestVersion) && semverExports.valid(group.latestVersion)) {
-                                    const cleanNew = semverExports.clean(latestVersion) || latestVersion;
-                                    const cleanCurrent = semverExports.clean(group.latestVersion) || group.latestVersion;
-                                    coreExports.debug(`[VERSION] Comparing semver versions for ${group.originalName}: ${cleanNew} vs ${cleanCurrent}`);
-                                    // If the new version is greater, update it
-                                    if (semverExports.gt(cleanNew, cleanCurrent)) {
-                                        coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
-                                        group.latestVersion = latestVersion;
-                                    }
-                                    else {
-                                        coreExports.debug(`[VERSION] Keeping current version ${group.latestVersion} (newer than or equal to ${latestVersion})`);
-                                    }
-                                }
-                                // Try with coercion for non-standard formats
-                                else {
-                                    const coercedNew = semverExports.coerce(latestVersion);
-                                    const coercedCurrent = semverExports.coerce(group.latestVersion);
-                                    if (coercedNew && coercedCurrent) {
-                                        coreExports.debug(`[VERSION] Comparing coerced versions: ${coercedNew.version} vs ${coercedCurrent.version}`);
-                                        if (semverExports.gt(coercedNew, coercedCurrent)) {
-                                            coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
-                                            group.latestVersion = latestVersion;
-                                        }
-                                    }
-                                    // Special handling for caret/tilde prefixes
-                                    else {
-                                        // For versions like ^1.2.3 or ~1.2.3, strip prefixes
-                                        const stripPrefixRegex = /[\^~]/g;
-                                        const strippedNew = latestVersion.replace(stripPrefixRegex, '');
-                                        const strippedCurrent = group.latestVersion.replace(stripPrefixRegex, '');
-                                        if (semverExports.valid(strippedNew) && semverExports.valid(strippedCurrent)) {
-                                            if (semverExports.gt(strippedNew, strippedCurrent)) {
-                                                coreExports.debug(`[VERSION] Using stripped version comparison: ${latestVersion} is newer than ${group.latestVersion}`);
-                                                group.latestVersion = latestVersion;
-                                            }
-                                        }
-                                        // As a fallback for Renovate, trust the most recent PR
-                                        else if (pattern.name.startsWith('renovate')) {
-                                            coreExports.debug(`[RENOVATE] Fallback: Using most recent version ${latestVersion}`);
-                                            group.latestVersion = latestVersion;
-                                        }
-                                    }
-                                }
-                            }
-                            catch (err) {
-                                coreExports.debug(`Version comparison error: ${err}. Using latest PR version.`);
-                                // For errors, trust the most recent PR for Renovate
-                                if (pattern.name.startsWith('renovate')) {
-                                    group.latestVersion = latestVersion;
-                                }
+                            const isRenovate = pattern.name.startsWith('renovate');
+                            if (isNewerVersion(latestVersion, group.latestVersion, group.originalDependencyName, isRenovate)) {
+                                coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
+                                group.latestVersion = latestVersion;
                             }
                         }
                     }
@@ -45618,7 +45541,7 @@ async function groupDependencyUpdates(sections) {
                 const group = updateGroups.get(groupKey);
                 // Format the consolidated entry based on the pattern
                 const prLinks = Array.from(group.allPRs).sort().join(', ');
-                const entry = group.pattern.formatEntry(group.originalName, group.latestVersion, group.initialVersion, prLinks);
+                const entry = group.pattern.formatEntry(group.originalDependencyName, group.latestVersion, group.initialVersion, prLinks);
                 newItems.push(entry);
                 processedGroups.add(groupKey);
             }
@@ -45627,6 +45550,107 @@ async function groupDependencyUpdates(sections) {
         result[label] = newItems;
     }
     return result;
+}
+/**
+ * Compares two version strings and determines if the new version is greater than the current one.
+ * Applies multiple strategies to handle semver, non-semver, and prefixed versions.
+ *
+ * @param newVersion - The new version to compare
+ * @param currentVersion - The current version to compare against
+ * @param packageName - The name of the dependency (for debug logging)
+ * @param isRenovate - Whether this is a Renovate update (affects fallback behavior)
+ * @returns True if the new version should replace the current version, false otherwise
+ */
+function isNewerVersion(newVersion, currentVersion, packageName, isRenovate) {
+    if (!newVersion || !currentVersion) {
+        return isRenovate; // For empty versions in Renovate updates, trust the most recent
+    }
+    try {
+        // Strategy 1: Direct semver comparison for valid versions
+        if (semverExports.valid(newVersion) && semverExports.valid(currentVersion)) {
+            const cleanNew = semverExports.clean(newVersion) || newVersion;
+            const cleanCurrent = semverExports.clean(currentVersion) || currentVersion;
+            coreExports.debug(`[VERSION] Comparing semver versions for ${packageName}: ${cleanNew} vs ${cleanCurrent}`);
+            if (semverExports.gt(cleanNew, cleanCurrent)) {
+                coreExports.debug(`[VERSION] ${newVersion} is newer than ${currentVersion}`);
+                return true;
+            }
+            else {
+                coreExports.debug(`[VERSION] ${currentVersion} is newer than or equal to ${newVersion}`);
+                return false;
+            }
+        }
+        // Strategy 2: Try coercion for non-standard formats
+        const coercedNew = semverExports.coerce(newVersion);
+        const coercedCurrent = semverExports.coerce(currentVersion);
+        if (coercedNew && coercedCurrent) {
+            coreExports.debug(`[VERSION] Comparing coerced versions: ${coercedNew.version} vs ${coercedCurrent.version}`);
+            if (semverExports.gt(coercedNew, coercedCurrent)) {
+                coreExports.debug(`[VERSION] ${newVersion} is newer than ${currentVersion} (coerced)`);
+                return true;
+            }
+            return false;
+        }
+        // Strategy 3: Special handling for caret/tilde prefixes
+        const stripPrefixRegex = /[\^~]/g;
+        const strippedNew = newVersion.replace(stripPrefixRegex, '');
+        const strippedCurrent = currentVersion.replace(stripPrefixRegex, '');
+        if (semverExports.valid(strippedNew) && semverExports.valid(strippedCurrent)) {
+            if (semverExports.gt(strippedNew, strippedCurrent)) {
+                coreExports.debug(`[VERSION] ${newVersion} is newer than ${currentVersion} (stripped)`);
+                return true;
+            }
+            return false;
+        }
+        // Strategy 4: For other cases, trust Renovate's order
+        if (isRenovate) {
+            coreExports.debug(`[RENOVATE] Fallback: Using most recent version ${newVersion}`);
+            return true;
+        }
+        return false;
+    }
+    catch (err) {
+        coreExports.debug(`Version comparison error: ${err}`);
+        // For errors with Renovate, trust the most recent PR
+        return isRenovate;
+    }
+}
+/**
+ * Compares two version strings and determines if the initial version is earlier than the current one.
+ * Used specifically for tracking the earliest "from" version in Dependabot updates.
+ *
+ * @param initialVersion - The new initial version to compare
+ * @param currentInitialVersion - The current initial version to compare against
+ * @returns True if the new initial version is earlier, false otherwise
+ */
+function isEarlierVersion(initialVersion, currentInitialVersion) {
+    if (!initialVersion || !currentInitialVersion) {
+        return !!initialVersion;
+    }
+    try {
+        // Try standard semver comparison first
+        if (semverExports.valid(initialVersion) && semverExports.valid(currentInitialVersion)) {
+            return semverExports.lt(initialVersion, currentInitialVersion);
+        }
+        // For non-semver versions, try to extract numbers for comparison
+        const initNumbers = initialVersion.match(/\d+/g) || [];
+        const groupInitNumbers = currentInitialVersion.match(/\d+/g) || [];
+        // Simple heuristic: compare the first number in each
+        if (initNumbers.length > 0 && groupInitNumbers.length > 0) {
+            const firstInitNumber = initNumbers[0];
+            const firstGroupNumber = groupInitNumbers[0];
+            if (firstInitNumber && firstGroupNumber) {
+                const parsedInit = parseInt(firstInitNumber);
+                const parsedGroup = parseInt(firstGroupNumber);
+                return parsedInit < parsedGroup;
+            }
+        }
+        return false;
+    }
+    catch (err) {
+        coreExports.debug(`Initial version comparison failed: ${err}. Keeping existing.`);
+        return false;
+    }
 }
 
 async function getRelease(client) {
