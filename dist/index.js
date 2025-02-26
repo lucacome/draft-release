@@ -45396,7 +45396,7 @@ async function splitMarkdownSections(markdown, categories) {
 /**
  * Consolidates multiple dependency update entries into single entries.
  *
- * Processes parsed release note sections to group dependency updates from Renovate and Dependabot.
+ * Processes parsed release note sections to group dependency updates from automated services.
  * For each dependency, the function aggregates entries to reflect the latest update while combining all relevant pull request links,
  * and preserves the original ordering of non-dependency items.
  *
@@ -45405,123 +45405,224 @@ async function splitMarkdownSections(markdown, categories) {
  */
 async function groupDependencyUpdates(sections) {
     const result = {};
+    // Define patterns for different types of automated updates
+    const updatePatterns = [
+        // Renovate standard dependency updates
+        {
+            name: 'renovate-dependency',
+            regex: /\* Update (.*?) to (.*?) by @renovate in (.*)$/,
+            getKey: (matches) => matches[1].trim().toLowerCase(),
+            getGroupKey: (matches) => matches[1].trim().toLowerCase(),
+            getOriginalName: (matches) => matches[1].trim(),
+            getLatestVersion: (matches) => matches[2].trim(),
+            getPRUrl: (matches) => matches[3].trim(),
+            formatEntry: (name, latest, initial, prLinks) => `* Update ${name} to ${latest} by @renovate in ${prLinks}`,
+        },
+        // Renovate lock file maintenance
+        {
+            name: 'renovate-lockfile',
+            regex: /\* Lock file maintenance by @renovate in (.*)$/,
+            getKey: () => 'lock-file-maintenance',
+            getGroupKey: () => 'lock-file-maintenance',
+            getOriginalName: () => 'Lock file maintenance',
+            getLatestVersion: () => '',
+            getPRUrl: (matches) => matches[1].trim(),
+            formatEntry: (_name, _latest, _initial, prLinks) => `* Lock file maintenance by @renovate in ${prLinks}`,
+        },
+        // Dependabot updates
+        {
+            name: 'dependabot',
+            regex: /\* Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$/,
+            getKey: (matches) => matches[1].trim().toLowerCase(),
+            getGroupKey: (matches) => matches[1].trim().toLowerCase(),
+            getOriginalName: (matches) => matches[1].trim(),
+            getLatestVersion: (matches) => matches[3].trim(),
+            getInitialVersion: (matches) => matches[2].trim(),
+            getPRUrl: (matches) => matches[4].trim(),
+            formatEntry: (name, latest, initial, prLinks) => `* Bump ${name} from ${initial} to ${latest} by @dependabot in ${prLinks}`,
+        },
+        // Pre-commit-ci updates
+        {
+            name: 'pre-commit-ci',
+            regex: /\* \[pre-commit\.ci\] pre-commit autoupdate by @pre-commit-ci in (.*)$/,
+            getKey: () => 'pre-commit',
+            getGroupKey: () => 'pre-commit',
+            getOriginalName: () => 'pre-commit',
+            getLatestVersion: () => '',
+            getPRUrl: (matches) => matches[1].trim(),
+            formatEntry: (_name, _latest, _initial, prLinks) => `* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in ${prLinks}`,
+        },
+        // Future patterns can be added here without modifying the core logic
+    ];
     for (const [label, items] of Object.entries(sections)) {
         if (items.length === 0) {
             result[label] = [];
             continue;
         }
-        // First pass: identify dependencies to group
-        const dependencyGroups = new Map();
-        // Track non-dependency items
-        const nonDependencyItems = new Set();
-        // First pass: gather information about dependencies
+        const updateGroups = new Map();
+        const nonAutomatedItems = new Set();
+        // First pass: gather update information
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
-            const renovateMatch = item.match(/\* Update (.*?) to (.*?) by @renovate in (.*)$/);
-            const dependabotMatch = item.match(/\* Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$/);
-            if (renovateMatch) {
-                const [, dependency, version, prLink] = renovateMatch;
-                const key = dependency.trim().toLowerCase(); // Lowercase for map key
-                const originalName = dependency.trim(); // Keep original for display
-                const prUrl = prLink.trim();
-                if (!dependencyGroups.has(key)) {
-                    dependencyGroups.set(key, {
-                        originalName,
-                        latestVersion: version,
-                        initialVersion: '',
-                        allPRs: new Set([prUrl]),
-                        source: 'renovate',
-                        position: i,
-                    });
-                }
-                else {
-                    const group = dependencyGroups.get(key);
-                    group.allPRs.add(prUrl);
-                    group.latestVersion = version;
-                }
-            }
-            else if (dependabotMatch) {
-                const [, dependency, fromVersion, toVersion, prLink] = dependabotMatch;
-                const key = dependency.trim().toLowerCase(); // Lowercase for map key
-                const originalName = dependency.trim(); // Keep original for display
-                const prUrl = prLink.trim();
-                if (!dependencyGroups.has(key)) {
-                    dependencyGroups.set(key, {
-                        originalName,
-                        latestVersion: toVersion,
-                        initialVersion: fromVersion,
-                        allPRs: new Set([prUrl]),
-                        source: 'dependabot',
-                        position: i,
-                    });
-                }
-                else {
-                    const group = dependencyGroups.get(key);
-                    group.allPRs.add(prUrl);
-                    group.latestVersion = toVersion;
-                    // Keep the earliest "from" version
-                    if (semverExports.valid(fromVersion) && semverExports.valid(group.initialVersion)) {
-                        try {
-                            if (semverExports.lt(fromVersion, group.initialVersion)) {
-                                group.initialVersion = fromVersion;
-                            }
-                        }
-                        catch {
-                            // If semver comparison fails, keep the first version we encountered
-                            if (!group.initialVersion) {
-                                group.initialVersion = fromVersion;
-                            }
-                        }
+            let matched = false;
+            // Try each pattern until one matches
+            for (const pattern of updatePatterns) {
+                const match = item.match(pattern.regex);
+                if (match) {
+                    matched = true;
+                    const groupKey = pattern.getGroupKey(match);
+                    const key = `${pattern.name}:${groupKey}`;
+                    const prUrl = pattern.getPRUrl(match);
+                    if (!updateGroups.has(key)) {
+                        updateGroups.set(key, {
+                            originalName: pattern.getOriginalName(match),
+                            latestVersion: pattern.getLatestVersion?.(match) || '',
+                            initialVersion: pattern.getInitialVersion?.(match) || '',
+                            allPRs: new Set([prUrl]),
+                            position: i,
+                            pattern,
+                        });
                     }
                     else {
-                        // For non-semver versions, just keep the first one we saw
-                        if (!group.initialVersion) {
-                            group.initialVersion = fromVersion;
+                        const group = updateGroups.get(key);
+                        group.allPRs.add(prUrl);
+                        // Version comparison logic for all dependency updates
+                        const latestVersion = pattern.getLatestVersion?.(match) || '';
+                        // Special handling for Dependabot initial version tracking
+                        if (pattern.name === 'dependabot') {
+                            const initialVersion = pattern.getInitialVersion?.(match) || '';
+                            // Always keep the earliest initial version
+                            if (initialVersion && group.initialVersion) {
+                                try {
+                                    if (semverExports.valid(initialVersion) && semverExports.valid(group.initialVersion)) {
+                                        // If both are valid semver, compare and keep the smallest
+                                        if (semverExports.lt(initialVersion, group.initialVersion)) {
+                                            coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (lower)`);
+                                            group.initialVersion = initialVersion;
+                                        }
+                                    }
+                                    else {
+                                        // For non-semver versions, try to extract numbers for comparison
+                                        const initNumbers = initialVersion.match(/\d+/g) || [];
+                                        const groupInitNumbers = group.initialVersion.match(/\d+/g) || [];
+                                        // Simple heuristic: compare the first number in each
+                                        if (initNumbers.length > 0 && groupInitNumbers.length > 0) {
+                                            const firstInitNumber = initNumbers[0];
+                                            const firstGroupNumber = groupInitNumbers[0];
+                                            if (firstInitNumber && firstGroupNumber) {
+                                                // Ensure neither is undefined
+                                                const parsedInit = parseInt(firstInitNumber);
+                                                const parsedGroup = parseInt(firstGroupNumber);
+                                                if (parsedInit < parsedGroup) {
+                                                    coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (numeric comparison)`);
+                                                    group.initialVersion = initialVersion;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (err) {
+                                    // In case of comparison error, don't update the initial version
+                                    coreExports.debug(`Initial version comparison failed: ${err}. Keeping existing.`);
+                                }
+                            }
+                            else if (initialVersion) {
+                                group.initialVersion = initialVersion;
+                            }
+                        }
+                        // Version comparison for latest version - for both Renovate and Dependabot
+                        if (latestVersion && group.latestVersion) {
+                            try {
+                                // Try to clean the versions if they're valid semver
+                                if (semverExports.valid(latestVersion) && semverExports.valid(group.latestVersion)) {
+                                    const cleanNew = semverExports.clean(latestVersion) || latestVersion;
+                                    const cleanCurrent = semverExports.clean(group.latestVersion) || group.latestVersion;
+                                    coreExports.debug(`[VERSION] Comparing semver versions for ${group.originalName}: ${cleanNew} vs ${cleanCurrent}`);
+                                    // If the new version is greater, update it
+                                    if (semverExports.gt(cleanNew, cleanCurrent)) {
+                                        coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
+                                        group.latestVersion = latestVersion;
+                                    }
+                                    else {
+                                        coreExports.debug(`[VERSION] Keeping current version ${group.latestVersion} (newer than or equal to ${latestVersion})`);
+                                    }
+                                }
+                                // Try with coercion for non-standard formats
+                                else {
+                                    const coercedNew = semverExports.coerce(latestVersion);
+                                    const coercedCurrent = semverExports.coerce(group.latestVersion);
+                                    if (coercedNew && coercedCurrent) {
+                                        coreExports.debug(`[VERSION] Comparing coerced versions: ${coercedNew.version} vs ${coercedCurrent.version}`);
+                                        if (semverExports.gt(coercedNew, coercedCurrent)) {
+                                            coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
+                                            group.latestVersion = latestVersion;
+                                        }
+                                    }
+                                    // Special handling for caret/tilde prefixes
+                                    else {
+                                        // For versions like ^1.2.3 or ~1.2.3, strip prefixes
+                                        const stripPrefixRegex = /[\^~]/g;
+                                        const strippedNew = latestVersion.replace(stripPrefixRegex, '');
+                                        const strippedCurrent = group.latestVersion.replace(stripPrefixRegex, '');
+                                        if (semverExports.valid(strippedNew) && semverExports.valid(strippedCurrent)) {
+                                            if (semverExports.gt(strippedNew, strippedCurrent)) {
+                                                coreExports.debug(`[VERSION] Using stripped version comparison: ${latestVersion} is newer than ${group.latestVersion}`);
+                                                group.latestVersion = latestVersion;
+                                            }
+                                        }
+                                        // As a fallback for Renovate, trust the most recent PR
+                                        else if (pattern.name.startsWith('renovate')) {
+                                            coreExports.debug(`[RENOVATE] Fallback: Using most recent version ${latestVersion}`);
+                                            group.latestVersion = latestVersion;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (err) {
+                                coreExports.debug(`Version comparison error: ${err}. Using latest PR version.`);
+                                // For errors, trust the most recent PR for Renovate
+                                if (pattern.name.startsWith('renovate')) {
+                                    group.latestVersion = latestVersion;
+                                }
+                            }
                         }
                     }
+                    break;
                 }
             }
-            else {
-                // Mark this as a non-dependency item
-                nonDependencyItems.add(i);
+            if (!matched) {
+                // Not an automated update
+                nonAutomatedItems.add(i);
             }
         }
-        // Second pass: create the new items array while preserving order
-        const processedDependencies = new Set();
+        // Second pass: create the consolidated entries
+        const processedGroups = new Set();
         const newItems = [];
         for (let i = 0; i < items.length; i++) {
-            if (nonDependencyItems.has(i)) {
-                // This is a non-dependency item, keep as is
+            if (nonAutomatedItems.has(i)) {
+                // Not an automated update, keep as is
                 newItems.push(items[i]);
                 continue;
             }
-            // This is a dependency item
             const item = items[i];
-            let dependencyKey = null;
-            // Extract the dependency key
-            const renovateMatch = item.match(/\* Update (.*?) to .* by @renovate/);
-            const dependabotMatch = item.match(/\* Bump (.*?) from .* by @dependabot/);
-            if (renovateMatch) {
-                dependencyKey = renovateMatch[1].trim().toLowerCase();
+            let groupKey = null;
+            // Find which pattern matches this item
+            for (const pattern of updatePatterns) {
+                const match = item.match(pattern.regex);
+                if (match) {
+                    groupKey = `${pattern.name}:${pattern.getGroupKey(match)}`;
+                    break;
+                }
             }
-            else if (dependabotMatch) {
-                dependencyKey = dependabotMatch[1].trim().toLowerCase();
+            if (groupKey && !processedGroups.has(groupKey)) {
+                const group = updateGroups.get(groupKey);
+                // Format the consolidated entry based on the pattern
+                const prLinks = Array.from(group.allPRs).sort().join(', ');
+                const entry = group.pattern.formatEntry(group.originalName, group.latestVersion, group.initialVersion, prLinks);
+                newItems.push(entry);
+                processedGroups.add(groupKey);
             }
-            if (dependencyKey && !processedDependencies.has(dependencyKey)) {
-                // This is the first occurrence of this dependency
-                const group = dependencyGroups.get(dependencyKey);
-                // Create the consolidated entry using the original name format
-                const prefix = group.source === 'renovate'
-                    ? `* Update ${group.originalName} to ${group.latestVersion} by @renovate in `
-                    : `* Bump ${group.originalName} from ${group.initialVersion} to ${group.latestVersion} by @dependabot in `;
-                // Join all PR links with comma separator
-                const prLinks = Array.from(group.allPRs).join(', ');
-                // Add the consolidated entry
-                newItems.push(`${prefix}${prLinks}`);
-                // Mark this dependency as processed
-                processedDependencies.add(dependencyKey);
-            }
-            // Skip subsequent occurrences of the same dependency
+            // Skip already processed groups
         }
         result[label] = newItems;
     }

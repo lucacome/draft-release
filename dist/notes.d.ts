@@ -46,7 +46,7 @@ export declare function splitMarkdownSections(markdown: string, categories: Cate
 /**
  * Consolidates multiple dependency update entries into single entries.
  *
- * Processes parsed release note sections to group dependency updates from Renovate and Dependabot.
+ * Processes parsed release note sections to group dependency updates from automated services.
  * For each dependency, the function aggregates entries to reflect the latest update while combining all relevant pull request links,
  * and preserves the original ordering of non-dependency items.
  *
