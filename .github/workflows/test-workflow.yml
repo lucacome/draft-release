@@ -39,7 +39,11 @@ jobs:
           echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
           echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
           echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
-          echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"
+
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            console.log("Release Sections: " + JSON.stringify(${{ steps.draft-release.outputs.release-sections }}, null, 2));
 
   test-dry-run-config:
     runs-on: ubuntu-24.04
