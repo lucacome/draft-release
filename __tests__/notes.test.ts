@@ -195,37 +195,94 @@ const markdown = `
 <!-- Release notes generated using configuration in .github/release.yml at main -->
 
 ## What's Changed
+### 🚀 Features
+* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326
+* Update dependency eslint-plugin-jest to ^28.8.3 by @renovate in https://github.com/lucacome/draft-release/pull/327
+* Update dependency eslint-plugin-import to ^2.30.0 by @renovate in https://github.com/lucacome/draft-release/pull/328
+* Update typescript-eslint monorepo to ^8.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/338
+### 💣 Breaking Changes
+* Delete .github/dependabot.yml by @lucacome in https://github.com/lucacome/draft-release/pull/316
+* Configure Renovate - autoclosed by @renovate in https://github.com/lucacome/draft-release/pull/315
+* Switch to yarn by @lucacome in https://github.com/lucacome/draft-release/pull/325
 ### 🐛 Bug Fixes
-* Bump anchore/sbom-action from 0.13.1 to 0.13.4 by @dependabot in https://github.com/somerepo/pull/200
+* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/324
+* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/340
+* Bump path-to-regexp from 6.2.2 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342
+* Update dependency @types/jest to ^29.5.13 by @renovate in https://github.com/lucacome/draft-release/pull/343
+* Update dependency @types/node to ^22.5.5 by @renovate in https://github.com/lucacome/draft-release/pull/344
+### 📝 Documentation
+* Update dependency lucacome/draft-release to v1 by @renovate in https://github.com/lucacome/draft-release/pull/321
 ### 🧪 Tests
-* update by @lucacome in https://github.com/somerepo/pull/205
+* Tested with jest
 ### 🔨 Maintenance
+* Build for renovate PR by @lucacome in https://github.com/lucacome/draft-release/pull/332
+* Only try to build on javascript changes by @lucacome in https://github.com/lucacome/draft-release/pull/335
+* Run pre-commit by @lucacome in https://github.com/lucacome/draft-release/pull/336
+### ⬆️ Dependencies
+* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318
+* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319
+* Update dependency eslint-plugin-jest to ^28.8.2 by @renovate in https://github.com/lucacome/draft-release/pull/320
+* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322
+* Update Yarn to v4.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/346
+### Other Changes
+* [StepSecurity] Apply security best practices by @step-security-bot in https://github.com/lucacome/draft-release/pull/331
+* Update pre-commit hook pre-commit/mirrors-eslint to v8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/334
+* Update ossf/scorecard-action action to v2.4.0 by @renovate in https://github.com/lucacome/draft-release/pull/333
+* Update pre-commit hook gitleaks/gitleaks to v8.18.4 by @renovate in https://github.com/lucacome/draft-release/pull/337
 
-* Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 by @dependabot in https://github.com/somerepo/pull/175
-* Bump actions/setup-go from 3 to 4 by @dependabot in https://github.com/somerepo/pull/198
 ## New Contributors
-* foo
+* @renovate made their first contribution in https://github.com/lucacome/draft-release/pull/315
+* @step-security-bot made their first contribution in https://github.com/lucacome/draft-release/pull/331
 
-**Full Changelog**: https://github.com/somerepo/compare/v5.0.4...v5.0.5`
+**Full Changelog**: https://github.com/lucacome/draft-release/compare/v1.1.1...v1.2.0`
 
 describe('splitMarkdownSections', () => {
   it('splits sections correctly', async () => {
     const expectedOutput = {
-      bug: ['* Bump anchore/sbom-action from 0.13.1 to 0.13.4 by @dependabot in https://github.com/somerepo/pull/200'],
-      tests: ['* update by @lucacome in https://github.com/somerepo/pull/205'],
-      chore: [
-        '* Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 by @dependabot in https://github.com/somerepo/pull/175',
-        '* Bump actions/setup-go from 3 to 4 by @dependabot in https://github.com/somerepo/pull/198',
+      enhancement: [
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
+        '* Update dependency eslint-plugin-jest to ^28.8.3 by @renovate in https://github.com/lucacome/draft-release/pull/327',
+        '* Update dependency eslint-plugin-import to ^2.30.0 by @renovate in https://github.com/lucacome/draft-release/pull/328',
+        '* Update typescript-eslint monorepo to ^8.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/338',
       ],
-      dependencies: [],
-      '*': [],
-      documentation: [],
-      enhancement: [],
-      change: [],
+      change: [
+        '* Delete .github/dependabot.yml by @lucacome in https://github.com/lucacome/draft-release/pull/316',
+        '* Configure Renovate - autoclosed by @renovate in https://github.com/lucacome/draft-release/pull/315',
+        '* Switch to yarn by @lucacome in https://github.com/lucacome/draft-release/pull/325',
+      ],
+      bug: [
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/324',
+        '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* Bump path-to-regexp from 6.2.2 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+        '* Update dependency @types/jest to ^29.5.13 by @renovate in https://github.com/lucacome/draft-release/pull/343',
+        '* Update dependency @types/node to ^22.5.5 by @renovate in https://github.com/lucacome/draft-release/pull/344',
+      ],
+      documentation: [
+        '* Update dependency lucacome/draft-release to v1 by @renovate in https://github.com/lucacome/draft-release/pull/321',
+      ],
+      chore: [
+        '* Build for renovate PR by @lucacome in https://github.com/lucacome/draft-release/pull/332',
+        '* Only try to build on javascript changes by @lucacome in https://github.com/lucacome/draft-release/pull/335',
+        '* Run pre-commit by @lucacome in https://github.com/lucacome/draft-release/pull/336',
+      ],
+      dependencies: [
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update dependency eslint-plugin-jest to ^28.8.2 by @renovate in https://github.com/lucacome/draft-release/pull/320',
+        '* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322',
+        '* Update Yarn to v4.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/346',
+      ],
+      '*': [
+        '* [StepSecurity] Apply security best practices by @step-security-bot in https://github.com/lucacome/draft-release/pull/331',
+        '* Update pre-commit hook pre-commit/mirrors-eslint to v8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/334',
+        '* Update ossf/scorecard-action action to v2.4.0 by @renovate in https://github.com/lucacome/draft-release/pull/333',
+        '* Update pre-commit hook gitleaks/gitleaks to v8.18.4 by @renovate in https://github.com/lucacome/draft-release/pull/337',
+      ],
+      tests: ['* Tested with jest'],
     }
     const categories = [
       {
-        title: 'Others', // default category
+        title: 'Other Changes', // default category
         labels: ['*'],
       },
       {
@@ -241,7 +298,7 @@ describe('splitMarkdownSections', () => {
         labels: ['chore'],
       },
       {
-        title: '📦 Dependencies',
+        title: '⬆️ Dependencies',
         labels: ['dependencies'],
       },
       {
