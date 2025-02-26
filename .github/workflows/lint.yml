@@ -1,10 +1,19 @@
-name: 'lint'
+name: Lint
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
+
+concurrency:
+  group: ${{ github.ref_name }}-lint
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   lint:

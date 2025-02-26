@@ -9,7 +9,8 @@ jobs:
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./
         id: draft-release
         with:
@@ -45,37 +46,38 @@ jobs:
             console.log("Release Sections: " + JSON.stringify(${{ steps.draft-release.outputs.release-sections }}, null, 2));
 
   test-dry-run-config:
-      runs-on: ubuntu-24.04
-      steps:
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        - uses: ./
-          id: draft-release
-          with:
-            config-path: .github/release-notes.yml
-            dry-run: true
-            variables: |
-              helm-chart=v0.1.1
-              foo=bar
-              my-variable=My Variable
-            notes-header: |
-              ## Welcome to the {{version}} release of Draft Release
-                The previous release was {{previous-version}}.
-                This is some text to welcome you to the release {{version-number}}.
-              ## Helm Chart
-                The Helm Chart version for this release is {{helm-chart}}.
-              ## My Variable
-                The value of my variable is {{my-variable}}.
-            notes-footer: |
-              ## Upgrade
-              - For Docker, use the {{version}} image from Docker Hub.
-              - For Binaries use the {{version-number}} release from GitHub.
-              - For Helm Chart, use the {{helm-chart}} version.
-              - For foo use the {{foo}} version.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./
+        id: draft-release
+        with:
+          config-path: .github/release-notes.yml
+          dry-run: true
+          variables: |
+            helm-chart=v0.1.1
+            foo=bar
+            my-variable=My Variable
+          notes-header: |
+            ## Welcome to the {{version}} release of Draft Release
+              The previous release was {{previous-version}}.
+              This is some text to welcome you to the release {{version-number}}.
+            ## Helm Chart
+              The Helm Chart version for this release is {{helm-chart}}.
+            ## My Variable
+              The value of my variable is {{my-variable}}.
+          notes-footer: |
+            ## Upgrade
+            - For Docker, use the {{version}} image from Docker Hub.
+            - For Binaries use the {{version-number}} release from GitHub.
+            - For Helm Chart, use the {{helm-chart}} version.
+            - For foo use the {{foo}} version.
 
-        - run: |
-            echo "Version: ${{ steps.draft-release.outputs.version }}"
-            echo "Previous Version: ${{ steps.draft-release.outputs.previous-version }}"
-            echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
-            echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
-            echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
-            echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"
+      - run: |
+          echo "Version: ${{ steps.draft-release.outputs.version }}"
+          echo "Previous Version: ${{ steps.draft-release.outputs.previous-version }}"
+          echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
+          echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
+          echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
+          echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"

@@ -21,6 +21,6 @@ documentation:
       - any-glob-to-any-file: '**/*.md'
 
 dependencies:
-  - head-branch: ['^deps/', '^dep/', '^dependabot/']
+  - head-branch: ['^deps/', '^dep/', '^dependabot/', '^renovate/']
   - changed-files:
-      - any-glob-to-any-file: ['package.json', 'package-lock.json']
+      - any-glob-to-any-file: ['package.json', 'yarn.lock']

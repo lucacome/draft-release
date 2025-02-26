@@ -1,37 +1,5 @@
 {
-  "name": "lucacome-draft-release",
-  "description": "GitHub Action to create a draft release",
-  "main": "src/main.ts",
-  "scripts": {
-    "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
-    "lint": "yarn run prettier && yarn run eslint",
-    "format": "yarn run prettier:fix && yarn run eslint:fix",
-    "eslint": "npx eslint --max-warnings=0 .",
-    "eslint:fix": "npx eslint --fix .",
-    "prettier": "npx prettier --check \"./**/*.ts\"",
-    "prettier:fix": "npx prettier --write \"./**/*.ts\"",
-    "test": "npx jest",
-    "all": "yarn format && yarn test && yarn build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lucacome/draft-release.git"
-  },
-  "keywords": [
-    "actions",
-    "release",
-    "notes",
-    "draft"
-  ],
-  "exports": {
-    ".": "./dist/index.js"
-  },
-  "engines": {
-    "node": ">=22.13.1"
-  },
-  "type": "module",
   "author": "Luca Comellini",
-  "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
@@ -40,6 +8,7 @@
     "handlebars": "^4.7.8",
     "semver": "^7.7.1"
   },
+  "description": "GitHub Action to create a draft release",
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
     "@eslint/js": "^9.20.0",
@@ -66,5 +35,36 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
-  "packageManager": "yarn@4.6.0"
+  "engines": {
+    "node": ">=22.13.1"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "keywords": [
+    "actions",
+    "release",
+    "notes",
+    "draft"
+  ],
+  "license": "MIT",
+  "main": "src/main.ts",
+  "name": "lucacome-draft-release",
+  "packageManager": "yarn@4.6.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucacome/draft-release.git"
+  },
+  "scripts": {
+    "all": "yarn format && yarn test && yarn build",
+    "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "eslint": "npx eslint --max-warnings=0 .",
+    "eslint:fix": "npx eslint --fix .",
+    "format": "yarn run prettier:fix && yarn run eslint:fix",
+    "lint": "yarn run prettier && yarn run eslint",
+    "prettier": "npx prettier --check \"./**/*.ts\"",
+    "prettier:fix": "npx prettier --write \"./**/*.ts\"",
+    "test": "npx jest"
+  },
+  "type": "module"
 }

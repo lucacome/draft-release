@@ -14,10 +14,17 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
-  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.ref_name }}-check-dist
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   check-dist:
