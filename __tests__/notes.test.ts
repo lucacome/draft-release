@@ -329,6 +329,8 @@ describe('groupDependencyUpdates', () => {
       bug: [
         '* Update dependency typescript to ^5.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/330',
         '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.22.0 by @renovate in https://github.com/lucacome/draft-release/pull/2794',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.26.0 by @renovate in https://github.com/lucacome/draft-release/pull/2798',
         '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
       ],
     }
@@ -338,6 +340,7 @@ describe('groupDependencyUpdates', () => {
     expect(result).toEqual({
       bug: [
         '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/330, https://github.com/lucacome/draft-release/pull/340',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.26.0 by @renovate in https://github.com/lucacome/draft-release/pull/2794, https://github.com/lucacome/draft-release/pull/2798',
         '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
       ],
     })
