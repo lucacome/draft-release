@@ -9,5 +9,6 @@ export interface Inputs {
     publish: boolean;
     configPath: string;
     dryRun: boolean;
+    groupDependencies: boolean;
 }
 export declare function getInputs(): Inputs;

@@ -13,6 +13,7 @@ config:
 # Define glob expressions to ignore
 ignores:
   - '.github/**'
+  - 'node_modules/**'
 
 # Fix any fixable errors
 fix: true

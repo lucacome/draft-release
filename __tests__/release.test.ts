@@ -147,6 +147,7 @@ describe('createOrUpdateRelease', () => {
     publish: false,
     configPath: '.github/release.yml',
     dryRun: false,
+    groupDependencies: true,
   }
   beforeEach(() => {
     jest.clearAllMocks()
