@@ -286,14 +286,15 @@ export async function splitMarkdownSections(markdown: string, categories: Catego
 }
 
 /**
- * Consolidates multiple dependency update entries into single entries.
+ * Consolidates dependency update entries in release note sections.
  *
- * Processes parsed release note sections to group dependency updates from automated services.
- * For each dependency, the function aggregates entries to reflect the latest update while combining all relevant pull request links,
- * and preserves the original ordering of non-dependency items.
+ * Processes parsed release note sections by grouping automated dependency update entries that match defined update patterns,
+ * such as Renovate standard updates, Renovate lockfile maintenance, Dependabot updates, and pre-commit-ci updates.
+ * For each dependency, it aggregates entries to record the most recent update while merging all relevant pull request links,
+ * and preserves the original order of non-matching items.
  *
- * @param sections - Parsed sections of the release notes.
- * @returns Updated sections with consolidated dependency update entries.
+ * @param sections - Parsed release note sections categorized by type.
+ * @returns Updated release note sections with consolidated dependency update entries.
  */
 export async function groupDependencyUpdates(sections: SectionData): Promise<SectionData> {
   const result: SectionData = {}
@@ -477,14 +478,18 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
 }
 
 /**
- * Compares two version strings and determines if the new version is greater than the current one.
- * Applies multiple strategies to handle semver, non-semver, and prefixed versions.
+ * Determines whether a candidate version should replace the current version.
  *
- * @param newVersion - The new version to compare
- * @param currentVersion - The current version to compare against
- * @param packageName - The name of the dependency (for debug logging)
- * @param isRenovate - Whether this is a Renovate update (affects fallback behavior)
- * @returns True if the new version should replace the current version, false otherwise
+ * This function compares two version strings using several strategies to handle standard semver,
+ * non-standard formats (via coercion), and versions with caret or tilde prefixes. If either
+ * version string is missing or if an error occurs during comparison, the function falls back to
+ * the automated update behavior indicated by the isRenovate flag.
+ *
+ * @param newVersion - The version string to evaluate as the new version.
+ * @param currentVersion - The version string currently in use.
+ * @param packageName - The name of the package being compared (used for debugging).
+ * @param isRenovate - Indicates whether the update comes from Renovate, affecting fallback behavior.
+ * @returns True if newVersion is determined to be newer than currentVersion; otherwise, false.
  */
 function isNewerVersion(newVersion: string, currentVersion: string, packageName: string, isRenovate: boolean): boolean {
   if (!newVersion || !currentVersion) {
