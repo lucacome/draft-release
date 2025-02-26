@@ -1,5 +1,5 @@
 import {describe, expect, test, it} from '@jest/globals'
-import {parseNotes, generateReleaseNotes, splitMarkdownSections} from '../src/notes'
+import {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates} from '../src/notes'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
 import {jest} from '@jest/globals'
@@ -83,6 +83,7 @@ describe('generateReleaseNotes', () => {
       publish: false,
       configPath: '.github/release.yml',
       dryRun: false,
+      groupDependencies: true,
     }
     const releaseData = {
       releases: [],
@@ -122,6 +123,7 @@ describe('generateReleaseNotes', () => {
       publish: false,
       configPath: '.github/release.yml',
       dryRun: false,
+      groupDependencies: true,
     }
 
     const releaseData = {
@@ -316,5 +318,134 @@ describe('splitMarkdownSections', () => {
     ]
     const result = await splitMarkdownSections(markdown, categories)
     expect(result).toEqual(expectedOutput)
+  })
+})
+
+// Add this after your existing tests
+
+describe('groupDependencyUpdates', () => {
+  it('groups renovate dependency updates with the same name', async () => {
+    const sections = {
+      bug: [
+        '* Update dependency typescript to ^5.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/330',
+        '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    expect(result).toEqual({
+      bug: [
+        '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/330, https://github.com/lucacome/draft-release/pull/340',
+        '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    })
+  })
+
+  it('groups dependabot dependency updates with the same name', async () => {
+    const sections = {
+      bug: [
+        '* Bump path-to-regexp from 6.1.0 to 6.2.2 by @dependabot in https://github.com/lucacome/draft-release/pull/332',
+        '* Bump path-to-regexp from 6.2.2 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+        '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    expect(result).toEqual({
+      bug: [
+        '* Bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/332, https://github.com/lucacome/draft-release/pull/342',
+        '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    })
+  })
+
+  it('groups mixed dependency updates with the same name', async () => {
+    const sections = {
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
+        '* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322',
+      ],
+      bug: [
+        '* Update dependency @types/node to ^22.5.5 by @renovate in https://github.com/lucacome/draft-release/pull/344',
+        '* Bump path-to-regexp from 6.2.2 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Note: dependencies in different sections remain separate
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/326',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322',
+      ],
+      bug: [
+        '* Update dependency @types/node to ^22.5.5 by @renovate in https://github.com/lucacome/draft-release/pull/344',
+        '* Bump path-to-regexp from 6.2.2 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+      ],
+    })
+  })
+
+  it('handles other update formats correctly', async () => {
+    const sections = {
+      dependencies: [
+        '* Update Yarn to v4.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/346',
+        '* Update pre-commit hook gitleaks/gitleaks to v8.18.4 by @renovate in https://github.com/lucacome/draft-release/pull/337',
+        '* Update pre-commit hook gitleaks/gitleaks to v8.18.5 by @renovate in https://github.com/lucacome/draft-release/pull/338',
+        '* Update pre-commit hook pre-commit/mirrors-eslint to v8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/334',
+        '* Update ossf/scorecard-action action to v2.4.0 by @renovate in https://github.com/lucacome/draft-release/pull/333',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // All of these have different dependency names, so they should remain separate
+    expect(result).toEqual({
+      dependencies: [
+        '* Update Yarn to v4.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/346',
+        '* Update pre-commit hook gitleaks/gitleaks to v8.18.5 by @renovate in https://github.com/lucacome/draft-release/pull/337, https://github.com/lucacome/draft-release/pull/338',
+        '* Update pre-commit hook pre-commit/mirrors-eslint to v8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/334',
+        '* Update ossf/scorecard-action action to v2.4.0 by @renovate in https://github.com/lucacome/draft-release/pull/333',
+      ],
+    })
+  })
+
+  it('handles empty sections and items without dependencies', async () => {
+    const sections = {
+      empty: [],
+      nodeps: [
+        '* Fix a bug by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+        '* Add a feature by @contributor in https://github.com/lucacome/draft-release/pull/346',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    expect(result).toEqual({
+      empty: [],
+      nodeps: [
+        '* Fix a bug by @lucacome in https://github.com/lucacome/draft-release/pull/345',
+        '* Add a feature by @contributor in https://github.com/lucacome/draft-release/pull/346',
+      ],
+    })
+  })
+
+  it('preserves all sections in the original input', async () => {
+    const sections = {
+      enhancement: ['* Feature 1'],
+      bug: ['* Bug 1'],
+      dependencies: ['* Update dependency X to Y by @renovate in PR-1'],
+      documentation: ['* Doc 1'],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    expect(Object.keys(result)).toEqual(['enhancement', 'bug', 'dependencies', 'documentation'])
   })
 })
