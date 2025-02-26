@@ -11,4 +11,14 @@ export interface Inputs {
     dryRun: boolean;
     groupDependencies: boolean;
 }
+/**
+ * Retrieves and parses the inputs for the GitHub Action.
+ *
+ * This function collects input values using the GitHub Actions core utilities and
+ * returns them as an object that conforms to the Inputs interface. It converts string
+ * inputs to appropriate types where necessary, such as parsing the 'collapse-after'
+ * input to an integer and interpreting 'publish', 'dry-run', and 'group-dependencies' as booleans.
+ *
+ * @returns An object containing the structured inputs for the action.
+ */
 export declare function getInputs(): Inputs;
