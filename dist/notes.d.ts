@@ -44,14 +44,15 @@ export declare function parseNotes(notes: string, major: string, minor: string):
  */
 export declare function splitMarkdownSections(markdown: string, categories: Category[]): Promise<SectionData>;
 /**
- * Consolidates multiple dependency update entries into single entries.
+ * Consolidates dependency update entries in release note sections.
  *
- * Processes parsed release note sections to group dependency updates from automated services.
- * For each dependency, the function aggregates entries to reflect the latest update while combining all relevant pull request links,
- * and preserves the original ordering of non-dependency items.
+ * Processes parsed release note sections by grouping automated dependency update entries that match defined update patterns,
+ * such as Renovate standard updates, Renovate lockfile maintenance, Dependabot updates, and pre-commit-ci updates.
+ * For each dependency, it aggregates entries to record the most recent update while merging all relevant pull request links,
+ * and preserves the original order of non-matching items.
  *
- * @param sections - Parsed sections of the release notes.
- * @returns Updated sections with consolidated dependency update entries.
+ * @param sections - Parsed release note sections categorized by type.
+ * @returns Updated release note sections with consolidated dependency update entries.
  */
 export declare function groupDependencyUpdates(sections: SectionData): Promise<SectionData>;
 export {};
