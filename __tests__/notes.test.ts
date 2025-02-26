@@ -329,6 +329,8 @@ describe('groupDependencyUpdates', () => {
       bug: [
         '* Update dependency typescript to ^5.5.0 by @renovate in https://github.com/lucacome/draft-release/pull/330',
         '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.22.0 by @renovate in https://github.com/lucacome/draft-release/pull/2794',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.26.0 by @renovate in https://github.com/lucacome/draft-release/pull/2798',
         '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
       ],
     }
@@ -338,6 +340,7 @@ describe('groupDependencyUpdates', () => {
     expect(result).toEqual({
       bug: [
         '* Update dependency typescript to ^5.6.2 by @renovate in https://github.com/lucacome/draft-release/pull/330, https://github.com/lucacome/draft-release/pull/340',
+        '* Update module github.com/onsi/ginkgo/v2 to v2.26.0 by @renovate in https://github.com/lucacome/draft-release/pull/2794, https://github.com/lucacome/draft-release/pull/2798',
         '* Fix something else by @lucacome in https://github.com/lucacome/draft-release/pull/345',
       ],
     })
@@ -447,5 +450,145 @@ describe('groupDependencyUpdates', () => {
     const result = await groupDependencyUpdates(sections)
 
     expect(Object.keys(result)).toEqual(['enhancement', 'bug', 'dependencies', 'documentation'])
+  })
+
+  it('groups pre-commit-ci updates correctly', async () => {
+    const sections = {
+      dependencies: [
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
+      ],
+      other: [
+        '* Fix bug in release notes by @lucacome in https://github.com/lucacome/draft-release/pull/360',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/359',
+        '* Another regular update by @contributor in https://github.com/lucacome/draft-release/pull/358',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Verify pre-commit updates are grouped properly within each section
+    expect(result).toEqual({
+      dependencies: [
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
+      ],
+      other: [
+        '* Fix bug in release notes by @lucacome in https://github.com/lucacome/draft-release/pull/360',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/359',
+        '* Another regular update by @contributor in https://github.com/lucacome/draft-release/pull/358',
+      ],
+    })
+  })
+
+  it('handles mixed dependency updates with pre-commit-ci updates', async () => {
+    const sections = {
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* Bump path-to-regexp from 6.2.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+        '* Bump path-to-regexp from 6.1.0 to 6.2.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Verify all types of updates are grouped correctly
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/326',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
+        '* Bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340, https://github.com/lucacome/draft-release/pull/342',
+      ],
+    })
+  })
+
+  it('preserves pre-commit-ci updates in different sections', async () => {
+    const sections = {
+      dependencies: ['* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350'],
+      enhancement: ['* Add feature by @contributor in https://github.com/lucacome/draft-release/pull/345'],
+      bug: [
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* Fix critical bug by @developer in https://github.com/lucacome/draft-release/pull/347',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Pre-commit updates should be grouped within each section but kept separate across sections
+    expect(result).toEqual({
+      dependencies: ['* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350'],
+      enhancement: ['* Add feature by @contributor in https://github.com/lucacome/draft-release/pull/345'],
+      bug: [
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* Fix critical bug by @developer in https://github.com/lucacome/draft-release/pull/347',
+      ],
+    })
+  })
+  // Add this test in the groupDependencyUpdates describe block
+  it('groups lock file maintenance updates correctly', async () => {
+    const sections = {
+      dependencies: [
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/391',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/395',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
+      ],
+      bug: [
+        '* Fix bug in release notes by @lucacome in https://github.com/lucacome/draft-release/pull/360',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/399',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Verify lock file maintenance updates are grouped properly within each section
+    expect(result).toEqual({
+      dependencies: [
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/391, https://github.com/lucacome/draft-release/pull/395',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
+        '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
+      ],
+      bug: [
+        '* Fix bug in release notes by @lucacome in https://github.com/lucacome/draft-release/pull/360',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/399',
+      ],
+    })
+  })
+
+  it('handles mixed updates with lock file maintenance', async () => {
+    const sections = {
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/391',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/395',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* Bump path-to-regexp from 6.2.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+        '* Bump path-to-regexp from 6.1.0 to 6.2.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // Verify all types of updates are grouped correctly
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/326',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/391, https://github.com/lucacome/draft-release/pull/395',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
+        '* Bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340, https://github.com/lucacome/draft-release/pull/342',
+      ],
+    })
   })
 })
