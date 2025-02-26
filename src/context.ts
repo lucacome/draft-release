@@ -12,6 +12,7 @@ export interface Inputs {
   publish: boolean
   configPath: string
   dryRun: boolean
+  groupDependencies: boolean
 }
 
 export function getInputs(): Inputs {
@@ -26,5 +27,6 @@ export function getInputs(): Inputs {
     publish: core.getBooleanInput('publish'),
     configPath: core.getInput('config-path'),
     dryRun: core.getBooleanInput('dry-run'),
+    groupDependencies: core.getBooleanInput('group-dependencies'),
   }
 }

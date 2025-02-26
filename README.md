@@ -4,7 +4,7 @@ This action creates a draft release for the next version to be released. It read
 
 To use this action, you need to create a release file in `.github/release.yml` as shown in the GitHub documentation for [creating a release file](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes).
 
-> **Note**
+> [!NOTE]
 >
 > This action requires read and write access to the repository's releases, this usually means `contents: write` permissions for the job running the action.
 >
@@ -37,15 +37,19 @@ jobs:
 
 ## Inputs
 
-| Name           | Type      | Description                                                       |
-| -------------- | --------- | ----------------------------------------------------------------- |
-| `github-token` | `string`  | The GitHub token to use for the release. (default `github.token`) |
-| `minor-label`  | `string`  | The label to use for minor releases. (default `enhancement`)      |
-| `major-label`  | `string`  | The label to use for major releases. (default `change`)           |
-| `notes-header` | `string`  | The header to use for the release notes.                          |
-| `notes-footer` | `string`  | The footer to use for the release notes.                          |
-| `variables`    | `list`    | A list of variables to use in the header and footer.              |
-| `publish`      | `boolean` | Whether to publish the release. (default `false`)                 |
+| Name                | Type      | Description                                                       |
+|---------------------|-----------|-------------------------------------------------------------------|
+| `github-token`      | `string`  | The GitHub token to use for the release. (default `github.token`) |
+| `minor-label`       | `string`  | The label to use for minor releases. (default `enhancement`)      |
+| `major-label`       | `string`  | The label to use for major releases. (default `change`)           |
+| `notes-header`      | `string`  | The header to use for the release notes.                          |
+| `notes-footer`      | `string`  | The footer to use for the release notes.                          |
+| `variables`         | `list`    | A list of variables to use in the header and footer.              |
+| `publish`           | `boolean` | Whether to publish the release. (default `false`)                 |
+| `collapse-after`    | `number`  | The number of PRs to show before collapsing. (default `0`)        |
+| `group-dependencies`| `boolean` | Whether to group dependency updates. (default `true`)             |
+| `config-path`       | `string`  | Path to release config file. (default `.github/release.yml`)      |
+| `dry-run`           | `boolean` | Run without creating a release. (default `false`)                 |
 
 ## Outputs
 
@@ -57,6 +61,8 @@ jobs:
 | `release-notes`    | `string` | The release notes of the next release.                                               |
 | `release-url`      | `string` | The URL of the next release.                                                         |
 | `release-sections` | `string` | A JSON output containing the release sections and the pull requests in each section. |
+| `release-header`   | `string` | The header of the release notes.                                                     |
+| `release-footer`   | `string` | The footer of the release notes.                                                     |
 
 ## Header and Footer
 

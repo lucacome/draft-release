@@ -14,6 +14,7 @@ describe('getVersionIncrease', () => {
     publish: false,
     configPath: '.github/release.yml',
     dryRun: false,
+    groupDependencies: true,
   }
 
   const releaseData = {

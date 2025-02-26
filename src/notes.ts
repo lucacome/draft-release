@@ -54,6 +54,13 @@ export async function generateReleaseNotes(
     const categories = await getCategories(inputs)
     sections = await splitMarkdownSections(body, categories)
 
+    if (inputs.groupDependencies) {
+      await core.group('Grouping dependency updates', async () => {
+        sections = await groupDependencyUpdates(sections)
+        core.debug(JSON.stringify(sections))
+      })
+    }
+
     body = await collapseSections(body, sections, categories, inputs.collapseAfter)
 
     if (inputs.header) {
@@ -88,71 +95,117 @@ export function parseNotes(notes: string, major: string, minor: string): string 
   return notesType
 }
 
+/**
+ * Regenerates markdown from the processed sections data,
+ * collapsing sections with more than n items into HTML details elements
+ * @param markdown Original markdown content
+ * @param sectionData Processed sections data
+ * @param categories Categories configuration
+ * @param n Number of items threshold for collapsing (0 means no collapsing)
+ * @returns Updated markdown with appropriate sections collapsed
+ */
 async function collapseSections(markdown: string, sectionData: SectionData, categories: Category[], n: number): Promise<string> {
-  if (n < 1) {
-    return markdown
-  }
   const beforeTextTemplate = `<details><summary>{count} changes</summary>\n\n`
   const afterText = `\n</details>\n`
 
-  const sectionsToAddText = categories
-    .map((category) => category.labels)
-    .flat()
-    .filter((label) => sectionData[label] && sectionData[label].length > n)
+  // Get lines of the original markdown
+  const originalLines = markdown.split('\n')
+  const headerLines: string[] = []
+  const footerLines: string[] = []
 
-  if (!sectionsToAddText.length) {
-    return markdown
-  }
+  // Track the state of our parser
+  let inHeaderSection = true
+  let inCategorySection = false
 
-  const lines = markdown.split('\n')
-  const modifiedLines: string[] = []
+  // GitHub release notes typically have:
+  // 1. Header (containing "## What's Changed")
+  // 2. Category sections (with ### headings)
+  // 3. Footer (with "## New Contributors" and "**Full Changelog**" links)
 
-  let insideSection = false
-  let currentLabel: string | null = null
-  let itemCount = 0
+  for (let i = 0; i < originalLines.length; i++) {
+    const line = originalLines[i]
 
-  for (const line of lines) {
-    const titleMatch = line.match(/###\s(.+)/)
+    // Detect section headings
+    const isL3Heading = line.match(/^###\s(.+)/)
+    const isL2Heading = !isL3Heading && line.match(/^##\s(.+)/)
 
-    if (titleMatch) {
-      if (insideSection && currentLabel && sectionsToAddText.includes(currentLabel)) {
-        modifiedLines.push(afterText)
-      }
-
-      const title = titleMatch[1]
-      const category = categories.find((cat) => cat.title === title)
-
-      if (category) {
-        const labels = category.labels
-        currentLabel = labels[0]
-        itemCount = 0
-        insideSection = true
-
-        if (labels.some((label) => sectionsToAddText.includes(label))) {
-          const beforeText = beforeTextTemplate.replace('{count}', String(sectionData[currentLabel].length))
-          modifiedLines.push(line, beforeText)
-        } else {
-          modifiedLines.push(line)
-        }
+    if (isL3Heading) {
+      // Found a category heading (###)
+      if (inHeaderSection) {
+        inHeaderSection = false
+        inCategorySection = true
         continue
       }
+
+      continue
     }
 
-    if (insideSection && line.trim() !== '') {
-      itemCount++
-
-      if (currentLabel && itemCount === sectionData[currentLabel].length && sectionsToAddText.includes(currentLabel)) {
-        modifiedLines.push(line, afterText)
-        insideSection = false
-      } else {
-        modifiedLines.push(line)
-      }
-    } else {
-      modifiedLines.push(line)
+    // Found a major section heading (##) after we've seen category headings
+    if (inCategorySection && isL2Heading) {
+      inCategorySection = false
+      // This is the beginning of the footer
+      footerLines.push(line)
+      continue
     }
+
+    if (inHeaderSection) {
+      headerLines.push(line)
+    } else if (!inCategorySection) {
+      // If we're not in a category section or header, we're in the footer
+      footerLines.push(line)
+    }
+
+    // Skip the actual content of the categories, as we'll regenerate it
   }
 
-  return modifiedLines.join('\n')
+  // Generate the new section content
+  const sectionLines: string[] = []
+
+  // Identify sections that should be collapsed
+  const sectionsToAddText =
+    n > 0
+      ? categories
+          .map((category) => category.labels)
+          .flat()
+          .filter((label) => sectionData[label] && sectionData[label].length > n)
+      : []
+
+  // Add each category's content
+  for (const category of categories) {
+    const label = category.labels[0]
+    const items = sectionData[label]
+
+    // Skip empty sections
+    if (!items || items.length === 0) continue
+
+    // Add section heading
+    sectionLines.push(`### ${category.title}`)
+
+    // Determine if this section should be collapsed
+    const shouldCollapse = sectionsToAddText.includes(label)
+
+    if (shouldCollapse) {
+      // Add opening details tag with count
+      const beforeText = beforeTextTemplate.replace('{count}', String(items.length))
+      sectionLines.push(beforeText)
+    }
+
+    // Add all items in the section
+    sectionLines.push(...items)
+
+    if (shouldCollapse) {
+      // Add closing details tag
+      sectionLines.push(afterText)
+    }
+
+    // Add an empty line after the section
+    sectionLines.push('')
+  }
+
+  // Combine header, section content, and footer
+  const result = [...headerLines, '', ...sectionLines, ...footerLines].join('\n')
+
+  return result
 }
 
 export async function splitMarkdownSections(markdown: string, categories: Category[]): Promise<SectionData> {
@@ -190,4 +243,159 @@ export async function splitMarkdownSections(markdown: string, categories: Catego
   })
 
   return sections
+}
+
+/**
+ * Groups dependency updates from renovate or dependabot into single entries
+ * showing the latest version but preserving all PR links and original order
+ * @param sections The parsed sections from the release notes
+ * @returns Updated sections with grouped dependency updates
+ */
+export async function groupDependencyUpdates(sections: SectionData): Promise<SectionData> {
+  const result: SectionData = {}
+
+  for (const [label, items] of Object.entries(sections)) {
+    if (items.length === 0) {
+      result[label] = []
+      continue
+    }
+
+    // First pass: identify dependencies to group
+    const dependencyGroups = new Map<
+      string,
+      {
+        originalName: string // Preserve the original casing of the dependency name
+        latestVersion: string
+        initialVersion: string
+        allPRs: Set<string>
+        source: string
+        position: number // Track the first position where this dependency appears
+      }
+    >()
+
+    // Track non-dependency items
+    const nonDependencyItems = new Set<number>()
+
+    // First pass: gather information about dependencies
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      const renovateMatch = item.match(/\* Update (.*?) to (.*?) by @renovate in (.*)$/)
+      const dependabotMatch = item.match(/\* Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$/)
+
+      if (renovateMatch) {
+        const [, dependency, version, prLink] = renovateMatch
+        const key = dependency.trim().toLowerCase() // Lowercase for map key
+        const originalName = dependency.trim() // Keep original for display
+        const prUrl = prLink.trim()
+
+        if (!dependencyGroups.has(key)) {
+          dependencyGroups.set(key, {
+            originalName,
+            latestVersion: version,
+            initialVersion: '',
+            allPRs: new Set([prUrl]),
+            source: 'renovate',
+            position: i,
+          })
+        } else {
+          const group = dependencyGroups.get(key)!
+          group.allPRs.add(prUrl)
+          group.latestVersion = version
+        }
+      } else if (dependabotMatch) {
+        const [, dependency, fromVersion, toVersion, prLink] = dependabotMatch
+        const key = dependency.trim().toLowerCase() // Lowercase for map key
+        const originalName = dependency.trim() // Keep original for display
+        const prUrl = prLink.trim()
+
+        if (!dependencyGroups.has(key)) {
+          dependencyGroups.set(key, {
+            originalName,
+            latestVersion: toVersion,
+            initialVersion: fromVersion,
+            allPRs: new Set([prUrl]),
+            source: 'dependabot',
+            position: i,
+          })
+        } else {
+          const group = dependencyGroups.get(key)!
+          group.allPRs.add(prUrl)
+          group.latestVersion = toVersion
+
+          // Keep the earliest "from" version
+          if (semver.valid(fromVersion) && semver.valid(group.initialVersion)) {
+            try {
+              if (semver.lt(fromVersion, group.initialVersion)) {
+                group.initialVersion = fromVersion
+              }
+            } catch {
+              // If semver comparison fails, keep the first version we encountered
+              if (!group.initialVersion) {
+                group.initialVersion = fromVersion
+              }
+            }
+          } else {
+            // For non-semver versions, just keep the first one we saw
+            if (!group.initialVersion) {
+              group.initialVersion = fromVersion
+            }
+          }
+        }
+      } else {
+        // Mark this as a non-dependency item
+        nonDependencyItems.add(i)
+      }
+    }
+
+    // Second pass: create the new items array while preserving order
+    const processedDependencies = new Set<string>()
+    const newItems: string[] = []
+
+    for (let i = 0; i < items.length; i++) {
+      if (nonDependencyItems.has(i)) {
+        // This is a non-dependency item, keep as is
+        newItems.push(items[i])
+        continue
+      }
+
+      // This is a dependency item
+      const item = items[i]
+      let dependencyKey: string | null = null
+
+      // Extract the dependency key
+      const renovateMatch = item.match(/\* Update (.*?) to .* by @renovate/)
+      const dependabotMatch = item.match(/\* Bump (.*?) from .* by @dependabot/)
+
+      if (renovateMatch) {
+        dependencyKey = renovateMatch[1].trim().toLowerCase()
+      } else if (dependabotMatch) {
+        dependencyKey = dependabotMatch[1].trim().toLowerCase()
+      }
+
+      if (dependencyKey && !processedDependencies.has(dependencyKey)) {
+        // This is the first occurrence of this dependency
+        const group = dependencyGroups.get(dependencyKey)!
+
+        // Create the consolidated entry using the original name format
+        const prefix =
+          group.source === 'renovate'
+            ? `* Update ${group.originalName} to ${group.latestVersion} by @renovate in `
+            : `* Bump ${group.originalName} from ${group.initialVersion} to ${group.latestVersion} by @dependabot in `
+
+        // Join all PR links with comma separator
+        const prLinks = Array.from(group.allPRs).join(', ')
+
+        // Add the consolidated entry
+        newItems.push(`${prefix}${prLinks}`)
+
+        // Mark this dependency as processed
+        processedDependencies.add(dependencyKey)
+      }
+      // Skip subsequent occurrences of the same dependency
+    }
+
+    result[label] = newItems
+  }
+
+  return result
 }
