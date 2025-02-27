@@ -45162,6 +45162,7 @@ async function getVersionIncrease(releaseData, inputs, notes) {
     return semverExports.inc(releaseData.latestRelease, version) || '';
 }
 
+const conventionalPrefixRegex = /^\* (fix|feat|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]+\))?:\s+/i;
 /**
  * Generates and formats release notes for a GitHub repository.
  *
@@ -45204,6 +45205,11 @@ async function generateReleaseNotes(client, inputs, releaseData) {
         };
         const categories = await getCategories(inputs);
         sections = await splitMarkdownSections(body, categories);
+        // First, process conventional prefixes if needed
+        if (inputs.removeConventionalPrefixes) {
+            sections = await removeConventionalPrefixes(sections);
+        }
+        // Then, group dependencies if needed
         if (inputs.groupDependencies) {
             await coreExports.group('Grouping dependency updates', async () => {
                 sections = await groupDependencyUpdates(sections);
@@ -45393,6 +45399,46 @@ async function splitMarkdownSections(markdown, categories) {
     return sections;
 }
 /**
+ * Removes conventional commit prefixes from release note entries.
+ *
+ * @param sections - Parsed release note sections categorized by type
+ * @returns Updated sections with prefixes removed
+ */
+async function removeConventionalPrefixes(sections) {
+    const result = {};
+    for (const [label, items] of Object.entries(sections)) {
+        if (items.length === 0) {
+            result[label] = [];
+            continue;
+        }
+        const processedItems = items.map((item) => {
+            if (conventionalPrefixRegex.test(item)) {
+                // Replace the prefix with just "* " and capitalize first word
+                let processed = item.replace(conventionalPrefixRegex, '* ');
+                // Capitalize the first word after the bullet point
+                processed = processed.replace(/^\* (.+)$/, (_, content) => {
+                    return `* ${capitalizeFirstWord(content)}`;
+                });
+                return processed;
+            }
+            return item;
+        });
+        result[label] = processedItems;
+    }
+    return result;
+}
+/**
+ * Extracts a conventional commit prefix from a string.
+ *
+ * @param str - The string containing a potential conventional commit prefix.
+ * @param regex - The regex pattern to use for matching the prefix.
+ * @returns The extracted prefix including scope and colon+space, or an empty string if none found.
+ */
+function getPrefix(str, regex) {
+    const match = str.match(regex);
+    return match ? match[0].substring(2) : ''; // Remove "* " prefix
+}
+/**
  * Consolidates dependency update entries in release note sections.
  *
  * Processes parsed release note sections by grouping automated dependency update entries that match defined update patterns,
@@ -45405,41 +45451,46 @@ async function splitMarkdownSections(markdown, categories) {
  */
 async function groupDependencyUpdates(sections) {
     const result = {};
-    // Define patterns for different types of automated updates
+    // Optional pattern part for conventional prefixes - can be used to enhance regexes
+    const optionalPrefixPattern = '(?:(?:fix|feat|chore|docs|style|refactor|perf|test|build|ci|revert)(?:\\([^)]+\\))?:\\s+)?';
+    // Create enhanced patterns that work with or without conventional prefixes
     const updatePatterns = [
         // Renovate standard dependency updates
         {
             name: 'renovate-dependency',
-            regex: /\* Update (.*?) to (.*?) by @renovate in (.*)$/,
+            // Match both "* Update..." and "* chore(deps): update..."
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Update (.*?) to (.*?) by @renovate in (.*)$`, 'i'),
             getKey: (matches) => matches[1].trim().toLowerCase(),
             getGroupKey: (matches) => matches[1].trim().toLowerCase(),
             getOriginalName: (matches) => matches[1].trim(),
             getLatestVersion: (matches) => matches[2].trim(),
             getPRUrl: (matches) => matches[3].trim(),
-            formatEntry: (name, latest, initial, prLinks) => `* Update ${name} to ${latest} by @renovate in ${prLinks}`,
+            formatEntry: (name, latest, _initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'update' : 'Update'} ${name} to ${latest} by @renovate in ${prLinks}`,
         },
         // Renovate lock file maintenance
         {
             name: 'renovate-lockfile',
-            regex: /\* Lock file maintenance by @renovate in (.*)$/,
+            // Match both "* Lock file..." and "* chore(deps): lock file..."
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Lock file maintenance by @renovate in (.*)$`, 'i'),
             getKey: () => 'lock-file-maintenance',
             getGroupKey: () => 'lock-file-maintenance',
             getOriginalName: () => 'Lock file maintenance',
             getLatestVersion: () => '',
             getPRUrl: (matches) => matches[1].trim(),
-            formatEntry: (_name, _latest, _initial, prLinks) => `* Lock file maintenance by @renovate in ${prLinks}`,
+            formatEntry: (_name, _latest, _initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'lock file maintenance' : 'Lock file maintenance'} by @renovate in ${prLinks}`,
         },
         // Dependabot updates
         {
             name: 'dependabot',
-            regex: /\* Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$/,
+            // Match both "* Bump..." and "* chore(deps): bump..."
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$`, 'i'),
             getKey: (matches) => matches[1].trim().toLowerCase(),
             getGroupKey: (matches) => matches[1].trim().toLowerCase(),
             getOriginalName: (matches) => matches[1].trim(),
             getLatestVersion: (matches) => matches[3].trim(),
             getInitialVersion: (matches) => matches[2].trim(),
             getPRUrl: (matches) => matches[4].trim(),
-            formatEntry: (name, latest, initial, prLinks) => `* Bump ${name} from ${initial} to ${latest} by @dependabot in ${prLinks}`,
+            formatEntry: (name, latest, initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'bump' : 'Bump'} ${name} from ${initial} to ${latest} by @dependabot in ${prLinks}`,
         },
         // Pre-commit-ci updates
         {
@@ -45452,7 +45503,6 @@ async function groupDependencyUpdates(sections) {
             getPRUrl: (matches) => matches[1].trim(),
             formatEntry: (_name, _latest, _initial, prLinks) => `* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in ${prLinks}`,
         },
-        // Future patterns can be added here without modifying the core logic
     ];
     for (const [label, items] of Object.entries(sections)) {
         if (items.length === 0) {
@@ -45463,16 +45513,16 @@ async function groupDependencyUpdates(sections) {
         const nonAutomatedItems = new Set();
         // First pass: gather update information
         for (let i = 0; i < items.length; i++) {
-            const item = items[i];
             let matched = false;
             // Try each pattern until one matches
             for (const pattern of updatePatterns) {
-                const match = item.match(pattern.regex);
+                const match = items[i].match(pattern.regex);
                 if (match) {
                     matched = true;
                     const groupKey = pattern.getGroupKey(match);
                     const key = `${pattern.name}:${groupKey}`;
                     const prUrl = pattern.getPRUrl(match);
+                    // When creating the group, store the prefix and version
                     if (!updateGroups.has(key)) {
                         updateGroups.set(key, {
                             originalDependencyName: pattern.getOriginalName(match),
@@ -45481,32 +45531,26 @@ async function groupDependencyUpdates(sections) {
                             allPRs: new Set([prUrl]),
                             position: i,
                             pattern,
+                            prefix: getPrefix(items[i], conventionalPrefixRegex),
                         });
                     }
                     else {
                         const group = updateGroups.get(key);
                         group.allPRs.add(prUrl);
-                        // Special handling for Dependabot initial version tracking
-                        if (pattern.name === 'dependabot') {
-                            const initialVersion = pattern.getInitialVersion?.(match) || '';
-                            // Always keep the earliest initial version
-                            if (initialVersion && group.initialVersion) {
-                                if (isEarlierVersion(initialVersion, group.initialVersion)) {
-                                    coreExports.debug(`[DEPENDABOT] Updating initial version from ${group.initialVersion} to ${initialVersion} (lower)`);
-                                    group.initialVersion = initialVersion;
-                                }
-                            }
-                            else if (initialVersion) {
-                                group.initialVersion = initialVersion;
-                            }
-                        }
-                        // Version comparison for latest version - for all dependency types
+                        // When we encounter a newer version, update the prefix along with the version
                         const latestVersion = pattern.getLatestVersion?.(match) || '';
-                        if (latestVersion && group.latestVersion) {
-                            const isRenovate = pattern.name.startsWith('renovate');
-                            if (isNewerVersion(latestVersion, group.latestVersion, group.originalDependencyName, isRenovate)) {
-                                coreExports.debug(`[VERSION] Updating latest version from ${group.latestVersion} to ${latestVersion}`);
-                                group.latestVersion = latestVersion;
+                        if (latestVersion &&
+                            group.latestVersion &&
+                            isNewerVersion(latestVersion, group.latestVersion, group.originalDependencyName, pattern.name.startsWith('renovate'))) {
+                            // Update both version and prefix
+                            group.latestVersion = latestVersion;
+                            group.prefix = getPrefix(items[i], conventionalPrefixRegex);
+                        }
+                        // Update initialVersion if needed (for Dependabot updates)
+                        const initialVersion = pattern.getInitialVersion?.(match) || '';
+                        if (initialVersion && pattern.name === 'dependabot') {
+                            if (!group.initialVersion || isEarlierVersion(initialVersion, group.initialVersion)) {
+                                group.initialVersion = initialVersion;
                             }
                         }
                     }
@@ -45523,15 +45567,15 @@ async function groupDependencyUpdates(sections) {
         const newItems = [];
         for (let i = 0; i < items.length; i++) {
             if (nonAutomatedItems.has(i)) {
-                // Not an automated update, keep as is
+                // Not an automated update - use directly
                 newItems.push(items[i]);
                 continue;
             }
-            const item = items[i];
+            // For automated updates, directly find which pattern matches
             let groupKey = null;
             // Find which pattern matches this item
             for (const pattern of updatePatterns) {
-                const match = item.match(pattern.regex);
+                const match = items[i].match(pattern.regex);
                 if (match) {
                     groupKey = `${pattern.name}:${pattern.getGroupKey(match)}`;
                     break;
@@ -45539,9 +45583,9 @@ async function groupDependencyUpdates(sections) {
             }
             if (groupKey && !processedGroups.has(groupKey)) {
                 const group = updateGroups.get(groupKey);
-                // Format the consolidated entry based on the pattern
+                // Format the consolidated entry
                 const prLinks = Array.from(group.allPRs).sort().join(', ');
-                const entry = group.pattern.formatEntry(group.originalDependencyName, group.latestVersion, group.initialVersion, prLinks);
+                const entry = group.pattern.formatEntry(group.originalDependencyName, group.latestVersion, group.initialVersion, prLinks, group.prefix);
                 newItems.push(entry);
                 processedGroups.add(groupKey);
             }
@@ -45655,6 +45699,16 @@ function isEarlierVersion(initialVersion, currentInitialVersion) {
         coreExports.debug(`Initial version comparison failed: ${err}. Keeping existing.`);
         return false;
     }
+}
+// Helper function to capitalize the first word in a string
+function capitalizeFirstWord(str) {
+    if (!str)
+        return str;
+    const words = str.trim().split(/\s+/);
+    if (words.length === 0)
+        return str;
+    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+    return words.join(' ');
 }
 
 async function getRelease(client) {
@@ -47797,6 +47851,7 @@ function getInputs() {
         configPath: coreExports.getInput('config-path'),
         dryRun: coreExports.getBooleanInput('dry-run'),
         groupDependencies: coreExports.getBooleanInput('group-dependencies'),
+        removeConventionalPrefixes: coreExports.getBooleanInput('remove-conventional-prefixes'),
     };
 }
 
