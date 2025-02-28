@@ -518,8 +518,17 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
       if (groupKey && !processedGroups.has(groupKey)) {
         const group = updateGroups.get(groupKey)!
 
-        // Format the consolidated entry
-        const prLinks = Array.from(group.allPRs).sort().join(', ')
+        // Format the consolidated entry with properly sorted PR numbers
+        const sortedPRs = Array.from(group.allPRs).sort((a, b) => {
+          // Extract PR numbers from URLs
+          const prNumA = parseInt(a.match(/\/pull\/(\d+)$/)?.[1] || '0')
+          const prNumB = parseInt(b.match(/\/pull\/(\d+)$/)?.[1] || '0')
+
+          // Compare numerically
+          return prNumA - prNumB
+        })
+
+        const prLinks = sortedPRs.join(', ')
         const entry = group.pattern.formatEntry(
           group.originalDependencyName,
           group.latestVersion,

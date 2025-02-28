@@ -370,9 +370,10 @@ describe('groupDependencyUpdates', () => {
   it('groups mixed dependency updates with the same name', async () => {
     const sections = {
       dependencies: [
-        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/169',
+        '* Update dependency @types/node to ^22.5.3 by @renovate in https://github.com/lucacome/draft-release/pull/210',
         '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
-        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/85',
         '* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322',
       ],
       bug: [
@@ -386,7 +387,7 @@ describe('groupDependencyUpdates', () => {
     // Note: dependencies in different sections remain separate
     expect(result).toEqual({
       dependencies: [
-        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/326',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/85, https://github.com/lucacome/draft-release/pull/169, https://github.com/lucacome/draft-release/pull/210',
         '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
         '* Update typescript-eslint monorepo to v8 (major) by @renovate in https://github.com/lucacome/draft-release/pull/322',
       ],
