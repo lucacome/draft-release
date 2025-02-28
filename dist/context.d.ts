@@ -10,6 +10,7 @@ export interface Inputs {
     configPath: string;
     dryRun: boolean;
     groupDependencies: boolean;
+    removeConventionalPrefixes: boolean;
 }
 /**
  * Retrieves and parses the inputs for the GitHub Action.

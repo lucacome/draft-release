@@ -37,19 +37,20 @@ jobs:
 
 ## Inputs
 
-| Name                | Type      | Description                                                       |
-|---------------------|-----------|-------------------------------------------------------------------|
-| `github-token`      | `string`  | The GitHub token to use for the release. (default `github.token`) |
-| `minor-label`       | `string`  | The label to use for minor releases. (default `enhancement`)      |
-| `major-label`       | `string`  | The label to use for major releases. (default `change`)           |
-| `notes-header`      | `string`  | The header to use for the release notes.                          |
-| `notes-footer`      | `string`  | The footer to use for the release notes.                          |
-| `variables`         | `list`    | A list of variables to use in the header and footer.              |
-| `publish`           | `boolean` | Whether to publish the release. (default `false`)                 |
-| `collapse-after`    | `number`  | The number of PRs to show before collapsing. (default `0`)        |
-| `group-dependencies`| `boolean` | Whether to group dependency updates. (default `true`)             |
-| `config-path`       | `string`  | Path to release config file. (default `.github/release.yml`)      |
-| `dry-run`           | `boolean` | Run without creating a release. (default `false`)                 |
+| Name                          | Type      | Description                                                       |
+|-------------------------------|-----------|-------------------------------------------------------------------|
+| `github-token`                | `string`  | The GitHub token to use for the release. (default `github.token`) |
+| `minor-label`                 | `string`  | The label to use for minor releases. (default `enhancement`)      |
+| `major-label`                 | `string`  | The label to use for major releases. (default `change`)           |
+| `notes-header`                | `string`  | The header to use for the release notes.                          |
+| `notes-footer`                | `string`  | The footer to use for the release notes.                          |
+| `variables`                   | `list`    | A list of variables to use in the header and footer.              |
+| `publish`                     | `boolean` | Whether to publish the release. (default `false`)                 |
+| `collapse-after`              | `number`  | The number of PRs to show before collapsing. (default `0`)        |
+| `group-dependencies`          | `boolean` | Whether to group dependency updates. (default `true`)             |
+| `config-path`                 | `string`  | Path to release config file. (default `.github/release.yml`)      |
+| `dry-run`                     | `boolean` | Run without creating a release. (default `false`)                 |
+| `remove-conventional-prefixes`| `boolean` | Remove conventional prefixes from PR titles. (default `false`)    |
 
 ## Outputs
 
@@ -140,4 +141,3 @@ jobs:
 
       - name: Get Version Number
         run: echo ${{ steps.draft-release.outputs.version }}
-```

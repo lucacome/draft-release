@@ -44,6 +44,13 @@ export declare function parseNotes(notes: string, major: string, minor: string):
  */
 export declare function splitMarkdownSections(markdown: string, categories: Category[]): Promise<SectionData>;
 /**
+ * Removes conventional commit prefixes from release note entries.
+ *
+ * @param sections - Parsed release note sections categorized by type
+ * @returns Updated sections with prefixes removed
+ */
+export declare function removeConventionalPrefixes(sections: SectionData): Promise<SectionData>;
+/**
  * Consolidates dependency update entries in release note sections.
  *
  * Processes parsed release note sections by grouping automated dependency update entries that match defined update patterns,
