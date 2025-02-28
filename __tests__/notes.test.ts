@@ -1,5 +1,5 @@
 import {describe, expect, test, it} from '@jest/globals'
-import {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates} from '../src/notes'
+import {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} from '../src/notes'
 import * as github from '@actions/github'
 import {Inputs} from '../src/context'
 import {jest} from '@jest/globals'
@@ -84,6 +84,7 @@ describe('generateReleaseNotes', () => {
       configPath: '.github/release.yml',
       dryRun: false,
       groupDependencies: true,
+      removeConventionalPrefixes: false,
     }
     const releaseData = {
       releases: [],
@@ -124,6 +125,7 @@ describe('generateReleaseNotes', () => {
       configPath: '.github/release.yml',
       dryRun: false,
       groupDependencies: true,
+      removeConventionalPrefixes: true,
     }
 
     const releaseData = {
@@ -491,6 +493,7 @@ describe('groupDependencyUpdates', () => {
       dependencies: [
         '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
         '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350',
+        '* fix(deps): update dependency @types/node to ^22.5.3 by @renovate in https://github.com/lucacome/draft-release/pull/320',
         '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/326',
         '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
         '* Bump path-to-regexp from 6.2.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
@@ -503,7 +506,7 @@ describe('groupDependencyUpdates', () => {
     // Verify all types of updates are grouped correctly
     expect(result).toEqual({
       dependencies: [
-        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/326',
+        '* Update dependency @types/node to ^22.5.4 by @renovate in https://github.com/lucacome/draft-release/pull/319, https://github.com/lucacome/draft-release/pull/320, https://github.com/lucacome/draft-release/pull/326',
         '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
         '* Bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340, https://github.com/lucacome/draft-release/pull/342',
       ],
@@ -588,6 +591,161 @@ describe('groupDependencyUpdates', () => {
         '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/391, https://github.com/lucacome/draft-release/pull/395',
         '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
         '* Bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340, https://github.com/lucacome/draft-release/pull/342',
+      ],
+    })
+  })
+
+  it('preserves mixed prefix types within grouped updates', async () => {
+    const sections = {
+      dependencies: [
+        // Same dependency with different prefix types
+        '* fix(deps): update dependency typescript to ^5.2.0 by @renovate in https://github.com/lucacome/draft-release/pull/320',
+        '* chore(deps-dev): update dependency typescript to ^5.3.0 by @renovate in https://github.com/lucacome/draft-release/pull/330',
+
+        // Same for dependabot updates
+        '* fix(deps): bump path-to-regexp from 6.1.0 to 6.2.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340',
+        '* chore(deps): bump path-to-regexp from 6.2.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/342',
+      ],
+    }
+
+    const result = await groupDependencyUpdates(sections)
+
+    // When we have the same dependency with different prefix types, it should preserve
+    // the prefix from the entry with the latest version
+    expect(result).toEqual({
+      dependencies: [
+        // For typescript, should use chore(deps-dev) prefix since 5.3.0 is newer than 5.2.0
+        '* chore(deps-dev): update dependency typescript to ^5.3.0 by @renovate in https://github.com/lucacome/draft-release/pull/320, https://github.com/lucacome/draft-release/pull/330',
+
+        // For path-to-regexp, should use chore(deps) prefix since 6.3.0 is newer than 6.2.0
+        '* chore(deps): bump path-to-regexp from 6.1.0 to 6.3.0 by @dependabot in https://github.com/lucacome/draft-release/pull/340, https://github.com/lucacome/draft-release/pull/342',
+      ],
+    })
+  })
+
+  it('correctly handles conventional prefixes with special formats', async () => {
+    const sections = {
+      dependencies: [
+        // Some less common conventional commit formats
+        '* refactor(deps): update dependency eslint to ^8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* perf(deps): update dependency lodash to ^4.17.21 by @renovate in https://github.com/lucacome/draft-release/pull/341',
+        '* docs(deps): update dependency typedoc to ^0.25.7 by @renovate in https://github.com/lucacome/draft-release/pull/342',
+        '* test(deps): update dependency jest to ^29.7.0 by @renovate in https://github.com/lucacome/draft-release/pull/343',
+      ],
+    }
+
+    // Test with removeConventionalPrefixes = false
+    const resultWithPrefixes = await groupDependencyUpdates(sections)
+    expect(resultWithPrefixes.dependencies[0]).toContain('refactor(deps):')
+    expect(resultWithPrefixes.dependencies[1]).toContain('perf(deps):')
+    expect(resultWithPrefixes.dependencies[2]).toContain('docs(deps):')
+    expect(resultWithPrefixes.dependencies[3]).toContain('test(deps):')
+  })
+})
+
+// First, let's add tests specifically for the removeConventionalPrefixes function
+describe('removeConventionalPrefixes', () => {
+  it('removes conventional prefixes from entries', async () => {
+    const sections = {
+      dependencies: [
+        '* fix(deps): update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* chore(deps): update typescript-eslint monorepo to v8 by @renovate in https://github.com/lucacome/draft-release/pull/322',
+        '* feat(ui): add new component by @contributor in https://github.com/lucacome/draft-release/pull/325',
+        '* Update regular dependency without prefix by @renovate in https://github.com/lucacome/draft-release/pull/330',
+      ],
+      bug: [
+        '* fix(core): resolve crash on startup by @developer in https://github.com/lucacome/draft-release/pull/340',
+        '* Regular bug fix without prefix by @contributor in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    }
+
+    const result = await removeConventionalPrefixes(sections)
+
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+        '* Update typescript-eslint monorepo to v8 by @renovate in https://github.com/lucacome/draft-release/pull/322',
+        '* Add new component by @contributor in https://github.com/lucacome/draft-release/pull/325',
+        '* Update regular dependency without prefix by @renovate in https://github.com/lucacome/draft-release/pull/330',
+      ],
+      bug: [
+        '* Resolve crash on startup by @developer in https://github.com/lucacome/draft-release/pull/340',
+        '* Regular bug fix without prefix by @contributor in https://github.com/lucacome/draft-release/pull/345',
+      ],
+    })
+  })
+
+  it('handles different conventional commit formats', async () => {
+    const sections = {
+      dependencies: [
+        '* refactor(deps): update dependency eslint to ^8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* perf(deps): update dependency lodash to ^4.17.21 by @renovate in https://github.com/lucacome/draft-release/pull/341',
+        '* docs(deps): update dependency typedoc to ^0.25.7 by @renovate in https://github.com/lucacome/draft-release/pull/342',
+        '* test(deps): update dependency jest to ^29.7.0 by @renovate in https://github.com/lucacome/draft-release/pull/343',
+      ],
+    }
+
+    const result = await removeConventionalPrefixes(sections)
+
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency eslint to ^8.56.0 by @renovate in https://github.com/lucacome/draft-release/pull/340',
+        '* Update dependency lodash to ^4.17.21 by @renovate in https://github.com/lucacome/draft-release/pull/341',
+        '* Update dependency typedoc to ^0.25.7 by @renovate in https://github.com/lucacome/draft-release/pull/342',
+        '* Update dependency jest to ^29.7.0 by @renovate in https://github.com/lucacome/draft-release/pull/343',
+      ],
+    })
+  })
+
+  it('leaves entries without conventional prefixes unchanged', async () => {
+    const sections = {
+      enhancement: [
+        '* Add new feature by @contributor in https://github.com/lucacome/draft-release/pull/326',
+        '* Improve performance by @developer in https://github.com/lucacome/draft-release/pull/327',
+      ],
+    }
+
+    const result = await removeConventionalPrefixes(sections)
+
+    // Should be unchanged
+    expect(result).toEqual({
+      enhancement: [
+        '* Add new feature by @contributor in https://github.com/lucacome/draft-release/pull/326',
+        '* Improve performance by @developer in https://github.com/lucacome/draft-release/pull/327',
+      ],
+    })
+  })
+
+  it('correctly handles empty sections', async () => {
+    const sections = {
+      empty: [],
+      dependencies: [
+        '* fix(deps): update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
+      ],
+    }
+
+    const result = await removeConventionalPrefixes(sections)
+
+    expect(result).toEqual({
+      empty: [],
+      dependencies: ['* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319'],
+    })
+  })
+
+  it('should capitalize the first word after removing prefix', async () => {
+    const sections = {
+      dependencies: [
+        '* fix(deps): update dependency typescript to ^5.2.0 by @renovate in https://github.com/lucacome/draft-release/pull/320',
+        '* chore(deps): lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/324',
+      ],
+    }
+
+    const result = await removeConventionalPrefixes(sections)
+
+    expect(result).toEqual({
+      dependencies: [
+        '* Update dependency typescript to ^5.2.0 by @renovate in https://github.com/lucacome/draft-release/pull/320',
+        '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/324',
       ],
     })
   })

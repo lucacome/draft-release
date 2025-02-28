@@ -13,6 +13,7 @@ export interface Inputs {
   configPath: string
   dryRun: boolean
   groupDependencies: boolean
+  removeConventionalPrefixes: boolean
 }
 
 /**
@@ -38,5 +39,6 @@ export function getInputs(): Inputs {
     configPath: core.getInput('config-path'),
     dryRun: core.getBooleanInput('dry-run'),
     groupDependencies: core.getBooleanInput('group-dependencies'),
+    removeConventionalPrefixes: core.getBooleanInput('remove-conventional-prefixes'),
   }
 }
