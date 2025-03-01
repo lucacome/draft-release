@@ -66,21 +66,30 @@ export async function generateReleaseNotes(
     const categories = await getCategories(inputs)
     sections = await splitMarkdownSections(body, categories)
 
-    // First, process conventional prefixes if needed
     if (inputs.removeConventionalPrefixes) {
       sections = await removeConventionalPrefixes(sections)
-    }
-
-    // Then, group dependencies if needed
-    if (inputs.groupDependencies) {
-      await core.group('Grouping dependency updates', async () => {
-        sections = await groupDependencyUpdates(sections)
-        core.debug(JSON.stringify(sections))
+      await core.group('Removing conventional commit prefixes', async () => {
+        core.debug(JSON.stringify(sections, null, 2))
       })
     }
 
-    body = await collapseSections(body, sections, categories, inputs.collapseAfter)
+    if (inputs.groupDependencies) {
+      sections = await groupDependencyUpdates(sections)
+      await core.group('Grouping dependency updates', async () => {
+        core.debug(JSON.stringify(sections, null, 2))
+      })
+    }
 
+    if (inputs.collapseAfter > 0) {
+      sections = await collapseSections(sections, inputs.collapseAfter)
+      await core.group('Collapsing sections', async () => {
+        core.debug(JSON.stringify(sections, null, 2))
+      })
+    }
+
+    body = rebuildMarkdown(body, sections, categories)
+
+    // Apply header and footer templates
     if (inputs.header) {
       const header = handlebars.compile(inputs.header)(data)
       body = `${header}\n\n${body}`
@@ -97,6 +106,85 @@ export async function generateReleaseNotes(
   }
 
   return body
+}
+
+/**
+ * Rebuilds the markdown content with processed sections.
+ *
+ * This function takes the original release notes body and replaces only the
+ * categorized sections that we want to modify, leaving all other content untouched.
+ *
+ * @param originalBody - The original markdown content from GitHub
+ * @param processedSections - The processed section data
+ * @param categories - The category definitions
+ * @returns Updated markdown with processed sections and all other content preserved
+ */
+function rebuildMarkdown(originalBody: string, processedSections: SectionData, categories: Category[]): string {
+  // Extract the structure of the original markdown
+  const lines = originalBody.split('\n')
+  const result: string[] = []
+
+  // Track if we're inside a section that we need to replace
+  let inReplaceableSection = false
+
+  // Process each line
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // Detect any kind of section header (## or ###)
+    // This is important because we need to reset inReplaceableSection for any new section
+    if (line.trim().startsWith('##')) {
+      // Reset the section flag for any section header (including ## and ###)
+      inReplaceableSection = false
+
+      // Now check if this is specifically a category section header (### Title)
+      const sectionMatch = line.trim().match(/^###\s(.+)$/)
+
+      if (sectionMatch) {
+        // Get the section title
+        const sectionTitle = sectionMatch[1]
+
+        // Find if this section matches any of our categories
+        const matchedCategory = categories.find((cat) => cat.title === sectionTitle)
+
+        if (matchedCategory) {
+          // This is a section we want to replace
+          inReplaceableSection = true
+          const currentSectionLabel = matchedCategory.labels[0]
+
+          // Add the section header
+          result.push(line)
+
+          // Add the processed items for this section
+          const sectionItems = processedSections[currentSectionLabel] || []
+          if (sectionItems.length > 0) {
+            result.push(...sectionItems)
+          }
+
+          // Skip lines until we hit the next section or non-bullet item
+          while (i + 1 < lines.length) {
+            const nextLine = lines[i + 1].trim()
+            if (nextLine.startsWith('##') || (nextLine && !nextLine.startsWith('*'))) {
+              // This is the start of a new section or non-bulleted content
+              break
+            }
+            i++ // Skip this line
+          }
+          continue
+        }
+      }
+
+      // This is a section header, but not one we want to modify
+      // We've already reset inReplaceableSection, so just add the line
+      result.push(line)
+    } else if (!inReplaceableSection) {
+      // Not in a replaceable section, just copy the line
+      result.push(line)
+    }
+    // If we're in a replaceable section, skip all lines
+  }
+
+  return result.join('\n')
 }
 
 /**
@@ -127,119 +215,46 @@ export function parseNotes(notes: string, major: string, minor: string): string 
 }
 
 /**
- * Re-generates release notes markdown with selectively collapsed sections.
+ * Adds collapse tags to sections that exceed the specified item limit.
  *
- * The function partitions the original markdown into header, category, and footer parts,
- * then rebuilds the document by processing each category section from the provided section data.
- * If a section contains more items than the specified threshold, its content is wrapped in HTML
- * <details> elements to allow collapsing.
- *
- * @param markdown - The original markdown content.
- * @param sectionData - An object mapping section labels to arrays of markdown entries.
- * @param categories - An array of category configurations, each containing a title and associated labels.
- * @param n - The threshold for collapsing a section; sections with more than n items are collapsed (0 disables collapsing).
- * @returns The updated markdown with collapsed sections where applicable.
+ * @param sections - The processed section data
+ * @param n - Number of items after which to collapse a section
+ * @returns SectionData with collapse tags added where needed
  */
-async function collapseSections(markdown: string, sectionData: SectionData, categories: Category[], n: number): Promise<string> {
-  const beforeTextTemplate = `<details><summary>{count} changes</summary>\n\n`
-  const afterText = `\n</details>\n`
-
-  // Get lines of the original markdown
-  const originalLines = markdown.split('\n')
-  const headerLines: string[] = []
-  const footerLines: string[] = []
-
-  // Track the state of our parser
-  let inHeaderSection = true
-  let inCategorySection = false
-
-  // GitHub release notes typically have:
-  // 1. Header (containing "## What's Changed")
-  // 2. Category sections (with ### headings)
-  // 3. Footer (with "## New Contributors" and "**Full Changelog**" links)
-
-  for (let i = 0; i < originalLines.length; i++) {
-    const line = originalLines[i]
-
-    // Detect section headings
-    const isL3Heading = line.match(/^###\s(.+)/)
-    const isL2Heading = !isL3Heading && line.match(/^##\s(.+)/)
-
-    if (isL3Heading) {
-      // Found a category heading (###)
-      if (inHeaderSection) {
-        inHeaderSection = false
-        inCategorySection = true
-        continue
-      }
-
-      continue
-    }
-
-    // Found a major section heading (##) after we've seen category headings
-    if (inCategorySection && isL2Heading) {
-      inCategorySection = false
-      // This is the beginning of the footer
-      footerLines.push(line)
-      continue
-    }
-
-    if (inHeaderSection) {
-      headerLines.push(line)
-    } else if (!inCategorySection) {
-      // If we're not in a category section or header, we're in the footer
-      footerLines.push(line)
-    }
-
-    // Skip the actual content of the categories, as we'll regenerate it
+async function collapseSections(sections: SectionData, n: number): Promise<SectionData> {
+  if (n <= 0) {
+    return sections // No collapsing needed
   }
 
-  // Generate the new section content
-  const sectionLines: string[] = []
+  const result: SectionData = {}
 
-  // Identify sections that should be collapsed
-  const sectionsToAddText =
-    n > 0
-      ? categories
-          .map((category) => category.labels)
-          .flat()
-          .filter((label) => sectionData[label] && sectionData[label].length > n)
-      : []
+  // Process each section
+  for (const [label, items] of Object.entries(sections)) {
+    if (items.length <= n) {
+      // No need to collapse
+      result[label] = [...items]
+    } else {
+      // If the section has more items than the limit, we'll collapse the entire section
 
-  // Add each category's content
-  for (const category of categories) {
-    const label = category.labels[0]
-    const items = sectionData[label]
+      // Create a details/summary block with the total number of changes
+      const summaryText = `<details><summary>${items.length} changes</summary>`
 
-    // Skip empty sections
-    if (!items || items.length === 0) continue
+      // Rather than joining all items with the HTML tags, modify the first and last items directly
+      const modifiedItems = [...items]
 
-    // Add section heading
-    sectionLines.push(`### ${category.title}`)
+      // Add the opening HTML to the first item
+      modifiedItems[0] = summaryText + '\n\n' + modifiedItems[0]
 
-    // Determine if this section should be collapsed
-    const shouldCollapse = sectionsToAddText.includes(label)
+      // Add the closing HTML to the last item
+      modifiedItems[modifiedItems.length - 1] = modifiedItems[modifiedItems.length - 1] + '\n</details>'
 
-    if (shouldCollapse) {
-      // Add opening details tag with count
-      const beforeText = beforeTextTemplate.replace('{count}', String(items.length))
-      sectionLines.push(beforeText)
+      // Replace the section content with the modified version
+      result[label] = modifiedItems
     }
-
-    // Add all items in the section
-    sectionLines.push(...items)
-
-    if (shouldCollapse) {
-      // Add closing details tag
-      sectionLines.push(afterText)
-    }
-
-    // Add an empty line after the section
-    sectionLines.push('')
   }
 
-  // Combine header, section content, and footer
-  const result = [...headerLines, '', ...sectionLines, ...footerLines].join('\n')
+  // Log the collapsed sections to help with debugging
+  core.debug(`Collapsed sections structure: ${JSON.stringify(result, null, 2)}`)
 
   return result
 }
