@@ -45259,14 +45259,25 @@ function rebuildMarkdown(originalBody, processedSections, categories) {
     const result = [];
     // Track if we're inside a section that we need to replace
     let inReplaceableSection = false;
+    // Track the last section we processed to add newlines
+    let lastSectionIndex = -1;
     // Process each line
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
         // Detect any kind of section header (## or ###)
         if (trimmedLine.startsWith('##')) {
+            // If we're starting a new section and have processed a section before,
+            // add an extra newline between sections
+            if (lastSectionIndex !== -1 && result.length > 0) {
+                // Ensure there's a blank line after the last section
+                if (result[result.length - 1] !== '') {
+                    result.push('');
+                }
+            }
             // Reset the section flag for any section header (including ## and ###)
             inReplaceableSection = false;
+            lastSectionIndex = result.length;
             // Now check if this is specifically a category section header (### Title)
             const sectionMatch = trimmedLine.match(/^###\s(.+)$/);
             if (sectionMatch) {
@@ -45287,18 +45298,23 @@ function rebuildMarkdown(originalBody, processedSections, categories) {
                     }
                     // Skip lines until we hit the next section or non-bullet item
                     while (i + 1 < lines.length) {
-                        const nextLine = lines[i + 1].trim();
-                        if (nextLine.startsWith('##')) {
+                        const nextLine = lines[i + 1];
+                        const nextTrimmed = nextLine.trim();
+                        if (nextTrimmed.startsWith('##')) {
                             // This is the start of a new section
                             break;
                         }
-                        else if (nextLine && !nextLine.startsWith('* ')) {
+                        else if (nextTrimmed && !nextTrimmed.startsWith('* ')) {
                             // This is non-bulleted content - add it to result and stop replacing
                             inReplaceableSection = false;
                             // Don't increment i so we'll process this line in the next loop iteration
                             break;
                         }
                         i++; // Skip this bullet point line
+                    }
+                    // Add a blank line after this section
+                    if (result[result.length - 1] !== '') {
+                        result.push('');
                     }
                     continue;
                 }
@@ -45307,10 +45323,14 @@ function rebuildMarkdown(originalBody, processedSections, categories) {
             result.push(line);
         }
         else if (!inReplaceableSection) {
-            // Not in a replaceable section, add the line
+            // Not in a replaceable section, add the line as-is
             result.push(line);
         }
         // If we're in a replaceable section, skip this line (it's a bullet point we've already replaced)
+    }
+    // Ensure we don't have trailing blank lines at the end
+    while (result.length > 0 && result[result.length - 1] === '') {
+        result.pop();
     }
     return result.join('\n');
 }
