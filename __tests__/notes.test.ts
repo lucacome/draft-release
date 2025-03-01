@@ -250,7 +250,7 @@ describe('generateReleaseNotes', () => {
       header: 'header with version-number {{version-number}}',
       footer: 'footer with version {{version}}',
       variables: [],
-      collapseAfter: 3,
+      collapseAfter: 5,
       publish: false,
       configPath: '.github/release.yml',
       dryRun: false,
