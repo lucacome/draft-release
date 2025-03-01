@@ -237,16 +237,17 @@ async function collapseSections(sections: SectionData, n: number): Promise<Secti
       // If the section has more items than the limit, we'll collapse the entire section
 
       // Create a details/summary block with the total number of changes
-      const summaryText = `<details><summary>${items.length} changes</summary>`
+      const beforeText = `<details><summary>${items.length} changes</summary>\n\n`
+      const afterText = '\n</details>\n'
 
       // Rather than joining all items with the HTML tags, modify the first and last items directly
       const modifiedItems = [...items]
 
       // Add the opening HTML to the first item
-      modifiedItems[0] = summaryText + '\n\n' + modifiedItems[0]
+      modifiedItems[0] = beforeText + modifiedItems[0]
 
       // Add the closing HTML to the last item
-      modifiedItems[modifiedItems.length - 1] = modifiedItems[modifiedItems.length - 1] + '\n</details>'
+      modifiedItems[modifiedItems.length - 1] = modifiedItems[modifiedItems.length - 1] + afterText
 
       // Replace the section content with the modified version
       result[label] = modifiedItems
