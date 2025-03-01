@@ -45262,13 +45262,13 @@ function rebuildMarkdown(originalBody, processedSections, categories) {
     // Process each line
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        const trimmedLine = line.trim();
         // Detect any kind of section header (## or ###)
-        // This is important because we need to reset inReplaceableSection for any new section
-        if (line.trim().startsWith('##')) {
+        if (trimmedLine.startsWith('##')) {
             // Reset the section flag for any section header (including ## and ###)
             inReplaceableSection = false;
             // Now check if this is specifically a category section header (### Title)
-            const sectionMatch = line.trim().match(/^###\s(.+)$/);
+            const sectionMatch = trimmedLine.match(/^###\s(.+)$/);
             if (sectionMatch) {
                 // Get the section title
                 const sectionTitle = sectionMatch[1];
@@ -45288,24 +45288,29 @@ function rebuildMarkdown(originalBody, processedSections, categories) {
                     // Skip lines until we hit the next section or non-bullet item
                     while (i + 1 < lines.length) {
                         const nextLine = lines[i + 1].trim();
-                        if (nextLine.startsWith('##') || (nextLine && !nextLine.startsWith('*'))) {
-                            // This is the start of a new section or non-bulleted content
+                        if (nextLine.startsWith('##')) {
+                            // This is the start of a new section
                             break;
                         }
-                        i++; // Skip this line
+                        else if (nextLine && !nextLine.startsWith('* ')) {
+                            // This is non-bulleted content - add it to result and stop replacing
+                            inReplaceableSection = false;
+                            // Don't increment i so we'll process this line in the next loop iteration
+                            break;
+                        }
+                        i++; // Skip this bullet point line
                     }
                     continue;
                 }
             }
             // This is a section header, but not one we want to modify
-            // We've already reset inReplaceableSection, so just add the line
             result.push(line);
         }
         else if (!inReplaceableSection) {
-            // Not in a replaceable section, just copy the line
+            // Not in a replaceable section, add the line
             result.push(line);
         }
-        // If we're in a replaceable section, skip all lines
+        // If we're in a replaceable section, skip this line (it's a bullet point we've already replaced)
     }
     return result.join('\n');
 }

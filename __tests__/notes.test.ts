@@ -242,6 +242,57 @@ describe('generateReleaseNotes', () => {
     expect(notes).not.toContain('revert')
   })
 
+  it('should work without new contributors', async () => {
+    const inputs: Inputs = {
+      githubToken: '_',
+      majorLabel: 'major',
+      minorLabel: 'minor',
+      header: 'header with version-number {{version-number}}',
+      footer: 'footer with version {{version}}',
+      variables: [],
+      collapseAfter: 3,
+      publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
+      groupDependencies: false,
+      removeConventionalPrefixes: true,
+    }
+
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {
+      data: {
+        body: `## What's Changed
+### 🚀 Features
+* feature 1
+* feature 2
+* feature 3
+* feature 4
+* feature 5
+
+
+**Full Changelog**: https://github.com/somewhere/compare/v5.0.4...v5.0.5`,
+      },
+    }
+
+    const mockNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockNotes.mockResolvedValue(mockResponse)
+
+    // call the function
+    const notes = await generateReleaseNotes(gh, inputs, releaseData)
+
+    // assert the result
+    expect(typeof notes).toEqual('string')
+    expect(notes).toContain('header with version-number 1.1.0')
+    expect(notes).toContain('footer with version v1.1.0')
+    expect(notes).toContain('**Full Changelog**')
+  })
+
   it('should work with all the features enabled', async () => {
     const inputs: Inputs = {
       githubToken: '_',
