@@ -5,9 +5,9 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@actions/artifact@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "@actions/artifact@npm:2.2.2"
+"@actions/artifact@npm:^2.3.0":
+  version: 2.3.1
+  resolution: "@actions/artifact@npm:2.3.1"
   dependencies:
     "@actions/core": "npm:^1.10.0"
     "@actions/github": "npm:^5.1.1"
@@ -21,7 +21,7 @@ __metadata:
     archiver: "npm:^7.0.1"
     jwt-decode: "npm:^3.1.2"
     unzip-stream: "npm:^0.3.1"
-  checksum: 10c0/e58c3d07e1ec29ddb5b5952db369cc1afb7f6d2f063f697665a56806b50d853d42894092738ba061869a65a54d52e63dfec6639894f57377796a7dbb99aa17cc
+  checksum: 10c0/e1ff127a1e36519b0082d0fce47458d3f35d7c1c84b454f04e7a60c0865fbc4d1e2344adf8ce928f8a83e60dc0514c9f9ecd80b81024f72f506ab51791d53891
   languageName: node
   linkType: hard
 
@@ -681,11 +681,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.56.0":
-  version: 0.56.0
-  resolution: "@docker/actions-toolkit@npm:0.56.0"
+"@docker/actions-toolkit@npm:^0.57.0":
+  version: 0.57.0
+  resolution: "@docker/actions-toolkit@npm:0.57.0"
   dependencies:
-    "@actions/artifact": "npm:^2.2.2"
+    "@actions/artifact": "npm:^2.3.0"
     "@actions/cache": "npm:^4.0.2"
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.1.1"
@@ -706,7 +706,7 @@ __metadata:
     semver: "npm:^7.7.1"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/67e6b00a4e153f96d4d194cf6a322d3705b7ad2ed6768e0049e005392c16ceda2a7d5914ba2178a0038d60bb2fc75272ebab9d96ceabeb05ce1c352a7d0e6a3f
+  checksum: 10c0/b83a2f268a7328f82b518b3bbac2e196fdf5803d15ae45b23e4062f7cfe2a206412d8e22ddc5a3d874fc778920aa38d8f5a2d0e9483bd408e29a4cd6a2a6c9bb
   languageName: node
   linkType: hard
 
@@ -5265,7 +5265,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@actions/github": "npm:^6.0.0"
-    "@docker/actions-toolkit": "npm:^0.56.0"
+    "@docker/actions-toolkit": "npm:^0.57.0"
     "@eslint/compat": "npm:^1.2.7"
     "@eslint/js": "npm:^9.22.0"
     "@jest/globals": "npm:^29.7.0"
