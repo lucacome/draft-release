@@ -1,20 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>nginxinc/k8s-common",
-    "schedule:weekly"
-  ],
+  "extends": ["github>nginxinc/k8s-common", "schedule:weekly"],
   "rangeStrategy": "bump",
   "packageRules": [
     {
-      "matchPackagePatterns": [
-        "^node$",
-        "@types/node"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "enabled": false
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "matchPackageNames": ["/^node$/", "/@types/node/"]
     }
   ]
 }
