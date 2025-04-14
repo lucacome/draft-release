@@ -7,14 +7,14 @@
   "rangeStrategy": "bump",
   "packageRules": [
     {
-      "matchPackagePatterns": [
-        "^node$",
-        "@types/node"
-      ],
       "matchUpdateTypes": [
         "major"
       ],
-      "enabled": false
+      "enabled": false,
+      "matchPackageNames": [
+        "/^node$/",
+        "/@types/node/"
+      ]
     }
   ]
 }
