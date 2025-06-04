@@ -74,7 +74,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/github@npm:^6.0.0, @actions/github@npm:^6.0.1":
+"@actions/github@npm:^6.0.1":
   version: 6.0.1
   resolution: "@actions/github@npm:6.0.1"
   dependencies:
@@ -684,15 +684,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.61.0":
-  version: 0.61.0
-  resolution: "@docker/actions-toolkit@npm:0.61.0"
+"@docker/actions-toolkit@npm:^0.62.1":
+  version: 0.62.1
+  resolution: "@docker/actions-toolkit@npm:0.62.1"
   dependencies:
     "@actions/artifact": "npm:^2.3.2"
     "@actions/cache": "npm:^4.0.3"
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.1.1"
-    "@actions/github": "npm:^6.0.0"
+    "@actions/github": "npm:^6.0.1"
     "@actions/http-client": "npm:^2.2.3"
     "@actions/io": "npm:^1.1.3"
     "@actions/tool-cache": "npm:^2.0.2"
@@ -706,10 +706,10 @@ __metadata:
     he: "npm:^1.2.0"
     js-yaml: "npm:^4.1.0"
     jwt-decode: "npm:^4.0.0"
-    semver: "npm:^7.7.1"
+    semver: "npm:^7.7.2"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/cd70ee5cec89e23af7dd53da8faf3c146278f4fb251c6509c4090f4aec7b665a449944b4b8346256efbc1e55cd0a5a41c43d2aeb0e37d06e9c9b92eee0306255
+  checksum: 10c0/a5d623239c64b0e69b8f62775cf5f49cd52d91dfc414a8dfa29bde0e8863b99c18b3bf92de7bab05e68828c12804d6fd0a5b013ed98fd440839453128e3de196
   languageName: node
   linkType: hard
 
@@ -5285,7 +5285,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@actions/github": "npm:^6.0.1"
-    "@docker/actions-toolkit": "npm:^0.61.0"
+    "@docker/actions-toolkit": "npm:^0.62.1"
     "@eslint/compat": "npm:^1.2.9"
     "@eslint/js": "npm:^9.28.0"
     "@jest/globals": "npm:^29.7.0"
@@ -6372,7 +6372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.7.1, semver@npm:^7.7.2":
+"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.7.2":
   version: 7.7.2
   resolution: "semver@npm:7.7.2"
   bin:
