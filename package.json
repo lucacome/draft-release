@@ -18,7 +18,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.19.1",
+    "@types/node": "^20.19.4",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
     "eslint": "^9.29.0",
@@ -36,7 +36,7 @@
     "typescript": "^5.8.3"
   },
   "engines": {
-    "node": ">=20.19.2"
+    "node": ">=20.19.3"
   },
   "exports": {
     ".": "./dist/index.js"
