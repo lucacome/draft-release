@@ -2126,7 +2126,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^8.38.0":
+"@typescript-eslint/eslint-plugin@npm:^8.39.0":
   version: 8.39.0
   resolution: "@typescript-eslint/eslint-plugin@npm:8.39.0"
   dependencies:
@@ -2147,7 +2147,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^8.38.0":
+"@typescript-eslint/parser@npm:^8.39.0":
   version: 8.39.0
   resolution: "@typescript-eslint/parser@npm:8.39.0"
   dependencies:
@@ -5661,8 +5661,8 @@ __metadata:
     "@types/js-yaml": "npm:^4.0.9"
     "@types/node": "npm:^20.19.9"
     "@types/semver": "npm:^7.7.0"
-    "@typescript-eslint/eslint-plugin": "npm:^8.38.0"
-    "@typescript-eslint/parser": "npm:^8.38.0"
+    "@typescript-eslint/eslint-plugin": "npm:^8.39.0"
+    "@typescript-eslint/parser": "npm:^8.39.0"
     eslint: "npm:^9.32.0"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-import: "npm:^2.32.0"
