@@ -509,7 +509,7 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
               position: i,
               pattern,
               prefix: getPrefix(items[i], conventionalPrefixRegex),
-              botName: pattern.getBotName?.(match) || 'renovate',
+              botName: pattern.getBotName?.(match),
             })
           } else {
             const group = updateGroups.get(key)!
