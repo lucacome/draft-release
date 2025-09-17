@@ -45558,49 +45558,53 @@ async function groupDependencyUpdates(sections) {
         {
             name: 'renovate-dependency',
             // Match both "* Update..." and "* chore(deps): update..."
-            regex: new RegExp(`\\* ${optionalPrefixPattern}Update (.*?) to (.*?) by @renovate in (.*)$`, 'i'),
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Update (.*?) to (.*?) by @(renovate(?:\\[bot\\])?) in (.*)$`, 'i'),
             getKey: (matches) => matches[1].trim().toLowerCase(),
             getGroupKey: (matches) => matches[1].trim().toLowerCase(),
             getOriginalName: (matches) => matches[1].trim(),
             getLatestVersion: (matches) => matches[2].trim(),
-            getPRUrl: (matches) => matches[3].trim(),
-            formatEntry: (name, latest, _initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'update' : 'Update'} ${name} to ${latest} by @renovate in ${prLinks}`,
+            getBotName: (matches) => matches[3].trim(),
+            getPRUrl: (matches) => matches[4].trim(),
+            formatEntry: (name, latest, _initial, prLinks, prefix, botName) => `* ${prefix || ''}${prefix ? 'update' : 'Update'} ${name} to ${latest} by @${botName || 'renovate'} in ${prLinks}`,
         },
         // Renovate lock file maintenance
         {
             name: 'renovate-lockfile',
             // Match both "* Lock file..." and "* chore(deps): lock file..."
-            regex: new RegExp(`\\* ${optionalPrefixPattern}Lock file maintenance by @renovate in (.*)$`, 'i'),
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Lock file maintenance by @(renovate(?:\\[bot\\])?) in (.*)$`, 'i'),
             getKey: () => 'lock-file-maintenance',
             getGroupKey: () => 'lock-file-maintenance',
             getOriginalName: () => 'Lock file maintenance',
             getLatestVersion: () => '',
-            getPRUrl: (matches) => matches[1].trim(),
-            formatEntry: (_name, _latest, _initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'lock file maintenance' : 'Lock file maintenance'} by @renovate in ${prLinks}`,
+            getBotName: (matches) => matches[1].trim(),
+            getPRUrl: (matches) => matches[2].trim(),
+            formatEntry: (_name, _latest, _initial, prLinks, prefix, botName) => `* ${prefix || ''}${prefix ? 'lock file maintenance' : 'Lock file maintenance'} by @${botName || 'renovate'} in ${prLinks}`,
         },
         // Dependabot updates
         {
             name: 'dependabot',
             // Match both "* Bump..." and "* chore(deps): bump..."
-            regex: new RegExp(`\\* ${optionalPrefixPattern}Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$`, 'i'),
+            regex: new RegExp(`\\* ${optionalPrefixPattern}Bump (.*?) from (.*?) to (.*?) by @(dependabot(?:\\[bot\\])?) in (.*)$`, 'i'),
             getKey: (matches) => matches[1].trim().toLowerCase(),
             getGroupKey: (matches) => matches[1].trim().toLowerCase(),
             getOriginalName: (matches) => matches[1].trim(),
             getLatestVersion: (matches) => matches[3].trim(),
             getInitialVersion: (matches) => matches[2].trim(),
-            getPRUrl: (matches) => matches[4].trim(),
-            formatEntry: (name, latest, initial, prLinks, prefix) => `* ${prefix || ''}${prefix ? 'bump' : 'Bump'} ${name} from ${initial} to ${latest} by @dependabot in ${prLinks}`,
+            getBotName: (matches) => matches[4].trim(),
+            getPRUrl: (matches) => matches[5].trim(),
+            formatEntry: (name, latest, initial, prLinks, prefix, botName) => `* ${prefix || ''}${prefix ? 'bump' : 'Bump'} ${name} from ${initial} to ${latest} by @${botName || 'dependabot'} in ${prLinks}`,
         },
         // Pre-commit-ci updates
         {
             name: 'pre-commit-ci',
-            regex: /\* \[pre-commit\.ci\] pre-commit autoupdate by @pre-commit-ci in (.*)$/,
+            regex: /\* \[pre-commit\.ci\] pre-commit autoupdate by @(pre-commit-ci(?:\[bot\])?) in (.*)$/,
             getKey: () => 'pre-commit',
             getGroupKey: () => 'pre-commit',
             getOriginalName: () => 'pre-commit',
             getLatestVersion: () => '',
-            getPRUrl: (matches) => matches[1].trim(),
-            formatEntry: (_name, _latest, _initial, prLinks) => `* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in ${prLinks}`,
+            getBotName: (matches) => matches[1].trim(),
+            getPRUrl: (matches) => matches[2].trim(),
+            formatEntry: (_name, _latest, _initial, prLinks, prefix, botName) => `* [pre-commit.ci] pre-commit autoupdate by @${botName || 'pre-commit-ci'} in ${prLinks}`,
         },
     ];
     for (const [label, items] of Object.entries(sections)) {
@@ -45631,6 +45635,7 @@ async function groupDependencyUpdates(sections) {
                             position: i,
                             pattern,
                             prefix: getPrefix(items[i], conventionalPrefixRegex),
+                            botName: pattern.getBotName?.(match) || 'renovate',
                         });
                     }
                     else {
@@ -45691,7 +45696,7 @@ async function groupDependencyUpdates(sections) {
                     return prNumA - prNumB;
                 });
                 const prLinks = sortedPRs.join(', ');
-                const entry = group.pattern.formatEntry(group.originalDependencyName, group.latestVersion, group.initialVersion, prLinks, group.prefix);
+                const entry = group.pattern.formatEntry(group.originalDependencyName, group.latestVersion, group.initialVersion, prLinks, group.prefix, group.botName);
                 newItems.push(entry);
                 processedGroups.add(groupKey);
             }

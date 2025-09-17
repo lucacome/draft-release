@@ -564,9 +564,9 @@ describe('groupDependencyUpdates', () => {
   it('groups pre-commit-ci updates correctly', async () => {
     const sections = {
       dependencies: [
-        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/lucacome/draft-release/pull/350',
         '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
-        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/355',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/lucacome/draft-release/pull/355',
         '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
         '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
       ],
@@ -582,7 +582,7 @@ describe('groupDependencyUpdates', () => {
     // Verify pre-commit updates are grouped properly within each section
     expect(result).toEqual({
       dependencies: [
-        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
+        '* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/lucacome/draft-release/pull/350, https://github.com/lucacome/draft-release/pull/355',
         '* Update dependency @types/node to ^22.5.2 by @renovate in https://github.com/lucacome/draft-release/pull/319',
         '* Update dependency ts-jest to ^29.2.5 by @renovate in https://github.com/lucacome/draft-release/pull/318',
         '* Bump path-to-regexp from 6.2.0 to 6.2.1 by @dependabot in https://github.com/lucacome/draft-release/pull/341',
