@@ -11,3 +11,4 @@ export type ReleaseData = {
 export declare function getRelease(client: ReturnType<typeof github.getOctokit>): Promise<ReleaseData>;
 export declare function createOrUpdateRelease(client: ReturnType<typeof github.getOctokit>, inputs: Inputs, releaseData: ReleaseData): Promise<void>;
 export {};
+//# sourceMappingURL=release.d.ts.map

@@ -23,3 +23,4 @@ export interface Inputs {
  * @returns An object containing the structured inputs for the action.
  */
 export declare function getInputs(): Inputs;
+//# sourceMappingURL=context.d.ts.map

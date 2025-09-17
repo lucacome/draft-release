@@ -63,3 +63,4 @@ export declare function removeConventionalPrefixes(sections: SectionData): Promi
  */
 export declare function groupDependencyUpdates(sections: SectionData): Promise<SectionData>;
 export {};
+//# sourceMappingURL=notes.d.ts.map

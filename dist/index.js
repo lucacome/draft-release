@@ -45635,7 +45635,7 @@ async function groupDependencyUpdates(sections) {
                             position: i,
                             pattern,
                             prefix: getPrefix(items[i], conventionalPrefixRegex),
-                            botName: pattern.getBotName?.(match) || 'renovate',
+                            botName: pattern.getBotName?.(match),
                         });
                     }
                     else {

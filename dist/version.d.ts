@@ -6,3 +6,4 @@ export interface Category {
 }
 export declare function getCategories(inputs: Inputs): Promise<Category[]>;
 export declare function getVersionIncrease(releaseData: ReleaseData, inputs: Inputs, notes: string): Promise<string>;
+//# sourceMappingURL=version.d.ts.map
