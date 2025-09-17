@@ -411,53 +411,57 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
     {
       name: 'renovate-dependency',
       // Match both "* Update..." and "* chore(deps): update..."
-      regex: new RegExp(`\\* ${optionalPrefixPattern}Update (.*?) to (.*?) by @renovate in (.*)$`, 'i'),
+      regex: new RegExp(`\\* ${optionalPrefixPattern}Update (.*?) to (.*?) by @(renovate(?:\\[bot\\])?) in (.*)$`, 'i'),
       getKey: (matches: RegExpMatchArray) => matches[1].trim().toLowerCase(),
       getGroupKey: (matches: RegExpMatchArray) => matches[1].trim().toLowerCase(),
       getOriginalName: (matches: RegExpMatchArray) => matches[1].trim(),
       getLatestVersion: (matches: RegExpMatchArray) => matches[2].trim(),
-      getPRUrl: (matches: RegExpMatchArray) => matches[3].trim(),
-      formatEntry: (name: string, latest: string, _initial: string, prLinks: string, prefix?: string) =>
-        `* ${prefix || ''}${prefix ? 'update' : 'Update'} ${name} to ${latest} by @renovate in ${prLinks}`,
+      getBotName: (matches: RegExpMatchArray) => matches[3].trim(),
+      getPRUrl: (matches: RegExpMatchArray) => matches[4].trim(),
+      formatEntry: (name: string, latest: string, _initial: string, prLinks: string, prefix?: string, botName?: string) =>
+        `* ${prefix || ''}${prefix ? 'update' : 'Update'} ${name} to ${latest} by @${botName || 'renovate'} in ${prLinks}`,
     },
     // Renovate lock file maintenance
     {
       name: 'renovate-lockfile',
       // Match both "* Lock file..." and "* chore(deps): lock file..."
-      regex: new RegExp(`\\* ${optionalPrefixPattern}Lock file maintenance by @renovate in (.*)$`, 'i'),
+      regex: new RegExp(`\\* ${optionalPrefixPattern}Lock file maintenance by @(renovate(?:\\[bot\\])?) in (.*)$`, 'i'),
       getKey: () => 'lock-file-maintenance',
       getGroupKey: () => 'lock-file-maintenance',
       getOriginalName: () => 'Lock file maintenance',
       getLatestVersion: () => '',
-      getPRUrl: (matches: RegExpMatchArray) => matches[1].trim(),
-      formatEntry: (_name: string, _latest: string, _initial: string, prLinks: string, prefix?: string) =>
-        `* ${prefix || ''}${prefix ? 'lock file maintenance' : 'Lock file maintenance'} by @renovate in ${prLinks}`,
+      getBotName: (matches: RegExpMatchArray) => matches[1].trim(),
+      getPRUrl: (matches: RegExpMatchArray) => matches[2].trim(),
+      formatEntry: (_name: string, _latest: string, _initial: string, prLinks: string, prefix?: string, botName?: string) =>
+        `* ${prefix || ''}${prefix ? 'lock file maintenance' : 'Lock file maintenance'} by @${botName || 'renovate'} in ${prLinks}`,
     },
     // Dependabot updates
     {
       name: 'dependabot',
       // Match both "* Bump..." and "* chore(deps): bump..."
-      regex: new RegExp(`\\* ${optionalPrefixPattern}Bump (.*?) from (.*?) to (.*?) by @dependabot in (.*)$`, 'i'),
+      regex: new RegExp(`\\* ${optionalPrefixPattern}Bump (.*?) from (.*?) to (.*?) by @(dependabot(?:\\[bot\\])?) in (.*)$`, 'i'),
       getKey: (matches: RegExpMatchArray) => matches[1].trim().toLowerCase(),
       getGroupKey: (matches: RegExpMatchArray) => matches[1].trim().toLowerCase(),
       getOriginalName: (matches: RegExpMatchArray) => matches[1].trim(),
       getLatestVersion: (matches: RegExpMatchArray) => matches[3].trim(),
       getInitialVersion: (matches: RegExpMatchArray) => matches[2].trim(),
-      getPRUrl: (matches: RegExpMatchArray) => matches[4].trim(),
-      formatEntry: (name: string, latest: string, initial: string, prLinks: string, prefix?: string) =>
-        `* ${prefix || ''}${prefix ? 'bump' : 'Bump'} ${name} from ${initial} to ${latest} by @dependabot in ${prLinks}`,
+      getBotName: (matches: RegExpMatchArray) => matches[4].trim(),
+      getPRUrl: (matches: RegExpMatchArray) => matches[5].trim(),
+      formatEntry: (name: string, latest: string, initial: string, prLinks: string, prefix?: string, botName?: string) =>
+        `* ${prefix || ''}${prefix ? 'bump' : 'Bump'} ${name} from ${initial} to ${latest} by @${botName || 'dependabot'} in ${prLinks}`,
     },
     // Pre-commit-ci updates
     {
       name: 'pre-commit-ci',
-      regex: /\* \[pre-commit\.ci\] pre-commit autoupdate by @pre-commit-ci in (.*)$/,
+      regex: /\* \[pre-commit\.ci\] pre-commit autoupdate by @(pre-commit-ci(?:\[bot\])?) in (.*)$/,
       getKey: () => 'pre-commit',
       getGroupKey: () => 'pre-commit',
       getOriginalName: () => 'pre-commit',
       getLatestVersion: () => '',
-      getPRUrl: (matches: RegExpMatchArray) => matches[1].trim(),
-      formatEntry: (_name: string, _latest: string, _initial: string, prLinks: string) =>
-        `* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci in ${prLinks}`,
+      getBotName: (matches: RegExpMatchArray) => matches[1].trim(),
+      getPRUrl: (matches: RegExpMatchArray) => matches[2].trim(),
+      formatEntry: (_name: string, _latest: string, _initial: string, prLinks: string, prefix?: string, botName?: string) =>
+        `* [pre-commit.ci] pre-commit autoupdate by @${botName || 'pre-commit-ci'} in ${prLinks}`,
     },
   ]
 
@@ -475,7 +479,8 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
       allPRs: Set<string>
       position: number
       pattern: (typeof updatePatterns)[0]
-      prefix: string // Store the prefix
+      prefix: string
+      botName: string
     }
 
     const updateGroups = new Map<string, UpdateGroup>()
@@ -504,6 +509,7 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
               position: i,
               pattern,
               prefix: getPrefix(items[i], conventionalPrefixRegex),
+              botName: pattern.getBotName?.(match),
             })
           } else {
             const group = updateGroups.get(key)!
@@ -581,7 +587,8 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
           group.latestVersion,
           group.initialVersion,
           prLinks,
-          group.prefix, // Pass the prefix to formatEntry
+          group.prefix,
+          group.botName,
         )
 
         newItems.push(entry)
