@@ -50,7 +50,7 @@
   "license": "MIT",
   "main": "src/main.ts",
   "name": "lucacome-draft-release",
-  "packageManager": "yarn@4.10.0",
+  "packageManager": "yarn@4.10.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lucacome/draft-release.git"
