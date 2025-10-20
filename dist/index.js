@@ -46223,7 +46223,7 @@ function requireSync () {
 	    );
 	  }
 	  // Normalize option `columns`
-	  options.cast_first_line_to_header = null;
+	  options.cast_first_line_to_header = undefined;
 	  if (options.columns === true) {
 	    // Fields in the first line are converted as-is to columns
 	    options.cast_first_line_to_header = undefined;
@@ -46755,7 +46755,7 @@ function requireSync () {
 	  // Normalize option `to`
 	  if (options.to === undefined || options.to === null) {
 	    options.to = -1;
-	  } else {
+	  } else if (options.to !== -1) {
 	    if (typeof options.to === "string" && /\d+/.test(options.to)) {
 	      options.to = parseInt(options.to);
 	    }
@@ -46774,7 +46774,7 @@ function requireSync () {
 	  // Normalize option `to_line`
 	  if (options.to_line === undefined || options.to_line === null) {
 	    options.to_line = -1;
-	  } else {
+	  } else if (options.to_line !== -1) {
 	    if (typeof options.to_line === "string" && /\d+/.test(options.to_line)) {
 	      options.to_line = parseInt(options.to_line);
 	    }
@@ -46905,10 +46905,14 @@ function requireSync () {
 	              this.state.bufBytesStart += bomLength;
 	              buf = buf.slice(bomLength);
 	              // Renormalize original options with the new encoding
-	              this.options = normalize_options({
+	              const options = normalize_options({
 	                ...this.original_options,
 	                encoding: encoding,
 	              });
+	              // Properties are merged with the existing options instance
+	              for (const key in options) {
+	                this.options[key] = options[key];
+	              }
 	              // Options will re-evaluate the Buffer with the new encoding
 	              ({ comment, escape, quote } = this.options);
 	              break;
@@ -47651,10 +47655,14 @@ function requireSync () {
 	      if (skip_records_with_error) {
 	        this.state.recordHasError = true;
 	        if (this.options.on_skip !== undefined) {
-	          this.options.on_skip(
-	            err,
-	            raw ? this.state.rawBuffer.toString(encoding) : undefined,
-	          );
+	          try {
+	            this.options.on_skip(
+	              err,
+	              raw ? this.state.rawBuffer.toString(encoding) : undefined,
+	            );
+	          } catch (err) {
+	            return err;
+	          }
 	        }
 	        // this.emit('skip', err, raw ? this.state.rawBuffer.toString(encoding) : undefined);
 	        return undefined;
@@ -47708,10 +47716,13 @@ function requireSync () {
 	    }
 	  };
 	  const close = () => {};
-	  const err1 = parser.parse(data, false, push, close);
-	  if (err1 !== undefined) throw err1;
-	  const err2 = parser.parse(undefined, true, push, close);
-	  if (err2 !== undefined) throw err2;
+	  const error = parser.parse(data, true, push, close);
+	  if (error !== undefined) throw error;
+	  // 250606: `parser.parse` was implemented as 2 calls:
+	  // const err1 = parser.parse(data, false, push, close);
+	  // if (err1 !== undefined) throw err1;
+	  // const err2 = parser.parse(undefined, true, push, close);
+	  // if (err2 !== undefined) throw err2;
 	  return records;
 	};
 
