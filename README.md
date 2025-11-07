@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.0
+      - uses: lucacome/draft-release@v2.0.1
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -100,7 +100,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.0
+      - uses: lucacome/draft-release@v2.0.1
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -133,7 +133,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.0
+      - uses: lucacome/draft-release@v2.0.1
         id: draft-release
         with:
           minor-label: 'enhancement'
