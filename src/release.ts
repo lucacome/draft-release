@@ -25,10 +25,10 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
 
   try {
     // get all releases
-    const releases: Release[] = await client.paginate(client.rest.repos.listReleases, {
+    const releases = (await client.paginate(client.rest.repos.listReleases, {
       ...context.repo,
       per_page: 100,
-    })
+    })) as unknown as Release[]
 
     releases.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 

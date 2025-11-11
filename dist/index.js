@@ -45851,10 +45851,10 @@ async function getRelease(client) {
     const context = githubExports.context;
     try {
         // get all releases
-        const releases = await client.paginate(client.rest.repos.listReleases, {
+        const releases = (await client.paginate(client.rest.repos.listReleases, {
             ...context.repo,
             per_page: 100,
-        });
+        }));
         releases.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         releaseResponse.releases = releases;
         const isTag = context.ref.startsWith('refs/tags/');
