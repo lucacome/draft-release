@@ -32,7 +32,7 @@
     "js-yaml": "^4.1.1",
     "prettier": "3.7.3",
     "rollup": "^4.53.3",
-    "ts-jest": "^29.4.5",
+    "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
     "typescript": "^5.9.3"
   },
