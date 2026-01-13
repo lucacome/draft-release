@@ -54,7 +54,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/core@npm:^2.0.0, @actions/core@npm:^2.0.1":
+"@actions/core@npm:^2.0.0, @actions/core@npm:^2.0.1, @actions/core@npm:^2.0.2":
   version: 2.0.2
   resolution: "@actions/core@npm:2.0.2"
   dependencies:
@@ -5575,7 +5575,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "lucacome-draft-release@workspace:."
   dependencies:
-    "@actions/core": "npm:^2.0.1"
+    "@actions/core": "npm:^2.0.2"
     "@actions/github": "npm:^7.0.0"
     "@docker/actions-toolkit": "npm:^0.72.0"
     "@eslint/compat": "npm:^2.0.1"
