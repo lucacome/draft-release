@@ -97,6 +97,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@actions/github@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@actions/github@npm:7.0.0"
+  dependencies:
+    "@actions/http-client": "npm:^3.0.1"
+    "@octokit/core": "npm:^5.0.1"
+    "@octokit/plugin-paginate-rest": "npm:^9.2.2"
+    "@octokit/plugin-rest-endpoint-methods": "npm:^10.4.0"
+    "@octokit/request": "npm:^8.4.1"
+    "@octokit/request-error": "npm:^5.1.1"
+    undici: "npm:^5.28.5"
+  checksum: 10c0/830039821d00efec8d0899c0b6ccd7e7ae27ea5dee50ff6d6277f4e19e582fa00576539df64a0b970211973f80792cff85727f3a3a4b53366ff5194209fe5c60
+  languageName: node
+  linkType: hard
+
 "@actions/glob@npm:^0.5.0":
   version: 0.5.0
   resolution: "@actions/glob@npm:0.5.0"
@@ -5540,7 +5555,7 @@ __metadata:
   resolution: "lucacome-draft-release@workspace:."
   dependencies:
     "@actions/core": "npm:^2.0.1"
-    "@actions/github": "npm:^6.0.1"
+    "@actions/github": "npm:^7.0.0"
     "@docker/actions-toolkit": "npm:^0.72.0"
     "@eslint/compat": "npm:^2.0.0"
     "@eslint/eslintrc": "npm:^3.3.3"
