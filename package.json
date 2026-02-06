@@ -6,7 +6,7 @@
     "@docker/actions-toolkit": "^0.76.0",
     "@types/semver": "^7.7.1",
     "handlebars": "^4.7.8",
-    "semver": "^7.7.3"
+    "semver": "^7.7.4"
   },
   "description": "GitHub Action to create a draft release",
   "devDependencies": {
