@@ -124,7 +124,7 @@ describe('generateReleaseNotes', () => {
     gh = github.getOctokit('_')
   })
   it('should generate release notes for the given header and footer', async () => {
-    const inputs = {
+    const inputs: Inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -165,7 +165,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should collapse the section if it has more than collapseAfter items', async () => {
-    const inputs = {
+    const inputs: Inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -248,7 +248,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should work without new contributors', async () => {
-    const inputs = {
+    const inputs: Inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -299,7 +299,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should work with all the features enabled', async () => {
-    const inputs = {
+    const inputs: Inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',

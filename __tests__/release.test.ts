@@ -8,7 +8,6 @@ jest.unstable_mockModule('@actions/core', () => corefix)
 const github = await import('@actions/github')
 await import('@actions/core')
 
-import {Inputs} from '../src/context'
 const {getRelease, createOrUpdateRelease} = await import('../src/release.js')
 
 let gh: ReturnType<typeof github.getOctokit>
