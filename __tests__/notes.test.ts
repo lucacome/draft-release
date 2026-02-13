@@ -11,6 +11,7 @@ await import('@actions/core')
 
 const {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} =
   await import('../src/notes.js')
+import type {Inputs} from '../src/context.js'
 
 let gh: ReturnType<typeof github.getOctokit>
 

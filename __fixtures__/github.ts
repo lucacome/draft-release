@@ -1,7 +1,7 @@
 import type * as github from '@actions/github'
 import {jest} from '@jest/globals'
 
-export const context: typeof Partial<github.context> = {
+export const context: Partial<typeof github.context> = {
   payload: {
     pull_request: {
       number: 123,

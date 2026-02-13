@@ -9,6 +9,8 @@ const github = await import('@actions/github')
 await import('@actions/core')
 
 const {getRelease, createOrUpdateRelease} = await import('../src/release.js')
+import type {Inputs} from '../src/context.js'
+import type {ReleaseData} from '../src/release.js'
 
 let gh: ReturnType<typeof github.getOctokit>
 
