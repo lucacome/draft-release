@@ -1,55 +1,16 @@
-import {promises as fsPromises} from 'fs'
-import * as yaml from 'js-yaml'
 import * as semver from 'semver'
 import {Inputs} from './context.js'
 import {parseNotes} from './notes.js'
 import {ReleaseData} from './release.js'
+import {getCategories} from './category.js'
 
-// yaml type definition for release.yml
-// changelog:
-//   exclude:
-//     labels:
-//       - skip-changelog
-//   categories:
-//     - title: 🚀 Features
-//       labels:
-//         - enhancement
-//     - title: 💣 Breaking Changes
-//       labels:
-//         - change
-//     - title: 🐛 Bug Fixes
-//       labels:
-//         - bug
-
-type ReleaseYAML = {
-  changelog: {
-    exclude: {
-      labels: string[]
-    }
-    categories: {
-      title: string
-      labels: string[]
-    }[]
-  }
-}
-
-export interface Category {
-  title: string
-  labels: string[]
-}
-
-export async function getCategories(inputs: Inputs): Promise<Category[]> {
-  const content = await fsPromises.readFile(inputs.configPath, 'utf8')
-  const doc = yaml.load(content) as ReleaseYAML
-  return doc.changelog.categories.map((category) => {
-    return {
-      title: category.title,
-      labels: category.labels,
-    }
-  })
-}
-
-// function that returns tile for matching label
+/**
+ * Retrieve the category title for a given label.
+ *
+ * @param inputs - Action inputs and configuration used to load categories
+ * @param label - The label to look up; if empty or not found, an empty string is returned
+ * @returns The matching category title, or an empty string if `label` is empty or no category matches
+ */
 async function getTitleForLabel(inputs: Inputs, label: string): Promise<string> {
   if (label === '') {
     return ''
