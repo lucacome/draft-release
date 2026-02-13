@@ -35,6 +35,14 @@ export interface Category {
   labels: string[]
 }
 
+/**
+ * Extracts release categories from the release YAML located at the configured path.
+ *
+ * Reads the YAML file at `inputs.configPath` and returns an array of categories defined under `changelog.categories`. File read or YAML parse errors propagate to the caller.
+ *
+ * @param inputs - Contains `configPath`, the filesystem path to the release YAML configuration
+ * @returns An array of `Category` objects parsed from `changelog.categories`
+ */
 export async function getCategories(inputs: Inputs): Promise<Category[]> {
   const content = await fsPromises.readFile(inputs.configPath, 'utf8')
   const doc = yaml.load(content) as ReleaseYAML
