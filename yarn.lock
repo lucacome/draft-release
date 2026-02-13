@@ -3761,7 +3761,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jest@npm:^29.12.2":
+"eslint-plugin-jest@npm:^29.14.0":
   version: 29.14.0
   resolution: "eslint-plugin-jest@npm:29.14.0"
   dependencies:
@@ -5768,7 +5768,7 @@ __metadata:
     eslint: "npm:^9.39.2"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-import: "npm:^2.32.0"
-    eslint-plugin-jest: "npm:^29.12.2"
+    eslint-plugin-jest: "npm:^29.14.0"
     eslint-plugin-prettier: "npm:^5.5.5"
     globals: "npm:^17.3.0"
     handlebars: "npm:^4.7.8"
