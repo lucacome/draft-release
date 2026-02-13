@@ -47008,6 +47008,14 @@ var loader = {
 };
 var load                = loader.load;
 
+/**
+ * Extracts release categories from the release YAML located at the configured path.
+ *
+ * Reads the YAML file at `inputs.configPath` and returns an array of categories defined under `changelog.categories`. File read or YAML parse errors propagate to the caller.
+ *
+ * @param inputs - Contains `configPath`, the filesystem path to the release YAML configuration
+ * @returns An array of `Category` objects parsed from `changelog.categories`
+ */
 async function getCategories(inputs) {
     const content = await promises.readFile(inputs.configPath, 'utf8');
     const doc = load(content);
@@ -47716,7 +47724,13 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     setOutput('release-url', response?.data?.html_url?.trim());
 }
 
-// function that returns tile for matching label
+/**
+ * Retrieve the category title for a given label.
+ *
+ * @param inputs - Action inputs and configuration used to load categories
+ * @param label - The label to look up; if empty or not found, an empty string is returned
+ * @returns The matching category title, or an empty string if `label` is empty or no category matches
+ */
 async function getTitleForLabel(inputs, label) {
     if (label === '') {
         return '';
