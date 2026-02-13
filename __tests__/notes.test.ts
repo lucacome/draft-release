@@ -1,11 +1,16 @@
-import {describe, expect, test, it} from '@jest/globals'
-import {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} from '../src/notes'
-import * as github from '@actions/github'
-import {Inputs} from '../src/context'
-import {jest} from '@jest/globals'
+import {jest, describe, expect, test, it, beforeEach} from '@jest/globals'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
+import * as githubfix from '../__fixtures__/github.js'
+import * as corefix from '../__fixtures__/core.js'
+
+jest.unstable_mockModule('@actions/github', () => githubfix)
+jest.unstable_mockModule('@actions/core', () => corefix)
+
+const github = await import('@actions/github')
+await import('@actions/core')
+
+const {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} =
+  await import('../src/notes.js')
 
 let gh: ReturnType<typeof github.getOctokit>
 
@@ -119,7 +124,7 @@ describe('generateReleaseNotes', () => {
     gh = github.getOctokit('_')
   })
   it('should generate release notes for the given header and footer', async () => {
-    const inputs: Inputs = {
+    const inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -160,7 +165,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should collapse the section if it has more than collapseAfter items', async () => {
-    const inputs: Inputs = {
+    const inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -243,7 +248,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should work without new contributors', async () => {
-    const inputs: Inputs = {
+    const inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',
@@ -294,7 +299,7 @@ describe('generateReleaseNotes', () => {
   })
 
   it('should work with all the features enabled', async () => {
-    const inputs: Inputs = {
+    const inputs = {
       githubToken: '_',
       majorLabel: 'major',
       minorLabel: 'minor',

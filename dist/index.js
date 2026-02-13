@@ -86,6 +86,10 @@ class Context {
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 var lib$1 = {};
 
 var proxy = {};
@@ -44195,6 +44199,7 @@ function requireLib () {
 }
 
 var libExports = requireLib();
+var Handlebars = /*@__PURE__*/getDefaultExportFromCjs(libExports);
 
 /*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
@@ -47013,25 +47018,6 @@ async function getCategories(inputs) {
         };
     });
 }
-// function that returns tile for matching label
-async function getTitleForLabel(inputs, label) {
-    if (label === '') {
-        return '';
-    }
-    const categories = await getCategories(inputs);
-    const category = categories.find((category) => category.labels.includes(label));
-    if (category === undefined) {
-        return '';
-    }
-    return category.title;
-}
-// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
-async function getVersionIncrease(releaseData, inputs, notes) {
-    const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel);
-    const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel);
-    const version = parseNotes(notes, majorTitle, minorTitle);
-    return semverExports.inc(releaseData.latestRelease, version) || '';
-}
 
 const conventionalPrefixRegex = /^\* (fix|feat|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]+\))?:\s+/i;
 /**
@@ -47097,12 +47083,14 @@ async function generateReleaseNotes(client, inputs, releaseData) {
         body = rebuildMarkdown(body, sections, categories);
         // Apply header and footer templates
         if (inputs.header) {
-            const header = libExports.compile(inputs.header)(data);
+            const template = Handlebars.compile(inputs.header);
+            const header = template(data);
             body = `${header}\n\n${body}`;
             setOutput('release-header', header?.trim());
         }
         if (inputs.footer) {
-            const footer = libExports.compile(inputs.footer)(data);
+            const template = Handlebars.compile(inputs.footer);
+            const footer = template(data);
             body = `${body}\n\n${footer}`;
             setOutput('release-footer', footer?.trim());
         }
@@ -47726,6 +47714,26 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     setOutput('release-notes', newReleaseNotes?.trim());
     setOutput('release-id', response?.data?.id);
     setOutput('release-url', response?.data?.html_url?.trim());
+}
+
+// function that returns tile for matching label
+async function getTitleForLabel(inputs, label) {
+    if (label === '') {
+        return '';
+    }
+    const categories = await getCategories(inputs);
+    const category = categories.find((category) => category.labels.includes(label));
+    if (category === undefined) {
+        return '';
+    }
+    return category.title;
+}
+// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
+async function getVersionIncrease(releaseData, inputs, notes) {
+    const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel);
+    const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel);
+    const version = parseNotes(notes, majorTitle, minorTitle);
+    return semverExports.inc(releaseData.latestRelease, version) || '';
 }
 
 var util = {};

@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as semver from 'semver'
-import * as handlebars from 'handlebars'
+import Handlebars from 'handlebars'
 import {Inputs} from './context.js'
-import {getCategories, Category} from './version.js'
+import {getCategories, Category} from './category.js'
 import {ReleaseData} from './release.js'
 
 interface VariableObject {
@@ -91,12 +91,14 @@ export async function generateReleaseNotes(
 
     // Apply header and footer templates
     if (inputs.header) {
-      const header = handlebars.compile(inputs.header)(data)
+      const template = Handlebars.compile(inputs.header)
+      const header = template(data)
       body = `${header}\n\n${body}`
       core.setOutput('release-header', header?.trim())
     }
     if (inputs.footer) {
-      const footer = handlebars.compile(inputs.footer)(data)
+      const template = Handlebars.compile(inputs.footer)
+      const footer = template(data)
       body = `${body}\n\n${footer}`
       core.setOutput('release-footer', footer?.trim())
     }
