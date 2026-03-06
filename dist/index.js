@@ -49661,6 +49661,7 @@ class Util {
             columns: false,
             relaxQuotes: true,
             comment: opts?.comment,
+            comment_no_infix: opts?.commentNoInfix,
             relaxColumnCount: true,
             skipEmptyLines: true,
             quote: opts?.quote
