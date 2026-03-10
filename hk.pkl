@@ -65,6 +65,9 @@ hooks {
         check = "mise run postlint"
         exclusive = true
       }
+      ["precommit"] = new Group {
+        steps = precommit
+      }
     }
   }
   ["check"] {
