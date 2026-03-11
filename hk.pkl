@@ -50,7 +50,7 @@ hooks {
     stash = "git"
     steps {
       ["install"] {
-        check = "yarn run install"
+        check = "yarn install"
         glob = List("package.json", "yarn.lock")
         exclusive = true
       }
