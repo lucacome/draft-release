@@ -33,7 +33,7 @@ local precommit = new Mapping<String, Step> {
   ["check-merge-conflict"] = Builtins.check_merge_conflict
   ["no-commit-to-branch"] = Builtins.no_commit_to_branch
   ["gitleaks"] {
-    check = "gitleaks git --pre-commit --redact --staged --verbose"
+    check = "gitleaks git --pre-commit --redact --staged --verbose --no-banner"
   }
 }
 
