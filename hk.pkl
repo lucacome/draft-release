@@ -1,7 +1,7 @@
 amends "package://github.com/jdx/hk/releases/download/v1.38.0/hk@1.38.0#/Config.pkl"
 import "package://github.com/jdx/hk/releases/download/v1.38.0/hk@1.38.0#/Builtins.pkl"
 
-exclude = List("dist")
+exclude = List("dist", "lib", "node_modules")
 
 local linters = new Mapping<String, Step> {
   ["trailing-whitespace"] = Builtins.trailing_whitespace
@@ -22,8 +22,10 @@ local linters = new Mapping<String, Step> {
     fix = "markdownlint-cli2 --fix {{files}}"
   }
   ["codespell"] {
-    check = "codespell --ignore-words-list=commitish --quiet-level=7 {{files}}"
-    fix = "codespell --ignore-words-list=commitish --quiet-level=7 --write-changes {{files}}"
+    check =
+      "codespell --ignore-words-list=commitish --quiet-level=7 --skip=./dist/**,./lib/**,./node_modules/** {{files}}"
+    fix =
+      "codespell --ignore-words-list=commitish --quiet-level=7 --write-changes --skip=./dist/**,./lib/**,./node_modules/** {{files}}"
   }
 }
 
@@ -48,11 +50,13 @@ hooks {
     stash = "git"
     steps {
       ["install"] {
-        check = "mise run install"
+        check = "yarn install"
+        glob = List("package.json", "yarn.lock")
         exclusive = true
       }
       ["build"] {
-        check = "mise run build"
+        check = "yarn run build"
+        glob = List("**/*.ts", "package.json", "yarn.lock", "tsconfig.json", "rollup.config.ts")
         exclusive = true
       }
       ["linters"] = new Group {
