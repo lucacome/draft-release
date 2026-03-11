@@ -3659,7 +3659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.0.2":
+"eslint@npm:10.0.2":
   version: 10.0.2
   resolution: "eslint@npm:10.0.2"
   dependencies:
@@ -5597,7 +5597,7 @@ __metadata:
     "@types/semver": "npm:^7.7.1"
     "@typescript-eslint/eslint-plugin": "npm:^8.56.1"
     "@typescript-eslint/parser": "npm:^8.56.1"
-    eslint: "npm:^10.0.2"
+    eslint: "npm:10.0.2"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-import: "npm:^2.32.0"
     eslint-plugin-jest: "npm:^29.15.0"
