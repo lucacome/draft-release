@@ -21,6 +21,7 @@ run = "yarn install"
 alias = "b"
 description = "Build the project"
 run = "yarn run build"
+depends = "install"
 
 [tasks.lint]
 alias = "l"

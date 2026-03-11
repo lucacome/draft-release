@@ -50,13 +50,13 @@ hooks {
     stash = "git"
     steps {
       ["install"] {
-        check = "mise run install"
+        check = "yarn run install"
         glob = List("package.json", "yarn.lock")
         exclusive = true
       }
       ["build"] {
-        check = "mise run build"
-        glob = List("**/*.ts")
+        check = "yarn run build"
+        glob = List("**/*.ts", "package.json", "yarn.lock", "tsconfig.json", "rollup.config.ts")
         exclusive = true
       }
       ["linters"] = new Group {
