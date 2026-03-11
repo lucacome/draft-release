@@ -10,7 +10,7 @@
   },
   "description": "GitHub Action to create a draft release",
   "devDependencies": {
-    "@eslint/compat": "^2.0.2",
+    "@eslint/compat": "^2.0.3",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
     "@jest/globals": "^30.2.0",
