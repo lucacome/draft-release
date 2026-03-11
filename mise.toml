@@ -35,3 +35,6 @@ run = "hk fix --all"
 [tasks.postlint]
 description = "Run post-lint checks"
 run = "git diff --exit-code"
+
+[hooks]
+postinstall = "mise run install"
