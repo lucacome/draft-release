@@ -19,7 +19,6 @@ run = "yarn install"
 alias = "b"
 description = "Build the project"
 run = "yarn run build"
-depends = "install"
 
 [tasks.lint]
 alias = "l"
@@ -35,8 +34,9 @@ run = "hk fix --all"
 description = "Run post-lint checks"
 run = "git diff --exit-code"
 
-[hooks]
-postinstall = "mise run install"
-
 [settings]
 idiomatic_version_file_enable_tools = ["node", "yarn"]
+experimental = true
+
+[prepare.yarn]
+auto = true

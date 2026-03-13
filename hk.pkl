@@ -49,13 +49,8 @@ hooks {
     fix = true
     stash = "git"
     steps {
-      ["install"] {
-        check = "yarn install"
-        glob = List("package.json", "yarn.lock")
-        exclusive = true
-      }
       ["build"] {
-        check = "yarn run build"
+        check = "mise run build"
         glob = List("**/*.ts", "package.json", "yarn.lock", "tsconfig.json", "rollup.config.ts")
         exclusive = true
       }
