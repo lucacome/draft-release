@@ -8,7 +8,7 @@ This file provides guidance for agentic coding agents working in this repository
 
 ## Project Structure
 
-```
+```bash
 src/              # TypeScript source (entry: index.ts → main.ts)
 __tests__/        # Jest test files (<module>.test.ts)
 __fixtures__/     # ESM-compatible mock modules for tests
@@ -24,50 +24,76 @@ eslint.config.mjs # ESLint flat config
 ## Commands
 
 ### Install dependencies
+
 ```bash
 yarn install
 ```
 
 ### Build (required after source changes)
+
 ```bash
 yarn build
 ```
 
 ### Run all tests
+
 ```bash
 yarn test
 # Expands to: NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest
 ```
 
 ### Run a single test file
+
 ```bash
 NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest __tests__/notes.test.ts
 ```
 
 ### Run a single test by name
+
 ```bash
 NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest --testNamePattern "groups renovate dependency"
 ```
 
-### Lint (check only)
+### Lint TypeScript (check only)
+
 ```bash
 yarn lint
 # Runs: prettier --check && eslint --max-warnings=0
 ```
 
-### Format (auto-fix)
+### Format TypeScript (auto-fix)
+
 ```bash
 yarn format
 # Runs: prettier --write && eslint --fix
 ```
 
+### Lint YAML files
+
+```bash
+yamllint .
+# Config: .yamllint.yaml (extends default, 120-char line limit, ignores .gitignore'd paths)
+```
+
+### Lint Markdown files
+
+```bash
+markdownlint-cli2 "**/*.md"
+# Config: .markdownlint-cli2.yaml (ignores .github/** and node_modules/**)
+# To auto-fix: markdownlint-cli2 --fix "**/*.md"
+```
+
 ### Build + test + format all at once
+
 ```bash
 yarn all
 ```
 
 > **Note:** `--experimental-vm-modules` is mandatory because the project uses
 > `"type": "module"` and Jest requires this flag for ESM support.
+>
+> **Note:** `yamllint` and `markdownlint-cli2` are managed via mise (`.mise.toml`).
+> Run `mise install` to ensure they are available locally.
 
 ---
 
@@ -85,6 +111,7 @@ yarn all
 ## Code Style
 
 ### Formatting (Prettier)
+
 - **No semicolons**
 - **Single quotes** for strings
 - **2-space indentation**, no tabs
@@ -95,12 +122,15 @@ yarn all
 - Prettier only formats `.ts` files; JSON/YAML/Markdown are not Prettier-managed
 
 ### Imports
+
 - **Always use `.js` extension** for relative imports (NodeNext resolution requirement),
   even when the source file is `.ts`:
+
   ```ts
   import {Inputs} from './context.js'
   import {getCategories} from './category.js'
   ```
+
 - Group order (no blank lines between groups):
   1. `@actions/*` packages
   2. Other third-party packages (`semver`, `handlebars`, `js-yaml`)
@@ -110,6 +140,7 @@ yarn all
 - Use `import type` for type-only imports
 
 ### Naming Conventions
+
 - **Variables and functions:** `camelCase` — `releaseData`, `getVersionIncrease`
 - **Interfaces and type aliases:** `PascalCase` — `Inputs`, `ReleaseData`, `Category`
 - **Source files:** lowercase single-word — `notes.ts`, `release.ts`, `version.ts`
@@ -119,13 +150,16 @@ yarn all
   `groupDependencies`, `removeConventionalPrefixes`
 
 ### Types
+
 - Prefer explicit interface/type declarations over inline types in function signatures
 - Use non-null assertion (`!`) only when type narrowing already guarantees non-null
 - Avoid `any`; if unavoidable in tests, add `// eslint-disable-next-line @typescript-eslint/no-explicit-any`
 - `camelcase` ESLint rule is disabled — snake_case from GitHub API responses is acceptable
 
 ### Error Handling
+
 Top-level orchestration catches all errors and calls `core.setFailed()`:
+
 ```ts
 try {
   // main work
@@ -136,6 +170,7 @@ try {
 
 Inner utility functions use `core.error()` for non-fatal errors and `core.debug()` for
 recoverable/expected errors:
+
 ```ts
 } catch (e) {
   core.error(`Error while generating release notes: ${e}`)
@@ -149,7 +184,9 @@ recoverable/expected errors:
 Use optional chaining defensively for API responses: `response?.data?.html_url`.
 
 ### Comments and Documentation
+
 - All exported public functions must have a **JSDoc comment** with `@param` and `@returns`:
+
   ```ts
   /**
    * Generates release notes for the given tag range.
@@ -158,6 +195,7 @@ Use optional chaining defensively for API responses: `response?.data?.html_url`.
    * @returns Markdown-formatted release notes string
    */
   ```
+
 - Use `//` inline comments for non-obvious logic, regex explanations, and algorithmic phases
 - Use section comments for major phases in complex functions:
   `// First pass: gather update information`
@@ -168,6 +206,7 @@ Use optional chaining defensively for API responses: `response?.data?.html_url`.
 ## Testing Patterns
 
 ### ESM Mock Setup
+
 Jest ESM requires `jest.unstable_mockModule()` called **before** any dynamic imports.
 All tests follow this structure:
 
@@ -189,6 +228,7 @@ const {myFunction} = await import('../src/myModule.js')
 ```
 
 ### Test Structure
+
 - `describe()` blocks group tests by exported function name
 - `it()` and `test()` are used interchangeably
 - Use `beforeEach()` to reset mock state: `jest.clearAllMocks()`
@@ -201,7 +241,7 @@ const {myFunction} = await import('../src/myModule.js')
 ## Key Dependencies
 
 | Package | Purpose |
-|---------|---------|
+| --------- | --------- |
 | `@actions/core` | Inputs, outputs, logging (`core.info`, `core.setFailed`, etc.) |
 | `@actions/github` | Octokit GitHub API client and Action context |
 | `@docker/actions-toolkit` | `Util.getInputList` for multi-value inputs |
