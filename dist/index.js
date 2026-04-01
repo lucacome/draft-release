@@ -34693,402 +34693,6 @@ function group(name, fn) {
     });
 }
 
-/**
- * Copyright 2023 actions-toolkit authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-class Exec {
-    static async exec(commandLine, args, options) {
-        debug(`Exec.exec: ${commandLine} ${args?.join(' ')}`);
-        return exec(commandLine, args, options);
-    }
-    static async getExecOutput(commandLine, args, options) {
-        debug(`Exec.getExecOutput: ${commandLine} ${args?.join(' ')}`);
-        return getExecOutput(commandLine, args, options);
-    }
-}
-
-class InvalidTokenError extends Error {
-}
-InvalidTokenError.prototype.name = "InvalidTokenError";
-function b64DecodeUnicode(str) {
-    return decodeURIComponent(atob(str).replace(/(.)/g, (m, p) => {
-        let code = p.charCodeAt(0).toString(16).toUpperCase();
-        if (code.length < 2) {
-            code = "0" + code;
-        }
-        return "%" + code;
-    }));
-}
-function base64UrlDecode(str) {
-    let output = str.replace(/-/g, "+").replace(/_/g, "/");
-    switch (output.length % 4) {
-        case 0:
-            break;
-        case 2:
-            output += "==";
-            break;
-        case 3:
-            output += "=";
-            break;
-        default:
-            throw new Error("base64 string is not of the correct length");
-    }
-    try {
-        return b64DecodeUnicode(output);
-    }
-    catch (err) {
-        return atob(output);
-    }
-}
-function jwtDecode(token, options) {
-    if (typeof token !== "string") {
-        throw new InvalidTokenError("Invalid token specified: must be a string");
-    }
-    options || (options = {});
-    const pos = options.header === true ? 0 : 1;
-    const part = token.split(".")[pos];
-    if (typeof part !== "string") {
-        throw new InvalidTokenError(`Invalid token specified: missing part #${pos + 1}`);
-    }
-    let decoded;
-    try {
-        decoded = base64UrlDecode(part);
-    }
-    catch (e) {
-        throw new InvalidTokenError(`Invalid token specified: invalid base64 for part #${pos + 1} (${e.message})`);
-    }
-    try {
-        return JSON.parse(decoded);
-    }
-    catch (e) {
-        throw new InvalidTokenError(`Invalid token specified: invalid json for part #${pos + 1} (${e.message})`);
-    }
-}
-
-/**
- * Copyright 2023 actions-toolkit authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-class GitHub {
-    githubToken;
-    octokit;
-    constructor(opts) {
-        this.githubToken = opts?.token || process.env.GITHUB_TOKEN;
-        this.octokit = getOctokit(`${this.githubToken}`);
-    }
-    repoData() {
-        return this.octokit.rest.repos.get({ ...context.repo }).then(response => response.data);
-    }
-    async releases(name, opts) {
-        let releases;
-        try {
-            // try without token first
-            releases = await this.releasesRaw(name, opts);
-        }
-        catch (error) {
-            if (!this.githubToken) {
-                throw error;
-            }
-            // try with token
-            releases = await this.releasesRaw(name, opts, this.githubToken);
-        }
-        return releases;
-    }
-    async releasesRaw(name, opts, token) {
-        const url = `https://raw.githubusercontent.com/${opts.owner}/${opts.repo}/${opts.ref}/${opts.path}`;
-        const http = new HttpClient('docker-actions-toolkit');
-        // prettier-ignore
-        const httpResp = await http.get(url, token ? {
-            Authorization: `token ${token}`
-        } : undefined);
-        const dt = await httpResp.readBody();
-        const statusCode = httpResp.message.statusCode || 500;
-        if (statusCode >= 400) {
-            throw new Error(`Failed to get ${name} releases from ${url} with status code ${statusCode}: ${dt}`);
-        }
-        return JSON.parse(dt);
-    }
-    static get context() {
-        return context;
-    }
-    static get serverURL() {
-        return process.env.GITHUB_SERVER_URL || 'https://github.com';
-    }
-    static get apiURL() {
-        return process.env.GITHUB_API_URL || 'https://api.github.com';
-    }
-    // Can't use the isGhes() func from @actions/artifact due to @actions/artifact/lib/internal/shared/config
-    // being internal since ESM-only packages do not support internal exports.
-    // https://github.com/actions/toolkit/blob/8351a5d84d862813d1bb8bdeef87b215f8a946f9/packages/artifact/src/internal/shared/config.ts#L27
-    static get isGHES() {
-        const ghURL = new URL(GitHub.serverURL);
-        const hostname = ghURL.hostname.trimEnd().toUpperCase();
-        const isGitHubHost = hostname === 'GITHUB.COM';
-        const isGitHubEnterpriseCloudHost = hostname.endsWith('.GHE.COM');
-        const isLocalHost = hostname.endsWith('.LOCALHOST');
-        return !isGitHubHost && !isGitHubEnterpriseCloudHost && !isLocalHost;
-    }
-    static get repository() {
-        return `${context.repo.owner}/${context.repo.repo}`;
-    }
-    static get workspace() {
-        return process.env.GITHUB_WORKSPACE || process.cwd();
-    }
-    static get runId() {
-        return process.env.GITHUB_RUN_ID ? +process.env.GITHUB_RUN_ID : context.runId;
-    }
-    static get runAttempt() {
-        // TODO: runAttempt is not yet part of github.context but will be in a
-        //  future release of @actions/github package: https://github.com/actions/toolkit/commit/faa425440f86f9c16587a19dfb59491253a2c92a
-        return process.env.GITHUB_RUN_ATTEMPT ? +process.env.GITHUB_RUN_ATTEMPT : 1;
-    }
-    static workflowRunURL(setAttempts) {
-        return `${GitHub.serverURL}/${GitHub.repository}/actions/runs/${GitHub.runId}${setAttempts ? `/attempts/${GitHub.runAttempt}` : ''}`;
-    }
-    static get actionsRuntimeToken() {
-        const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
-        return token ? jwtDecode(token) : undefined;
-    }
-    static async printActionsRuntimeTokenACs() {
-        let jwt;
-        try {
-            jwt = GitHub.actionsRuntimeToken;
-        }
-        catch (e) {
-            throw new Error(`Cannot parse GitHub Actions Runtime Token: ${e.message}`);
-        }
-        if (!jwt) {
-            throw new Error(`ACTIONS_RUNTIME_TOKEN not set`);
-        }
-        try {
-            JSON.parse(`${jwt.ac}`).forEach(ac => {
-                let permission;
-                switch (ac.Permission) {
-                    case 1:
-                        permission = 'read';
-                        break;
-                    case 2:
-                        permission = 'write';
-                        break;
-                    case 3:
-                        permission = 'read/write';
-                        break;
-                    default:
-                        permission = `unimplemented (${ac.Permission})`;
-                }
-                info(`${ac.Scope}: ${permission}`);
-            });
-        }
-        catch (e) {
-            throw new Error(`Cannot parse GitHub Actions Runtime Token ACs: ${e.message}`);
-        }
-    }
-}
-
-/**
- * Copyright 2023 actions-toolkit authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-class Git {
-    static async context() {
-        const ctx = { ...context };
-        ctx.ref = await Git.ref();
-        ctx.sha = await Git.fullCommit();
-        return ctx;
-    }
-    static async isInsideWorkTree() {
-        return await Git.exec(['rev-parse', '--is-inside-work-tree'])
-            .then(out => {
-            return out === 'true';
-        })
-            .catch(() => {
-            return false;
-        });
-    }
-    static async remoteSha(repo, ref, token) {
-        const repoMatch = repo.match(/github.com\/([^/]+)\/([^/]+?)(?:\.git)?(\/|$)/);
-        // if we have a token and this is a GitHub repo we can use the GitHub API
-        if (token && repoMatch) {
-            setSecret(token);
-            const octokit = getOctokit(token, {
-                baseUrl: GitHub.apiURL
-            });
-            const [owner, repoName] = repoMatch.slice(1, 3);
-            try {
-                return (await octokit.rest.repos.listCommits({
-                    owner: owner,
-                    repo: repoName,
-                    sha: ref,
-                    per_page: 1
-                })).data[0].sha;
-            }
-            catch (e) {
-                throw new Error(`Cannot find remote ref for ${repo}#${ref}: ${e.message}`);
-            }
-        }
-        // otherwise we fall back to git ls-remote
-        return await Git.exec(['ls-remote', repo, ref]).then(out => {
-            const [rsha] = out.split(/[\s\t]/);
-            if (rsha.length == 0) {
-                throw new Error(`Cannot find remote ref for ${repo}#${ref}`);
-            }
-            return rsha;
-        });
-    }
-    static async remoteURL() {
-        return await Git.exec(['remote', 'get-url', 'origin']).then(rurl => {
-            if (rurl.length == 0) {
-                return Git.exec(['remote', 'get-url', 'upstream']).then(rurl => {
-                    if (rurl.length == 0) {
-                        throw new Error(`Cannot find remote URL for origin or upstream`);
-                    }
-                    return rurl;
-                });
-            }
-            return rurl;
-        });
-    }
-    static async ref() {
-        const isHeadDetached = await Git.isHeadDetached();
-        if (isHeadDetached) {
-            return await Git.getDetachedRef();
-        }
-        return await Git.exec(['symbolic-ref', 'HEAD']);
-    }
-    static async fullCommit() {
-        return await Git.exec(['show', '--format=%H', 'HEAD', '--quiet', '--']);
-    }
-    static async shortCommit() {
-        return await Git.exec(['show', '--format=%h', 'HEAD', '--quiet', '--']);
-    }
-    static async tag() {
-        return await Git.exec(['tag', '--points-at', 'HEAD', '--sort', '-version:creatordate']).then(tags => {
-            if (tags.length == 0) {
-                return Git.exec(['describe', '--tags', '--abbrev=0']);
-            }
-            return tags.split('\n')[0];
-        });
-    }
-    static async isHeadDetached() {
-        return await Git.exec(['branch', '--show-current']).then(res => {
-            return res.length == 0;
-        });
-    }
-    static async getDetachedRef() {
-        const res = await Git.exec(['show', '-s', '--pretty=%D']);
-        debug(`detached HEAD ref: ${res}`);
-        const normalizedRef = res.replace(/^grafted, /, '').trim();
-        if (normalizedRef === 'HEAD') {
-            return await Git.inferRefFromHead();
-        }
-        // Can be "HEAD, <tagname>" or "grafted, HEAD, <tagname>"
-        const refMatch = normalizedRef.match(/^HEAD, (.*)$/);
-        if (!refMatch || !refMatch[1]) {
-            throw new Error(`Cannot find detached HEAD ref in "${res}"`);
-        }
-        const ref = refMatch[1].trim();
-        // Tag refs are formatted as "tag: <tagname>"
-        if (ref.startsWith('tag: ')) {
-            return `refs/tags/${ref.split(':')[1].trim()}`;
-        }
-        // Pull request merge refs are formatted as "pull/<number>/<state>"
-        const prMatch = ref.match(/^pull\/\d+\/(head|merge)$/);
-        if (prMatch) {
-            return `refs/${ref}`;
-        }
-        // Branch refs can be formatted as "<origin>/<branch-name>, <branch-name>"
-        const branchMatch = ref.match(/^[^/]+\/[^/]+, (.+)$/);
-        if (branchMatch) {
-            return `refs/heads/${branchMatch[1].trim()}`;
-        }
-        // Branch refs checked out by its latest SHA can be formatted as "<origin>/<branch-name>"
-        const shaBranchMatch = ref.match(/^[^/]+\/(.+)$/);
-        if (shaBranchMatch) {
-            return `refs/heads/${shaBranchMatch[1].trim()}`;
-        }
-        throw new Error(`Unsupported detached HEAD ref in "${res}"`);
-    }
-    static async exec(args = []) {
-        return await Exec.getExecOutput(`git`, args, {
-            ignoreReturnCode: true,
-            silent: true
-        }).then(res => {
-            if (res.stderr.length > 0 && res.exitCode != 0) {
-                throw new Error(res.stderr);
-            }
-            return res.stdout.trim();
-        });
-    }
-    static async inferRefFromHead() {
-        const localRef = await Git.findContainingRef('refs/heads/');
-        if (localRef) {
-            return localRef;
-        }
-        const remoteRef = await Git.findContainingRef('refs/remotes/');
-        if (remoteRef) {
-            const remoteMatch = remoteRef.match(/^refs\/remotes\/[^/]+\/(.+)$/);
-            if (remoteMatch) {
-                return `refs/heads/${remoteMatch[1]}`;
-            }
-            return remoteRef;
-        }
-        const tagRef = await Git.exec(['tag', '--contains', 'HEAD']);
-        const [firstTag] = tagRef
-            .split('\n')
-            .map(tag => tag.trim())
-            .filter(tag => tag.length > 0);
-        if (firstTag) {
-            return `refs/tags/${firstTag}`;
-        }
-        throw new Error(`Cannot infer ref from detached HEAD`);
-    }
-    static async findContainingRef(scope) {
-        const refs = await Git.exec(['for-each-ref', '--format=%(refname)', '--contains', 'HEAD', '--sort=-committerdate', scope]);
-        const [first] = refs
-            .split('\n')
-            .map(r => r.trim())
-            .filter(r => r.length > 0);
-        return first;
-    }
-    static async commitDate(ref) {
-        return new Date(await Git.exec(['show', '-s', '--format="%ci"', ref]));
-    }
-}
-
 var re = {exports: {}};
 
 var constants;
@@ -49736,125 +49340,6 @@ function capitalizeFirstWord(str) {
     return words.join(' ');
 }
 
-async function getRelease(client, inputs) {
-    const releaseResponse = {
-        latestRelease: 'v0.0.0',
-        releases: [],
-        branch: '',
-        nextRelease: '',
-    };
-    const context$1 = inputs.context === 'git' ? await Git.context() : context;
-    try {
-        // get all releases
-        const releases = await client.paginate(client.rest.repos.listReleases, {
-            ...context$1.repo,
-            per_page: 100,
-        });
-        releases.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        releaseResponse.releases = releases;
-        const isTag = context$1.ref.startsWith('refs/tags/');
-        releaseResponse.branch = isTag ? 'tag' : context$1.ref.replace('refs/heads/', '');
-        debug(`Current branch: ${releaseResponse.branch}`);
-        releaseResponse.nextRelease = isTag ? context$1.ref.replace('refs/tags/', '') : 'next';
-        if (releases.length === 0) {
-            debug(`No releases found`);
-            return releaseResponse;
-        }
-        const releaseInCurrent = releases.find((release) => !release.draft && release.target_commitish === releaseResponse.branch);
-        if (releaseInCurrent === undefined) {
-            debug(`No release found for branch ${releaseResponse.branch}`);
-            // find latest release that is not a draft
-            const latestNonDraft = releases.find((release) => !release.draft);
-            if (latestNonDraft === undefined) {
-                return releaseResponse;
-            }
-            releaseResponse.latestRelease = latestNonDraft.tag_name;
-        }
-        else {
-            releaseResponse.latestRelease = releaseInCurrent.tag_name;
-        }
-    }
-    catch (error) {
-        debug(`Error getting releases: ${error}`);
-    }
-    return releaseResponse;
-}
-async function createOrUpdateRelease(client, inputs, releaseData) {
-    const context$1 = context;
-    const releases = releaseData.releases;
-    const nextRelease = releaseData.nextRelease;
-    // find if a release draft already exists for versionIncrease
-    const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease);
-    if (releaseDraft === undefined && releaseData.branch === 'tag') {
-        info(`No release draft found for tag ${nextRelease}. Skipping release creation/update.`);
-        return;
-    }
-    const draft = releaseData.branch !== 'tag' || !inputs.publish;
-    releaseData.branch = (releaseData.branch === 'tag' && releaseDraft?.target_commitish) || releaseData.branch;
-    debug(`releaseData.branch: ${releaseData.branch}`);
-    const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData);
-    let response;
-    if (!inputs.dryRun) {
-        const releaseParams = {
-            ...context$1.repo,
-            tag_name: nextRelease,
-            name: nextRelease,
-            target_commitish: releaseData.branch,
-            body: newReleaseNotes,
-            draft: draft,
-        };
-        response = await (releaseDraft === undefined
-            ? client.rest.repos.createRelease({
-                ...releaseParams,
-            })
-            : client.rest.repos.updateRelease({
-                ...releaseParams,
-                release_id: releaseDraft.id,
-            }));
-    }
-    const separator = '----------------------------------';
-    startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`);
-    info(separator);
-    info(`latestRelease: ${releaseData.latestRelease}`);
-    info(separator);
-    info(`releaseNotes: ${newReleaseNotes}`);
-    info(separator);
-    info(`releaseURL: ${response?.data?.html_url}`);
-    info(separator);
-    debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
-    debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`);
-    endGroup();
-    setOutput('release-notes', newReleaseNotes?.trim());
-    setOutput('release-id', response?.data?.id);
-    setOutput('release-url', response?.data?.html_url?.trim());
-}
-
-/**
- * Retrieve the category title for a given label.
- *
- * @param inputs - Action inputs and configuration used to load categories
- * @param label - The label to look up; if empty or not found, an empty string is returned
- * @returns The matching category title, or an empty string if `label` is empty or no category matches
- */
-async function getTitleForLabel(inputs, label) {
-    if (label === '') {
-        return '';
-    }
-    const categories = await getCategories(inputs);
-    const category = categories.find((category) => category.labels.includes(label));
-    if (category === undefined) {
-        return '';
-    }
-    return category.title;
-}
-// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
-async function getVersionIncrease(releaseData, inputs, notes) {
-    const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel);
-    const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel);
-    const version = parseNotes(notes, majorTitle, minorTitle);
-    return semverExports.inc(releaseData.latestRelease, version) || '';
-}
-
 class CsvError extends Error {
   constructor(code, message, options, ...contexts) {
     if (Array.isArray(message)) message = message.join(" ").trim();
@@ -51851,6 +51336,402 @@ class Util {
     }
 }
 
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class Exec {
+    static async exec(commandLine, args, options) {
+        debug(`Exec.exec: ${commandLine} ${args?.join(' ')}`);
+        return exec(commandLine, args, options);
+    }
+    static async getExecOutput(commandLine, args, options) {
+        debug(`Exec.getExecOutput: ${commandLine} ${args?.join(' ')}`);
+        return getExecOutput(commandLine, args, options);
+    }
+}
+
+class InvalidTokenError extends Error {
+}
+InvalidTokenError.prototype.name = "InvalidTokenError";
+function b64DecodeUnicode(str) {
+    return decodeURIComponent(atob(str).replace(/(.)/g, (m, p) => {
+        let code = p.charCodeAt(0).toString(16).toUpperCase();
+        if (code.length < 2) {
+            code = "0" + code;
+        }
+        return "%" + code;
+    }));
+}
+function base64UrlDecode(str) {
+    let output = str.replace(/-/g, "+").replace(/_/g, "/");
+    switch (output.length % 4) {
+        case 0:
+            break;
+        case 2:
+            output += "==";
+            break;
+        case 3:
+            output += "=";
+            break;
+        default:
+            throw new Error("base64 string is not of the correct length");
+    }
+    try {
+        return b64DecodeUnicode(output);
+    }
+    catch (err) {
+        return atob(output);
+    }
+}
+function jwtDecode(token, options) {
+    if (typeof token !== "string") {
+        throw new InvalidTokenError("Invalid token specified: must be a string");
+    }
+    options || (options = {});
+    const pos = options.header === true ? 0 : 1;
+    const part = token.split(".")[pos];
+    if (typeof part !== "string") {
+        throw new InvalidTokenError(`Invalid token specified: missing part #${pos + 1}`);
+    }
+    let decoded;
+    try {
+        decoded = base64UrlDecode(part);
+    }
+    catch (e) {
+        throw new InvalidTokenError(`Invalid token specified: invalid base64 for part #${pos + 1} (${e.message})`);
+    }
+    try {
+        return JSON.parse(decoded);
+    }
+    catch (e) {
+        throw new InvalidTokenError(`Invalid token specified: invalid json for part #${pos + 1} (${e.message})`);
+    }
+}
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class GitHub {
+    githubToken;
+    octokit;
+    constructor(opts) {
+        this.githubToken = opts?.token || process.env.GITHUB_TOKEN;
+        this.octokit = getOctokit(`${this.githubToken}`);
+    }
+    repoData() {
+        return this.octokit.rest.repos.get({ ...context.repo }).then(response => response.data);
+    }
+    async releases(name, opts) {
+        let releases;
+        try {
+            // try without token first
+            releases = await this.releasesRaw(name, opts);
+        }
+        catch (error) {
+            if (!this.githubToken) {
+                throw error;
+            }
+            // try with token
+            releases = await this.releasesRaw(name, opts, this.githubToken);
+        }
+        return releases;
+    }
+    async releasesRaw(name, opts, token) {
+        const url = `https://raw.githubusercontent.com/${opts.owner}/${opts.repo}/${opts.ref}/${opts.path}`;
+        const http = new HttpClient('docker-actions-toolkit');
+        // prettier-ignore
+        const httpResp = await http.get(url, token ? {
+            Authorization: `token ${token}`
+        } : undefined);
+        const dt = await httpResp.readBody();
+        const statusCode = httpResp.message.statusCode || 500;
+        if (statusCode >= 400) {
+            throw new Error(`Failed to get ${name} releases from ${url} with status code ${statusCode}: ${dt}`);
+        }
+        return JSON.parse(dt);
+    }
+    static get context() {
+        return context;
+    }
+    static get serverURL() {
+        return process.env.GITHUB_SERVER_URL || 'https://github.com';
+    }
+    static get apiURL() {
+        return process.env.GITHUB_API_URL || 'https://api.github.com';
+    }
+    // Can't use the isGhes() func from @actions/artifact due to @actions/artifact/lib/internal/shared/config
+    // being internal since ESM-only packages do not support internal exports.
+    // https://github.com/actions/toolkit/blob/8351a5d84d862813d1bb8bdeef87b215f8a946f9/packages/artifact/src/internal/shared/config.ts#L27
+    static get isGHES() {
+        const ghURL = new URL(GitHub.serverURL);
+        const hostname = ghURL.hostname.trimEnd().toUpperCase();
+        const isGitHubHost = hostname === 'GITHUB.COM';
+        const isGitHubEnterpriseCloudHost = hostname.endsWith('.GHE.COM');
+        const isLocalHost = hostname.endsWith('.LOCALHOST');
+        return !isGitHubHost && !isGitHubEnterpriseCloudHost && !isLocalHost;
+    }
+    static get repository() {
+        return `${context.repo.owner}/${context.repo.repo}`;
+    }
+    static get workspace() {
+        return process.env.GITHUB_WORKSPACE || process.cwd();
+    }
+    static get runId() {
+        return process.env.GITHUB_RUN_ID ? +process.env.GITHUB_RUN_ID : context.runId;
+    }
+    static get runAttempt() {
+        // TODO: runAttempt is not yet part of github.context but will be in a
+        //  future release of @actions/github package: https://github.com/actions/toolkit/commit/faa425440f86f9c16587a19dfb59491253a2c92a
+        return process.env.GITHUB_RUN_ATTEMPT ? +process.env.GITHUB_RUN_ATTEMPT : 1;
+    }
+    static workflowRunURL(setAttempts) {
+        return `${GitHub.serverURL}/${GitHub.repository}/actions/runs/${GitHub.runId}${setAttempts ? `/attempts/${GitHub.runAttempt}` : ''}`;
+    }
+    static get actionsRuntimeToken() {
+        const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
+        return token ? jwtDecode(token) : undefined;
+    }
+    static async printActionsRuntimeTokenACs() {
+        let jwt;
+        try {
+            jwt = GitHub.actionsRuntimeToken;
+        }
+        catch (e) {
+            throw new Error(`Cannot parse GitHub Actions Runtime Token: ${e.message}`);
+        }
+        if (!jwt) {
+            throw new Error(`ACTIONS_RUNTIME_TOKEN not set`);
+        }
+        try {
+            JSON.parse(`${jwt.ac}`).forEach(ac => {
+                let permission;
+                switch (ac.Permission) {
+                    case 1:
+                        permission = 'read';
+                        break;
+                    case 2:
+                        permission = 'write';
+                        break;
+                    case 3:
+                        permission = 'read/write';
+                        break;
+                    default:
+                        permission = `unimplemented (${ac.Permission})`;
+                }
+                info(`${ac.Scope}: ${permission}`);
+            });
+        }
+        catch (e) {
+            throw new Error(`Cannot parse GitHub Actions Runtime Token ACs: ${e.message}`);
+        }
+    }
+}
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class Git {
+    static async context() {
+        const ctx = { ...context };
+        ctx.ref = await Git.ref();
+        ctx.sha = await Git.fullCommit();
+        return ctx;
+    }
+    static async isInsideWorkTree() {
+        return await Git.exec(['rev-parse', '--is-inside-work-tree'])
+            .then(out => {
+            return out === 'true';
+        })
+            .catch(() => {
+            return false;
+        });
+    }
+    static async remoteSha(repo, ref, token) {
+        const repoMatch = repo.match(/github.com\/([^/]+)\/([^/]+?)(?:\.git)?(\/|$)/);
+        // if we have a token and this is a GitHub repo we can use the GitHub API
+        if (token && repoMatch) {
+            setSecret(token);
+            const octokit = getOctokit(token, {
+                baseUrl: GitHub.apiURL
+            });
+            const [owner, repoName] = repoMatch.slice(1, 3);
+            try {
+                return (await octokit.rest.repos.listCommits({
+                    owner: owner,
+                    repo: repoName,
+                    sha: ref,
+                    per_page: 1
+                })).data[0].sha;
+            }
+            catch (e) {
+                throw new Error(`Cannot find remote ref for ${repo}#${ref}: ${e.message}`);
+            }
+        }
+        // otherwise we fall back to git ls-remote
+        return await Git.exec(['ls-remote', repo, ref]).then(out => {
+            const [rsha] = out.split(/[\s\t]/);
+            if (rsha.length == 0) {
+                throw new Error(`Cannot find remote ref for ${repo}#${ref}`);
+            }
+            return rsha;
+        });
+    }
+    static async remoteURL() {
+        return await Git.exec(['remote', 'get-url', 'origin']).then(rurl => {
+            if (rurl.length == 0) {
+                return Git.exec(['remote', 'get-url', 'upstream']).then(rurl => {
+                    if (rurl.length == 0) {
+                        throw new Error(`Cannot find remote URL for origin or upstream`);
+                    }
+                    return rurl;
+                });
+            }
+            return rurl;
+        });
+    }
+    static async ref() {
+        const isHeadDetached = await Git.isHeadDetached();
+        if (isHeadDetached) {
+            return await Git.getDetachedRef();
+        }
+        return await Git.exec(['symbolic-ref', 'HEAD']);
+    }
+    static async fullCommit() {
+        return await Git.exec(['show', '--format=%H', 'HEAD', '--quiet', '--']);
+    }
+    static async shortCommit() {
+        return await Git.exec(['show', '--format=%h', 'HEAD', '--quiet', '--']);
+    }
+    static async tag() {
+        return await Git.exec(['tag', '--points-at', 'HEAD', '--sort', '-version:creatordate']).then(tags => {
+            if (tags.length == 0) {
+                return Git.exec(['describe', '--tags', '--abbrev=0']);
+            }
+            return tags.split('\n')[0];
+        });
+    }
+    static async isHeadDetached() {
+        return await Git.exec(['branch', '--show-current']).then(res => {
+            return res.length == 0;
+        });
+    }
+    static async getDetachedRef() {
+        const res = await Git.exec(['show', '-s', '--pretty=%D']);
+        debug(`detached HEAD ref: ${res}`);
+        const normalizedRef = res.replace(/^grafted, /, '').trim();
+        if (normalizedRef === 'HEAD') {
+            return await Git.inferRefFromHead();
+        }
+        // Can be "HEAD, <tagname>" or "grafted, HEAD, <tagname>"
+        const refMatch = normalizedRef.match(/^HEAD, (.*)$/);
+        if (!refMatch || !refMatch[1]) {
+            throw new Error(`Cannot find detached HEAD ref in "${res}"`);
+        }
+        const ref = refMatch[1].trim();
+        // Tag refs are formatted as "tag: <tagname>"
+        if (ref.startsWith('tag: ')) {
+            return `refs/tags/${ref.split(':')[1].trim()}`;
+        }
+        // Pull request merge refs are formatted as "pull/<number>/<state>"
+        const prMatch = ref.match(/^pull\/\d+\/(head|merge)$/);
+        if (prMatch) {
+            return `refs/${ref}`;
+        }
+        // Branch refs can be formatted as "<origin>/<branch-name>, <branch-name>"
+        const branchMatch = ref.match(/^[^/]+\/[^/]+, (.+)$/);
+        if (branchMatch) {
+            return `refs/heads/${branchMatch[1].trim()}`;
+        }
+        // Branch refs checked out by its latest SHA can be formatted as "<origin>/<branch-name>"
+        const shaBranchMatch = ref.match(/^[^/]+\/(.+)$/);
+        if (shaBranchMatch) {
+            return `refs/heads/${shaBranchMatch[1].trim()}`;
+        }
+        throw new Error(`Unsupported detached HEAD ref in "${res}"`);
+    }
+    static async exec(args = []) {
+        return await Exec.getExecOutput(`git`, args, {
+            ignoreReturnCode: true,
+            silent: true
+        }).then(res => {
+            if (res.stderr.length > 0 && res.exitCode != 0) {
+                throw new Error(res.stderr);
+            }
+            return res.stdout.trim();
+        });
+    }
+    static async inferRefFromHead() {
+        const localRef = await Git.findContainingRef('refs/heads/');
+        if (localRef) {
+            return localRef;
+        }
+        const remoteRef = await Git.findContainingRef('refs/remotes/');
+        if (remoteRef) {
+            const remoteMatch = remoteRef.match(/^refs\/remotes\/[^/]+\/(.+)$/);
+            if (remoteMatch) {
+                return `refs/heads/${remoteMatch[1]}`;
+            }
+            return remoteRef;
+        }
+        const tagRef = await Git.exec(['tag', '--contains', 'HEAD']);
+        const [firstTag] = tagRef
+            .split('\n')
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0);
+        if (firstTag) {
+            return `refs/tags/${firstTag}`;
+        }
+        throw new Error(`Cannot infer ref from detached HEAD`);
+    }
+    static async findContainingRef(scope) {
+        const refs = await Git.exec(['for-each-ref', '--format=%(refname)', '--contains', 'HEAD', '--sort=-committerdate', scope]);
+        const [first] = refs
+            .split('\n')
+            .map(r => r.trim())
+            .filter(r => r.length > 0);
+        return first;
+    }
+    static async commitDate(ref) {
+        return new Date(await Git.exec(['show', '-s', '--format="%ci"', ref]));
+    }
+}
+
 var ContextSource;
 (function (ContextSource) {
     ContextSource["workflow"] = "workflow";
@@ -51883,36 +51764,158 @@ function getInputs() {
         context: (getInput('context') || ContextSource.workflow),
     };
 }
+async function getContext(source) {
+    return source === ContextSource.git ? await Git.context() : context;
+}
+
+async function getRelease(client, inputs) {
+    const releaseResponse = {
+        latestRelease: 'v0.0.0',
+        releases: [],
+        branch: '',
+        nextRelease: '',
+    };
+    const context = await getContext(inputs.context);
+    try {
+        // get all releases
+        const releases = await client.paginate(client.rest.repos.listReleases, {
+            ...context.repo,
+            per_page: 100,
+        });
+        releases.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        releaseResponse.releases = releases;
+        const isTag = context.ref.startsWith('refs/tags/');
+        releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '');
+        debug(`Current branch: ${releaseResponse.branch}`);
+        releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : 'next';
+        if (releases.length === 0) {
+            debug(`No releases found`);
+            return releaseResponse;
+        }
+        const releaseInCurrent = releases.find((release) => !release.draft && release.target_commitish === releaseResponse.branch);
+        if (releaseInCurrent === undefined) {
+            debug(`No release found for branch ${releaseResponse.branch}`);
+            // find latest release that is not a draft
+            const latestNonDraft = releases.find((release) => !release.draft);
+            if (latestNonDraft === undefined) {
+                return releaseResponse;
+            }
+            releaseResponse.latestRelease = latestNonDraft.tag_name;
+        }
+        else {
+            releaseResponse.latestRelease = releaseInCurrent.tag_name;
+        }
+    }
+    catch (error) {
+        debug(`Error getting releases: ${error}`);
+    }
+    return releaseResponse;
+}
+async function createOrUpdateRelease(client, inputs, releaseData) {
+    const context$1 = context;
+    const releases = releaseData.releases;
+    const nextRelease = releaseData.nextRelease;
+    // find if a release draft already exists for versionIncrease
+    const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease);
+    if (releaseDraft === undefined && releaseData.branch === 'tag') {
+        info(`No release draft found for tag ${nextRelease}. Skipping release creation/update.`);
+        return;
+    }
+    const draft = releaseData.branch !== 'tag' || !inputs.publish;
+    releaseData.branch = (releaseData.branch === 'tag' && releaseDraft?.target_commitish) || releaseData.branch;
+    debug(`releaseData.branch: ${releaseData.branch}`);
+    const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData);
+    let response;
+    if (!inputs.dryRun) {
+        const releaseParams = {
+            ...context$1.repo,
+            tag_name: nextRelease,
+            name: nextRelease,
+            target_commitish: releaseData.branch,
+            body: newReleaseNotes,
+            draft: draft,
+        };
+        response = await (releaseDraft === undefined
+            ? client.rest.repos.createRelease({
+                ...releaseParams,
+            })
+            : client.rest.repos.updateRelease({
+                ...releaseParams,
+                release_id: releaseDraft.id,
+            }));
+    }
+    const separator = '----------------------------------';
+    startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`);
+    info(separator);
+    info(`latestRelease: ${releaseData.latestRelease}`);
+    info(separator);
+    info(`releaseNotes: ${newReleaseNotes}`);
+    info(separator);
+    info(`releaseURL: ${response?.data?.html_url}`);
+    info(separator);
+    debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
+    debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`);
+    endGroup();
+    setOutput('release-notes', newReleaseNotes?.trim());
+    setOutput('release-id', response?.data?.id);
+    setOutput('release-url', response?.data?.html_url?.trim());
+}
+
+/**
+ * Retrieve the category title for a given label.
+ *
+ * @param inputs - Action inputs and configuration used to load categories
+ * @param label - The label to look up; if empty or not found, an empty string is returned
+ * @returns The matching category title, or an empty string if `label` is empty or no category matches
+ */
+async function getTitleForLabel(inputs, label) {
+    if (label === '') {
+        return '';
+    }
+    const categories = await getCategories(inputs);
+    const category = categories.find((category) => category.labels.includes(label));
+    if (category === undefined) {
+        return '';
+    }
+    return category.title;
+}
+// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
+async function getVersionIncrease(releaseData, inputs, notes) {
+    const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel);
+    const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel);
+    const version = parseNotes(notes, majorTitle, minorTitle);
+    return semverExports.inc(releaseData.latestRelease, version) || '';
+}
 
 async function run() {
     try {
-        const context$1 = context;
-        startGroup(`Context info`);
-        info(`eventName: ${context$1.eventName}`);
-        info(`sha: ${context$1.sha}`);
-        info(`ref: ${context$1.ref}`);
-        info(`workflow: ${context$1.workflow}`);
-        info(`action: ${context$1.action}`);
-        info(`actor: ${context$1.actor}`);
-        info(`runNumber: ${context$1.runNumber}`);
-        info(`runId: ${context$1.runId}`);
-        endGroup();
         const inputs = getInputs();
         const client = getOctokit(inputs.githubToken);
+        const context = await getContext(inputs.context);
+        await group(`Context info`, async () => {
+            info(`eventName: ${context.eventName}`);
+            info(`sha: ${context.sha}`);
+            info(`ref: ${context.ref}`);
+            info(`workflow: ${context.workflow}`);
+            info(`action: ${context.action}`);
+            info(`actor: ${context.actor}`);
+            info(`runNumber: ${context.runNumber}`);
+            info(`runId: ${context.runId}`);
+        });
         const releaseData = await getRelease(client, inputs);
         setOutput('previous-version', releaseData.latestRelease);
-        startGroup(`Releases`);
-        info(`Latest release: ${releaseData.latestRelease}`);
-        info(`Found ${releaseData.releases.length} release(s):`);
-        info(`-`.repeat(20));
-        releaseData.releases.forEach((release) => {
-            info(`ID: ${release.id}`);
-            info(`Release: ${release.tag_name}`);
-            info(`Draft: ${release.draft}`);
-            info(`Target commitish: ${release.target_commitish}`);
+        await group(`Releases`, async () => {
+            info(`Latest release: ${releaseData.latestRelease}`);
+            info(`Found ${releaseData.releases.length} release(s):`);
             info(`-`.repeat(20));
+            releaseData.releases.forEach((release) => {
+                info(`ID: ${release.id}`);
+                info(`Release: ${release.tag_name}`);
+                info(`Draft: ${release.draft}`);
+                info(`Target commitish: ${release.target_commitish}`);
+                info(`-`.repeat(20));
+            });
         });
-        endGroup();
         if (releaseData.nextRelease === 'next') {
             // generate release notes for the next release
             const releaseNotes = await generateReleaseNotes(client, inputs, releaseData);

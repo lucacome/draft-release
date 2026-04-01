@@ -4,6 +4,10 @@ This file provides guidance for agentic coding agents working in this repository
 `draft-release` is a **GitHub Action** written in TypeScript. The compiled bundle
 (`dist/index.js`) is committed to the repository and must be rebuilt after source changes.
 
+> **Self-maintenance rule:** After completing any change to the codebase, always review
+> this file and update it if the change affects project structure, commands, inputs/outputs,
+> dependencies, coding conventions, or testing patterns documented here.
+
 ---
 
 ## Project Structure
@@ -315,6 +319,7 @@ const {myFunction} = await import('../src/myModule.js')
 | `remove-conventional-prefixes` | `false` | Strip `feat:`, `chore:`, etc. from dep PR titles |
 | `publish` | `false` | Publish the release (remove draft flag) |
 | `config-path` | `.github/release.yml` | Path to release category config |
+| `context` | `workflow` | Context for deriving versions (`workflow` or `git`) |
 | `dry-run` | `false` | Run without creating/updating a release |
 
 ### Outputs

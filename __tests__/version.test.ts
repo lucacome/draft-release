@@ -1,6 +1,7 @@
 import {describe, expect, test} from '@jest/globals'
-import {getVersionIncrease} from '../src/version'
-import {Inputs} from '../src/context'
+import {getVersionIncrease} from '../src/version.js'
+import {ContextSource} from '../src/context.js'
+import type {Inputs} from '../src/context.js'
 
 describe('getVersionIncrease', () => {
   const fakeInputs: Inputs = {
@@ -16,6 +17,7 @@ describe('getVersionIncrease', () => {
     dryRun: false,
     groupDependencies: true,
     removeConventionalPrefixes: false,
+    context: ContextSource.workflow,
   }
 
   const releaseData = {

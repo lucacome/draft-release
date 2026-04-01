@@ -1,9 +1,8 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import {components as OctoOpenApiTypes} from '@octokit/openapi-types'
-import {Git} from '@docker/actions-toolkit/lib/git.js'
 import {generateReleaseNotes} from './notes.js'
-import {Inputs} from './context.js'
+import {getContext, Inputs} from './context.js'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 
@@ -22,7 +21,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
     nextRelease: '',
   }
 
-  const context = inputs.context === 'git' ? await Git.context() : github.context
+  const context = await getContext(inputs.context)
 
   try {
     // get all releases

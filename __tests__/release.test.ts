@@ -4,15 +4,15 @@ import * as corefix from '../__fixtures__/core.js'
 
 jest.unstable_mockModule('@actions/github', () => githubfix)
 jest.unstable_mockModule('@actions/core', () => corefix)
-jest.unstable_mockModule('@docker/actions-toolkit/lib/git.js', () => ({
-  Git: {
-    context: jest.fn(),
-  },
+jest.unstable_mockModule('../src/context.js', () => ({
+  ContextSource: {workflow: 'workflow', git: 'git'},
+  getContext: jest.fn(),
+  getInputs: jest.fn(),
 }))
 
 const github = await import('@actions/github')
 await import('@actions/core')
-const {Git} = await import('@docker/actions-toolkit/lib/git.js')
+const {ContextSource, getContext} = await import('../src/context.js')
 
 const {getRelease, createOrUpdateRelease} = await import('../src/release.js')
 import type {Inputs} from '../src/context.js'
@@ -33,13 +33,15 @@ const workflowInputs: Inputs = {
   dryRun: false,
   groupDependencies: true,
   removeConventionalPrefixes: false,
-  context: 'workflow',
+  context: ContextSource.workflow,
 }
 
 describe('getRelease', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     gh = github.getOctokit('_')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jest.mocked(getContext).mockResolvedValue(githubfix.context as any)
   })
 
   test('should return the latest release when multiple releases exist', async () => {
@@ -66,8 +68,7 @@ describe('getRelease', () => {
       ],
     }
 
-    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
-    mockReleases.mockResolvedValue(mockResponse)
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
 
     const releaseData = await getRelease(gh, workflowInputs)
 
@@ -99,8 +100,7 @@ describe('getRelease', () => {
       ],
     }
 
-    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
-    mockReleases.mockResolvedValue(mockResponse)
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
 
     const releaseData = await getRelease(gh, workflowInputs)
 
@@ -132,8 +132,7 @@ describe('getRelease', () => {
       ],
     }
 
-    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
-    mockReleases.mockResolvedValue(mockResponse)
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
 
     const releaseData = await getRelease(gh, workflowInputs)
 
@@ -149,8 +148,7 @@ describe('getRelease', () => {
       data: [],
     }
 
-    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
-    mockReleases.mockResolvedValue(mockResponse)
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
 
     const releaseData = await getRelease(gh, workflowInputs)
 
@@ -159,6 +157,13 @@ describe('getRelease', () => {
   })
 
   test('should use local git state when context is git', async () => {
+    jest.mocked(getContext).mockResolvedValue({
+      ...githubfix.context,
+      ref: 'refs/heads/feature-branch',
+      sha: 'abc1234',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -177,20 +182,12 @@ describe('getRelease', () => {
       ],
     }
 
-    jest.mocked(Git.context).mockResolvedValue({
-      ...githubfix.context,
-      ref: 'refs/heads/feature-branch',
-      sha: 'abc1234',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
 
-    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
-    mockReleases.mockResolvedValue(mockResponse)
-
-    const gitInputs: Inputs = {...workflowInputs, context: 'git'}
+    const gitInputs: Inputs = {...workflowInputs, context: ContextSource.git}
     const releaseData = await getRelease(gh, gitInputs)
 
-    expect(Git.context).toHaveBeenCalledTimes(1)
+    expect(getContext).toHaveBeenCalledWith(ContextSource.git)
     expect(releaseData.branch).toBe('feature-branch')
     expect(releaseData.latestRelease).toBe('v2.0.0')
   })
@@ -214,7 +211,7 @@ describe('createOrUpdateRelease', () => {
     dryRun: false,
     groupDependencies: true,
     removeConventionalPrefixes: false,
-    context: 'workflow',
+    context: ContextSource.workflow,
   }
   beforeEach(() => {
     jest.clearAllMocks()

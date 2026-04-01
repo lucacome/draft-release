@@ -14,6 +14,8 @@ config:
 ignores:
   - '.github/**'
   - 'node_modules/**'
+  - '.agents/**'
+  - '.claude/**'
 
 # Fix any fixable errors
 fix: true

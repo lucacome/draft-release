@@ -1,5 +1,7 @@
 import * as core from '@actions/core'
+import * as github from '@actions/github'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
+import {Git} from '@docker/actions-toolkit/lib/git.js'
 
 export enum ContextSource {
   workflow = 'workflow',
@@ -48,4 +50,10 @@ export function getInputs(): Inputs {
     removeConventionalPrefixes: core.getBooleanInput('remove-conventional-prefixes'),
     context: (core.getInput('context') || ContextSource.workflow) as ContextSource,
   }
+}
+
+type Context = typeof github.context
+
+export async function getContext(source: ContextSource): Promise<Context> {
+  return source === ContextSource.git ? await Git.context() : github.context
 }
