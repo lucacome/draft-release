@@ -34,7 +34,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.2
 
       - name: Draft Release
         uses: lucacome/draft-release@v2.0.4
@@ -109,7 +109,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.2
 
       - name: Draft Release
         uses: lucacome/draft-release@v2.0.4
@@ -145,7 +145,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.2
 
       - name: Draft Release
         uses: lucacome/draft-release@v2.0.4
