@@ -7,6 +7,8 @@ This file provides guidance for agentic coding agents working in this repository
 > **Self-maintenance rule:** After completing any change to the codebase, always review
 > this file and update it if the change affects project structure, commands, inputs/outputs,
 > dependencies, coding conventions, or testing patterns documented here.
+> **README rule:** After any change to action inputs or outputs (in `action.yml` or
+> `src/context.ts`), always update the inputs/outputs tables in `README.md` to match.
 
 ---
 

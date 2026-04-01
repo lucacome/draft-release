@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as semver from 'semver'
 import Handlebars from 'handlebars'
-import {Inputs} from './context.js'
+import {getContext, Inputs} from './context.js'
 import {getCategories, Category} from './category.js'
 import {ReleaseData} from './release.js'
 
@@ -30,7 +30,7 @@ export async function generateReleaseNotes(
   inputs: Inputs,
   releaseData: ReleaseData,
 ): Promise<string> {
-  const context = github.context
+  const context = await getContext(inputs.context)
   const latestRelease = releaseData.latestRelease
   const nextRelease = releaseData.nextRelease
   const configPath = inputs.configPath

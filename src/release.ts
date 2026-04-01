@@ -70,7 +70,7 @@ export async function createOrUpdateRelease(
   inputs: Inputs,
   releaseData: ReleaseData,
 ): Promise<void> {
-  const context = github.context
+  const context = await getContext(inputs.context)
   const releases = releaseData.releases
   const nextRelease = releaseData.nextRelease
 
