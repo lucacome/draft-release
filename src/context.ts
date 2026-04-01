@@ -1,5 +1,10 @@
 import * as core from '@actions/core'
-import {Util} from '@docker/actions-toolkit/lib/util'
+import {Util} from '@docker/actions-toolkit/lib/util.js'
+
+export enum ContextSource {
+  workflow = 'workflow',
+  git = 'git',
+}
 
 export interface Inputs {
   githubToken: string
@@ -14,6 +19,7 @@ export interface Inputs {
   dryRun: boolean
   groupDependencies: boolean
   removeConventionalPrefixes: boolean
+  context: ContextSource
 }
 
 /**
@@ -40,5 +46,6 @@ export function getInputs(): Inputs {
     dryRun: core.getBooleanInput('dry-run'),
     groupDependencies: core.getBooleanInput('group-dependencies'),
     removeConventionalPrefixes: core.getBooleanInput('remove-conventional-prefixes'),
+    context: (core.getInput('context') || ContextSource.workflow) as ContextSource,
   }
 }

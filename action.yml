@@ -50,6 +50,10 @@ inputs:
     description: 'Whether to run the action without creating a release'
     default: 'false'
     required: false
+  context:
+    description: 'Where to get context data. Allowed options are "workflow" (default), "git".'
+    default: 'workflow'
+    required: false
 outputs:
   version:
     description: 'The version of the release'

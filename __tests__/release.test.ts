@@ -1,12 +1,18 @@
-import {jest} from '@jest/globals'
+import {jest, describe, expect, test, beforeEach} from '@jest/globals'
 import * as githubfix from '../__fixtures__/github.js'
 import * as corefix from '../__fixtures__/core.js'
 
 jest.unstable_mockModule('@actions/github', () => githubfix)
 jest.unstable_mockModule('@actions/core', () => corefix)
+jest.unstable_mockModule('@docker/actions-toolkit/lib/git.js', () => ({
+  Git: {
+    context: jest.fn(),
+  },
+}))
 
 const github = await import('@actions/github')
 await import('@actions/core')
+const {Git} = await import('@docker/actions-toolkit/lib/git.js')
 
 const {getRelease, createOrUpdateRelease} = await import('../src/release.js')
 import type {Inputs} from '../src/context.js'
@@ -14,13 +20,29 @@ import type {ReleaseData} from '../src/release.js'
 
 let gh: ReturnType<typeof github.getOctokit>
 
+const workflowInputs: Inputs = {
+  githubToken: '_',
+  majorLabel: 'major',
+  minorLabel: 'minor',
+  header: '',
+  footer: '',
+  variables: [],
+  collapseAfter: 0,
+  publish: false,
+  configPath: '.github/release.yml',
+  dryRun: false,
+  groupDependencies: true,
+  removeConventionalPrefixes: false,
+  context: 'workflow',
+}
+
 describe('getRelease', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     gh = github.getOctokit('_')
   })
 
-  it('should return the latest release when multiple releases exist', async () => {
+  test('should return the latest release when multiple releases exist', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -47,13 +69,13 @@ describe('getRelease', () => {
     const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
     mockReleases.mockResolvedValue(mockResponse)
 
-    const releaseData = await getRelease(gh)
+    const releaseData = await getRelease(gh, workflowInputs)
 
     expect(releaseData.releases).toHaveLength(3)
     expect(releaseData.latestRelease).toBe('v1.0.2')
   })
 
-  it('should return the latest for the current branch', async () => {
+  test('should return the latest for the current branch', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -80,13 +102,13 @@ describe('getRelease', () => {
     const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
     mockReleases.mockResolvedValue(mockResponse)
 
-    const releaseData = await getRelease(gh)
+    const releaseData = await getRelease(gh, workflowInputs)
 
     expect(releaseData.releases).toHaveLength(3)
     expect(releaseData.latestRelease).toBe('v1.0.1')
   })
 
-  it('should return the latest non-draft release', async () => {
+  test('should return the latest non-draft release', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -113,13 +135,13 @@ describe('getRelease', () => {
     const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
     mockReleases.mockResolvedValue(mockResponse)
 
-    const releaseData = await getRelease(gh)
+    const releaseData = await getRelease(gh, workflowInputs)
 
     expect(releaseData.releases).toHaveLength(3)
     expect(releaseData.latestRelease).toBe('v1.0.0')
   })
 
-  it('should return v0.0.0 when no releases exist', async () => {
+  test('should return v0.0.0 when no releases exist', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -130,10 +152,47 @@ describe('getRelease', () => {
     const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
     mockReleases.mockResolvedValue(mockResponse)
 
-    const releaseData = await getRelease(gh)
+    const releaseData = await getRelease(gh, workflowInputs)
 
     expect(releaseData.releases).toHaveLength(0)
     expect(releaseData.latestRelease).toBe('v0.0.0')
+  })
+
+  test('should use local git state when context is git', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {
+      headers: {},
+      status: 200,
+      data: [
+        {
+          tag_name: 'v2.0.0',
+          target_commitish: 'feature-branch',
+          draft: false,
+        },
+        {
+          tag_name: 'v1.0.0',
+          target_commitish: 'main',
+          draft: false,
+        },
+      ],
+    }
+
+    jest.mocked(Git.context).mockResolvedValue({
+      ...githubfix.context,
+      ref: 'refs/heads/feature-branch',
+      sha: 'abc1234',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    const mockReleases = jest.spyOn(gh.rest.repos, 'listReleases')
+    mockReleases.mockResolvedValue(mockResponse)
+
+    const gitInputs: Inputs = {...workflowInputs, context: 'git'}
+    const releaseData = await getRelease(gh, gitInputs)
+
+    expect(Git.context).toHaveBeenCalledTimes(1)
+    expect(releaseData.branch).toBe('feature-branch')
+    expect(releaseData.latestRelease).toBe('v2.0.0')
   })
 })
 
@@ -155,6 +214,7 @@ describe('createOrUpdateRelease', () => {
     dryRun: false,
     groupDependencies: true,
     removeConventionalPrefixes: false,
+    context: 'workflow',
   }
   beforeEach(() => {
     jest.clearAllMocks()

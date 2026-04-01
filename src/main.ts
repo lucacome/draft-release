@@ -22,7 +22,7 @@ export async function run(): Promise<void> {
     const inputs: Inputs = getInputs()
     const client = github.getOctokit(inputs.githubToken)
 
-    const releaseData = await getRelease(client)
+    const releaseData = await getRelease(client, inputs)
     core.setOutput('previous-version', releaseData.latestRelease)
 
     core.startGroup(`Releases`)
