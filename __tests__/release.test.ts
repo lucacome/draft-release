@@ -415,7 +415,128 @@ describe('createOrUpdateRelease', () => {
       expect.objectContaining({
         tag_name: 'v1.0.1',
         target_commitish: 'v1.0.1',
+        draft: true,
       }),
     )
+  })
+
+  it('should update existing draft when branch is tag and matching draft exists', async () => {
+    const releaseData: ReleaseData = {
+      latestRelease: 'v1.0.0',
+      releases: [
+        {
+          id: 5,
+          tag_name: 'v1.0.1',
+          target_commitish: 'main',
+          draft: true,
+          created_at: '2024-03-02T00:00:00Z',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any[],
+      branch: 'tag',
+      nextRelease: 'v1.0.1',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockUpdate = jest.spyOn(gh.rest.repos, 'updateRelease')
+    mockUpdate.mockResolvedValue(mockResponse)
+
+    await createOrUpdateRelease(gh, inputs, releaseData)
+
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tag_name: 'v1.0.1',
+        // uses the draft's target_commitish (the branch it was prepared on), not the tag name
+        target_commitish: 'main',
+        release_id: 5,
+        draft: true,
+      }),
+    )
+  })
+
+  it('should create a non-draft release when branch is tag and publish is true', async () => {
+    const publishInputs: Inputs = {...inputs, publish: true}
+
+    const releaseData: ReleaseData = {
+      latestRelease: 'v1.0.0',
+      releases: [],
+      branch: 'tag',
+      nextRelease: 'v1.0.1',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockCreate = jest.spyOn(gh.rest.repos, 'createRelease')
+    mockCreate.mockResolvedValue(mockResponse)
+
+    await createOrUpdateRelease(gh, publishInputs, releaseData)
+
+    expect(mockCreate).toHaveBeenCalledTimes(1)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tag_name: 'v1.0.1',
+        target_commitish: 'v1.0.1',
+        draft: false,
+      }),
+    )
+  })
+
+  it('should publish existing draft when branch is tag and publish is true', async () => {
+    const publishInputs: Inputs = {...inputs, publish: true}
+
+    const releaseData: ReleaseData = {
+      latestRelease: 'v1.0.0',
+      releases: [
+        {
+          id: 5,
+          tag_name: 'v1.0.1',
+          target_commitish: 'main',
+          draft: true,
+          created_at: '2024-03-02T00:00:00Z',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any[],
+      branch: 'tag',
+      nextRelease: 'v1.0.1',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockUpdate = jest.spyOn(gh.rest.repos, 'updateRelease')
+    mockUpdate.mockResolvedValue(mockResponse)
+
+    await createOrUpdateRelease(gh, publishInputs, releaseData)
+
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tag_name: 'v1.0.1',
+        target_commitish: 'main',
+        release_id: 5,
+        draft: false,
+      }),
+    )
+  })
+
+  it('should set release-id and release-url outputs from the API response', async () => {
+    const releaseData: ReleaseData = {
+      latestRelease: 'v1.0.0',
+      releases: [],
+      branch: 'main',
+      nextRelease: 'v1.0.1',
+    }
+
+    jest.spyOn(gh.rest.repos, 'generateReleaseNotes').mockResolvedValue(mockNotes)
+    jest.spyOn(gh.rest.repos, 'createRelease').mockResolvedValue(mockResponse)
+
+    await createOrUpdateRelease(gh, inputs, releaseData)
+
+    expect(core.setOutput).toHaveBeenCalledWith('release-id', '2')
+    expect(core.setOutput).toHaveBeenCalledWith('release-url', 'https://github.com/lucacome/draft-release/releases/tag/v1.0.1')
   })
 })

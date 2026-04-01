@@ -51567,7 +51567,6 @@ function groupDependencyUpdates(sections) {
             result[label] = [];
             continue;
         }
-        // Grouping structures
         const updateGroups = new Map();
         const nonAutomatedItems = new Set();
         // First pass: gather update information

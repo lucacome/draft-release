@@ -487,7 +487,6 @@ export function groupDependencyUpdates(sections: SectionData): SectionData {
       continue
     }
 
-    // Grouping structures
     const updateGroups = new Map<string, UpdateGroup>()
     const nonAutomatedItems = new Set<number>()
 
