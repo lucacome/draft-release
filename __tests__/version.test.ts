@@ -1,10 +1,24 @@
-import {describe, expect, test} from '@jest/globals'
-import {getVersionIncrease} from '../src/version.js'
+import {jest, describe, expect, test, beforeEach} from '@jest/globals'
 import {ContextSource} from '../src/context.js'
 import type {Inputs} from '../src/context.js'
 
+jest.unstable_mockModule('../src/category.js', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getCategories: jest.fn<() => Promise<any>>().mockResolvedValue([
+    {title: '🚀 Features', labels: ['enhancement']},
+    {title: '💣 Breaking Changes', labels: ['change']},
+    {title: '🐛 Bug Fixes', labels: ['bug']},
+  ]),
+}))
+
+const {getVersionIncrease} = await import('../src/version.js')
+
 describe('getVersionIncrease', () => {
-  const fakeInputs: Inputs = {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  const baseInputs: Inputs = {
     majorLabel: '',
     minorLabel: '',
     githubToken: '',
@@ -28,25 +42,27 @@ describe('getVersionIncrease', () => {
   }
 
   test('should return patch with empty labels (bug)', async () => {
-    const version = await getVersionIncrease(releaseData, fakeInputs, '### 🐛 Bug Fixes')
+    const inputs: Inputs = {...baseInputs}
+    const version = await getVersionIncrease(releaseData, inputs, '### 🐛 Bug Fixes')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (feature)', async () => {
-    const version = await getVersionIncrease(releaseData, fakeInputs, '### 🚀 Features')
+    const inputs: Inputs = {...baseInputs}
+    const version = await getVersionIncrease(releaseData, inputs, '### 🚀 Features')
     expect(version).toEqual('1.0.1')
   })
   test('should return patch with empty labels (change)', async () => {
-    const version = await getVersionIncrease(releaseData, fakeInputs, '### 💣 Breaking Changes')
+    const inputs: Inputs = {...baseInputs}
+    const version = await getVersionIncrease(releaseData, inputs, '### 💣 Breaking Changes')
     expect(version).toEqual('1.0.1')
   })
 
   test('should return minor', async () => {
-    fakeInputs.minorLabel = 'enhancement'
-    fakeInputs.majorLabel = 'change'
+    const inputs: Inputs = {...baseInputs, minorLabel: 'enhancement', majorLabel: 'change'}
 
     const version = await getVersionIncrease(
       releaseData,
-      fakeInputs,
+      inputs,
       `
             ### 🚀 Features
             some feaures
@@ -57,11 +73,10 @@ describe('getVersionIncrease', () => {
     expect(version).toEqual('1.1.0')
   })
   test('should return major', async () => {
-    fakeInputs.minorLabel = 'bug'
-    fakeInputs.majorLabel = 'change'
+    const inputs: Inputs = {...baseInputs, minorLabel: 'bug', majorLabel: 'change'}
     const version = await getVersionIncrease(
       releaseData,
-      fakeInputs,
+      inputs,
       `
             ### 💣 Breaking Changes
             some breaking changes

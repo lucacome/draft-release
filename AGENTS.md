@@ -300,7 +300,7 @@ const {myFunction} = await import('../src/myModule.js')
 | `@docker/actions-toolkit` | `Util.getInputList` for multi-value inputs (e.g. `variables`) |
 | `semver` | Semantic version parsing and comparison |
 | `handlebars` | Template interpolation for header/footer strings |
-| `js-yaml` | Parses `.github/release.yml` for release categories (devDep, bundled by Rollup) |
+| `js-yaml` | Parses `.github/release.yml` for release categories (runtime dep, bundled by Rollup) |
 
 ---
 
@@ -344,8 +344,8 @@ const {myFunction} = await import('../src/myModule.js')
 - **Always rebuild `dist/` after changing source files** — GitHub Actions runs the
   committed `dist/index.js`, not the TypeScript sources directly. The pre-commit hook
   does this automatically; when working without hooks run `yarn build` manually.
-- **Node.js 24.14.1** is the pinned runtime (`.nvmrc`, `.mise.toml`).
-- **Yarn 4.13.0 (Berry)** is the package manager; do not use `npm` or `pnpm`.
+- **Node.js** is the pinned runtime (see `.nvmrc` and `.mise.toml` for the exact version).
+- **Yarn (Berry)** is the package manager; do not use `npm` or `pnpm`.
 - The `dist/` directory is committed and must be kept in sync with `src/`. CI has a
   `check-dist` workflow that fails if `dist/` is out of date.
 - ESLint is configured with `--max-warnings=0` — all lint warnings are treated as errors.

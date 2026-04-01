@@ -1,6 +1,6 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
-import {getRelease, createOrUpdateRelease} from './release.js'
+import {getRelease, createOrUpdateRelease, NEXT_RELEASE_SENTINEL} from './release.js'
 import {generateReleaseNotes} from './notes.js'
 import {getVersionIncrease} from './version.js'
 import {getContext, getInputs, Inputs} from './context.js'
@@ -38,10 +38,16 @@ export async function run(): Promise<void> {
       })
     })
 
-    if (releaseData.nextRelease === 'next') {
+    if (releaseData.nextRelease === NEXT_RELEASE_SENTINEL) {
       // generate release notes for the next release
       const releaseNotes = await generateReleaseNotes(client, inputs, releaseData)
-      releaseData.nextRelease = 'v' + (await getVersionIncrease(releaseData, inputs, releaseNotes))
+      const versionIncrease = await getVersionIncrease(releaseData, inputs, releaseNotes)
+      if (!versionIncrease) {
+        throw new Error(
+          `Could not compute next version from latest release '${releaseData.latestRelease}'. Ensure it is a valid semver tag.`,
+        )
+      }
+      releaseData.nextRelease = 'v' + versionIncrease
     }
     core.setOutput('version', releaseData.nextRelease)
 
@@ -51,5 +57,4 @@ export async function run(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
-  return
 }

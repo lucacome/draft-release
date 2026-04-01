@@ -41,7 +41,7 @@ export async function generateReleaseNotes(
     const notes = await client.rest.repos.generateReleaseNotes({
       ...context.repo,
       tag_name: nextRelease,
-      previous_tag_name: semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
+      previous_tag_name: semver.valid(latestRelease) && semver.gt(latestRelease, '0.0.0') ? latestRelease : '',
       target_commitish: releaseData.branch,
       configuration_file_path: configPath,
     })
@@ -49,9 +49,11 @@ export async function generateReleaseNotes(
     body = notes.data.body
 
     // get all the variables from inputs.variables
+    // Split only on the first '=' so values containing '=' (e.g. URLs) are preserved.
     const variables: VariableObject = inputs.variables.reduce((acc: VariableObject, variable: string) => {
-      const [key, value] = variable.split('=')
-      acc[key] = value
+      const eqIdx = variable.indexOf('=')
+      if (eqIdx === -1) return acc
+      acc[variable.slice(0, eqIdx)] = variable.slice(eqIdx + 1)
       return acc
     }, {})
 
@@ -64,24 +66,24 @@ export async function generateReleaseNotes(
       ...variables,
     }
     const categories = await getCategories(inputs)
-    sections = await splitMarkdownSections(body, categories)
+    sections = splitMarkdownSections(body, categories)
 
     if (inputs.removeConventionalPrefixes) {
-      sections = await removeConventionalPrefixes(sections)
+      sections = removeConventionalPrefixes(sections)
       await core.group('Removing conventional commit prefixes', async () => {
         core.debug(JSON.stringify(sections, null, 2))
       })
     }
 
     if (inputs.groupDependencies) {
-      sections = await groupDependencyUpdates(sections)
+      sections = groupDependencyUpdates(sections)
       await core.group('Grouping dependency updates', async () => {
         core.debug(JSON.stringify(sections, null, 2))
       })
     }
 
     if (inputs.collapseAfter > 0) {
-      sections = await collapseSections(sections, inputs.collapseAfter)
+      sections = collapseSections(sections, inputs.collapseAfter)
       await core.group('Collapsing sections', async () => {
         core.debug(JSON.stringify(sections, null, 2))
       })
@@ -94,13 +96,13 @@ export async function generateReleaseNotes(
       const template = Handlebars.compile(inputs.header)
       const header = template(data)
       body = `${header}\n\n${body}`
-      core.setOutput('release-header', header?.trim())
+      core.setOutput('release-header', header.trim())
     }
     if (inputs.footer) {
       const template = Handlebars.compile(inputs.footer)
       const footer = template(data)
       body = `${body}\n\n${footer}`
-      core.setOutput('release-footer', footer?.trim())
+      core.setOutput('release-footer', footer.trim())
     }
     core.setOutput('release-sections', JSON.stringify(sections))
   } catch (e) {
@@ -254,7 +256,7 @@ export function parseNotes(notes: string, major: string, minor: string): string 
  * @param n - Number of items after which to collapse a section
  * @returns SectionData with collapse tags added where needed
  */
-async function collapseSections(sections: SectionData, n: number): Promise<SectionData> {
+function collapseSections(sections: SectionData, n: number): SectionData {
   if (n <= 0) {
     return sections // No collapsing needed
   }
@@ -303,9 +305,9 @@ async function collapseSections(sections: SectionData, n: number): Promise<Secti
  *
  * @param markdown - The markdown content to be parsed.
  * @param categories - An array of category definitions, each with a title and associated labels used for mapping sections.
- * @returns A promise that resolves to an object mapping category labels to arrays of markdown bullet list items.
+ * @returns An object mapping category labels to arrays of markdown bullet list items.
  */
-export async function splitMarkdownSections(markdown: string, categories: Category[]): Promise<SectionData> {
+export function splitMarkdownSections(markdown: string, categories: Category[]): SectionData {
   const lines = markdown.split('\n')
   const sections: SectionData = {}
 
@@ -348,7 +350,7 @@ export async function splitMarkdownSections(markdown: string, categories: Catego
  * @param sections - Parsed release note sections categorized by type
  * @returns Updated sections with prefixes removed
  */
-export async function removeConventionalPrefixes(sections: SectionData): Promise<SectionData> {
+export function removeConventionalPrefixes(sections: SectionData): SectionData {
   const result: SectionData = {}
 
   for (const [label, items] of Object.entries(sections)) {
@@ -401,7 +403,7 @@ function getPrefix(str: string, regex: RegExp): string {
  * @param sections - Parsed release note sections categorized by type.
  * @returns Updated release note sections with consolidated dependency update entries.
  */
-export async function groupDependencyUpdates(sections: SectionData): Promise<SectionData> {
+export function groupDependencyUpdates(sections: SectionData): SectionData {
   const result: SectionData = {}
 
   // Optional pattern part for conventional prefixes - can be used to enhance regexes
@@ -467,22 +469,22 @@ export async function groupDependencyUpdates(sections: SectionData): Promise<Sec
     },
   ]
 
+  // Grouping structure — defined at function scope so it is not redeclared each loop iteration
+  interface UpdateGroup {
+    originalDependencyName: string
+    latestVersion: string
+    initialVersion: string
+    allPRs: Set<string>
+    position: number
+    pattern: (typeof updatePatterns)[0]
+    prefix: string
+    botName: string
+  }
+
   for (const [label, items] of Object.entries(sections)) {
     if (items.length === 0) {
       result[label] = []
       continue
-    }
-
-    // Grouping structures
-    interface UpdateGroup {
-      originalDependencyName: string
-      latestVersion: string
-      initialVersion: string
-      allPRs: Set<string>
-      position: number
-      pattern: (typeof updatePatterns)[0]
-      prefix: string
-      botName: string
     }
 
     const updateGroups = new Map<string, UpdateGroup>()

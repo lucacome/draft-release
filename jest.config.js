@@ -3,6 +3,12 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
 export default {
   clearMocks: true,
+  coverageThreshold: {
+    global: {
+      lines: 80,
+      branches: 70,
+    },
+  },
   extensionsToTreatAsEsm: ['.ts'],
   moduleFileExtensions: ['ts', 'js'],
   preset: 'ts-jest',
