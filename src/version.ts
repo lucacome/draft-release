@@ -23,11 +23,21 @@ async function getTitleForLabel(inputs: Inputs, label: string): Promise<string> 
   return category.title
 }
 
-// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
+/**
+ * Computes the next semantic version based on release notes and action inputs.
+ *
+ * @param releaseData - Current release metadata including the latest published version
+ * @param inputs - Action inputs providing label and configuration values
+ * @param notes - Markdown release notes used to detect version bump type
+ * @returns The incremented version string (e.g. `'1.2.3'`), or `''` if the latest release tag is not valid semver
+ */
 export async function getVersionIncrease(releaseData: ReleaseData, inputs: Inputs, notes: string): Promise<string> {
   const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel)
   const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel)
-  const version = parseNotes(notes, majorTitle, minorTitle) as semver.ReleaseType
+  const parsedType = parseNotes(notes, majorTitle, minorTitle)
+  // parseNotes always returns one of these three values; validate before casting to catch
+  // any future changes to parseNotes that might introduce unexpected return values.
+  const version: semver.ReleaseType = parsedType === 'major' || parsedType === 'minor' || parsedType === 'patch' ? parsedType : 'patch'
 
   return semver.inc(releaseData.latestRelease, version) || ''
 }

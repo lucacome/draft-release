@@ -7,7 +7,7 @@ jest.unstable_mockModule('@actions/github', () => githubfix)
 jest.unstable_mockModule('@actions/core', () => corefix)
 
 const github = await import('@actions/github')
-await import('@actions/core')
+const core = await import('@actions/core')
 
 const {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} =
   await import('../src/notes.js')
@@ -435,7 +435,7 @@ describe('splitMarkdownSections', () => {
         labels: ['change'],
       },
     ]
-    const result = await splitMarkdownSections(markdown, categories)
+    const result = splitMarkdownSections(markdown, categories)
     expect(result).toEqual(expectedOutput)
   })
 })
@@ -454,7 +454,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     expect(result).toEqual({
       bug: [
@@ -474,7 +474,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     expect(result).toEqual({
       bug: [
@@ -499,7 +499,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Note: dependencies in different sections remain separate
     expect(result).toEqual({
@@ -526,7 +526,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // All of these have different dependency names, so they should remain separate
     expect(result).toEqual({
@@ -548,7 +548,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     expect(result).toEqual({
       empty: [],
@@ -567,7 +567,7 @@ describe('groupDependencyUpdates', () => {
       documentation: ['* Doc 1'],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     expect(Object.keys(result)).toEqual(['enhancement', 'bug', 'dependencies', 'documentation'])
   })
@@ -588,7 +588,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Verify pre-commit updates are grouped properly within each section
     expect(result).toEqual({
@@ -619,7 +619,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Verify all types of updates are grouped correctly
     expect(result).toEqual({
@@ -641,7 +641,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Pre-commit updates should be grouped within each section but kept separate across sections
     expect(result).toEqual({
@@ -669,7 +669,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Verify lock file maintenance updates are grouped properly within each section
     expect(result).toEqual({
@@ -700,7 +700,7 @@ describe('groupDependencyUpdates', () => {
       ],
     }
 
-    const result = await groupDependencyUpdates(sections)
+    const result = groupDependencyUpdates(sections)
 
     // Verify all types of updates are grouped correctly
     expect(result).toEqual({
@@ -753,7 +753,7 @@ describe('groupDependencyUpdates', () => {
     }
 
     // Test with removeConventionalPrefixes = false
-    const resultWithPrefixes = await groupDependencyUpdates(sections)
+    const resultWithPrefixes = groupDependencyUpdates(sections)
     expect(resultWithPrefixes.dependencies[0]).toContain('refactor(deps):')
     expect(resultWithPrefixes.dependencies[1]).toContain('perf(deps):')
     expect(resultWithPrefixes.dependencies[2]).toContain('docs(deps):')
@@ -777,7 +777,7 @@ describe('removeConventionalPrefixes', () => {
       ],
     }
 
-    const result = await removeConventionalPrefixes(sections)
+    const result = removeConventionalPrefixes(sections)
 
     expect(result).toEqual({
       dependencies: [
@@ -803,7 +803,7 @@ describe('removeConventionalPrefixes', () => {
       ],
     }
 
-    const result = await removeConventionalPrefixes(sections)
+    const result = removeConventionalPrefixes(sections)
 
     expect(result).toEqual({
       dependencies: [
@@ -823,7 +823,7 @@ describe('removeConventionalPrefixes', () => {
       ],
     }
 
-    const result = await removeConventionalPrefixes(sections)
+    const result = removeConventionalPrefixes(sections)
 
     // Should be unchanged
     expect(result).toEqual({
@@ -842,7 +842,7 @@ describe('removeConventionalPrefixes', () => {
       ],
     }
 
-    const result = await removeConventionalPrefixes(sections)
+    const result = removeConventionalPrefixes(sections)
 
     expect(result).toEqual({
       empty: [],
@@ -858,7 +858,7 @@ describe('removeConventionalPrefixes', () => {
       ],
     }
 
-    const result = await removeConventionalPrefixes(sections)
+    const result = removeConventionalPrefixes(sections)
 
     expect(result).toEqual({
       dependencies: [
@@ -866,5 +866,147 @@ describe('removeConventionalPrefixes', () => {
         '* Lock file maintenance by @renovate in https://github.com/lucacome/draft-release/pull/324',
       ],
     })
+  })
+})
+
+describe('generateReleaseNotes — error handling and edge cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    gh = github.getOctokit('_')
+  })
+
+  it('should return empty string and call core.error when API throws', async () => {
+    const inputs: Inputs = {
+      githubToken: '_',
+      majorLabel: 'major',
+      minorLabel: 'minor',
+      header: '',
+      footer: '',
+      variables: [],
+      collapseAfter: 0,
+      publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
+      groupDependencies: false,
+      removeConventionalPrefixes: false,
+      context: ContextSource.workflow,
+    }
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
+
+    jest.spyOn(gh.rest.repos, 'generateReleaseNotes').mockRejectedValue(new Error('API failure'))
+
+    const notes = await generateReleaseNotes(gh, inputs, releaseData)
+
+    expect(notes).toBe('')
+    expect(core.error).toHaveBeenCalledWith(expect.stringContaining('API failure'))
+  })
+
+  it('should pass empty previous_tag_name when latestRelease is v0.0.0', async () => {
+    const inputs: Inputs = {
+      githubToken: '_',
+      majorLabel: 'major',
+      minorLabel: 'minor',
+      header: '',
+      footer: '',
+      variables: [],
+      collapseAfter: 0,
+      publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
+      groupDependencies: false,
+      removeConventionalPrefixes: false,
+      context: ContextSource.workflow,
+    }
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v0.0.0',
+      branch: 'main',
+      nextRelease: 'v0.0.1',
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {data: {body: 'first release notes'}}
+    const mockNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockNotes.mockResolvedValue(mockResponse)
+
+    await generateReleaseNotes(gh, inputs, releaseData)
+
+    expect(mockNotes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previous_tag_name: '',
+      }),
+    )
+  })
+
+  it('should call setOutput for release-sections, release-header, release-footer', async () => {
+    const inputs: Inputs = {
+      githubToken: '_',
+      majorLabel: 'major',
+      minorLabel: 'minor',
+      header: 'My Header',
+      footer: 'My Footer',
+      variables: [],
+      collapseAfter: 0,
+      publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
+      groupDependencies: false,
+      removeConventionalPrefixes: false,
+      context: ContextSource.workflow,
+    }
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {data: {body: "## What's Changed\n### 🐛 Bug Fixes\n* Fix something"}}
+    jest.spyOn(gh.rest.repos, 'generateReleaseNotes').mockResolvedValue(mockResponse)
+
+    await generateReleaseNotes(gh, inputs, releaseData)
+
+    expect(core.setOutput).toHaveBeenCalledWith('release-sections', expect.any(String))
+    expect(core.setOutput).toHaveBeenCalledWith('release-header', 'My Header')
+    expect(core.setOutput).toHaveBeenCalledWith('release-footer', 'My Footer')
+  })
+
+  it('should correctly parse variables with = in the value', async () => {
+    const inputs: Inputs = {
+      githubToken: '_',
+      majorLabel: 'major',
+      minorLabel: 'minor',
+      // Use triple-brace {{{}}} syntax to avoid Handlebars HTML-escaping special chars in URLs
+      header: '{{{url}}}',
+      footer: '',
+      variables: ['url=https://example.com?foo=bar&baz=qux'],
+      collapseAfter: 0,
+      publish: false,
+      configPath: '.github/release.yml',
+      dryRun: false,
+      groupDependencies: false,
+      removeConventionalPrefixes: false,
+      context: ContextSource.workflow,
+    }
+    const releaseData = {
+      releases: [],
+      latestRelease: 'v1.0.0',
+      branch: 'main',
+      nextRelease: 'v1.1.0',
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {data: {body: 'body'}}
+    jest.spyOn(gh.rest.repos, 'generateReleaseNotes').mockResolvedValue(mockResponse)
+
+    const notes = await generateReleaseNotes(gh, inputs, releaseData)
+
+    expect(notes).toContain('https://example.com?foo=bar&baz=qux')
   })
 })

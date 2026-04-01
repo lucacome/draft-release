@@ -51156,6 +51156,12 @@ var load                = loader.load;
 async function getCategories(inputs) {
     const content = await promises.readFile(inputs.configPath, 'utf8');
     const doc = load(content);
+    if (!doc?.changelog?.categories) {
+        throw new Error(`Invalid release config at '${inputs.configPath}': missing 'changelog.categories'`);
+    }
+    // TODO: doc.changelog.exclude.labels is parsed but not applied — PRs with excluded labels
+    // will still appear in the release notes. Implementing this requires filtering entries
+    // returned by the GitHub generateReleaseNotes API call in generateReleaseNotes().
     return doc.changelog.categories.map((category) => {
         return {
             title: category.title,
@@ -51186,15 +51192,18 @@ async function generateReleaseNotes(client, inputs, releaseData) {
         const notes = await client.rest.repos.generateReleaseNotes({
             ...context.repo,
             tag_name: nextRelease,
-            previous_tag_name: semverExports.gt(latestRelease, '0.0.0') ? latestRelease : '',
+            previous_tag_name: semverExports.valid(latestRelease) && semverExports.gt(latestRelease, '0.0.0') ? latestRelease : '',
             target_commitish: releaseData.branch,
             configuration_file_path: configPath,
         });
         body = notes.data.body;
         // get all the variables from inputs.variables
+        // Split only on the first '=' so values containing '=' (e.g. URLs) are preserved.
         const variables = inputs.variables.reduce((acc, variable) => {
-            const [key, value] = variable.split('=');
-            acc[key] = value;
+            const eqIdx = variable.indexOf('=');
+            if (eqIdx === -1)
+                return acc;
+            acc[variable.slice(0, eqIdx)] = variable.slice(eqIdx + 1);
             return acc;
         }, {});
         // variables to replace in header and footer
@@ -51206,21 +51215,21 @@ async function generateReleaseNotes(client, inputs, releaseData) {
             ...variables,
         };
         const categories = await getCategories(inputs);
-        sections = await splitMarkdownSections(body, categories);
+        sections = splitMarkdownSections(body, categories);
         if (inputs.removeConventionalPrefixes) {
-            sections = await removeConventionalPrefixes(sections);
+            sections = removeConventionalPrefixes(sections);
             await group('Removing conventional commit prefixes', async () => {
                 debug(JSON.stringify(sections, null, 2));
             });
         }
         if (inputs.groupDependencies) {
-            sections = await groupDependencyUpdates(sections);
+            sections = groupDependencyUpdates(sections);
             await group('Grouping dependency updates', async () => {
                 debug(JSON.stringify(sections, null, 2));
             });
         }
         if (inputs.collapseAfter > 0) {
-            sections = await collapseSections(sections, inputs.collapseAfter);
+            sections = collapseSections(sections, inputs.collapseAfter);
             await group('Collapsing sections', async () => {
                 debug(JSON.stringify(sections, null, 2));
             });
@@ -51231,13 +51240,13 @@ async function generateReleaseNotes(client, inputs, releaseData) {
             const template = Handlebars.compile(inputs.header);
             const header = template(data);
             body = `${header}\n\n${body}`;
-            setOutput('release-header', header?.trim());
+            setOutput('release-header', header.trim());
         }
         if (inputs.footer) {
             const template = Handlebars.compile(inputs.footer);
             const footer = template(data);
             body = `${body}\n\n${footer}`;
-            setOutput('release-footer', footer?.trim());
+            setOutput('release-footer', footer.trim());
         }
         setOutput('release-sections', JSON.stringify(sections));
     }
@@ -51368,7 +51377,7 @@ function parseNotes(notes, major, minor) {
  * @param n - Number of items after which to collapse a section
  * @returns SectionData with collapse tags added where needed
  */
-async function collapseSections(sections, n) {
+function collapseSections(sections, n) {
     if (n <= 0) {
         return sections; // No collapsing needed
     }
@@ -51408,9 +51417,9 @@ async function collapseSections(sections, n) {
  *
  * @param markdown - The markdown content to be parsed.
  * @param categories - An array of category definitions, each with a title and associated labels used for mapping sections.
- * @returns A promise that resolves to an object mapping category labels to arrays of markdown bullet list items.
+ * @returns An object mapping category labels to arrays of markdown bullet list items.
  */
-async function splitMarkdownSections(markdown, categories) {
+function splitMarkdownSections(markdown, categories) {
     const lines = markdown.split('\n');
     const sections = {};
     categories.forEach((category) => {
@@ -51449,7 +51458,7 @@ async function splitMarkdownSections(markdown, categories) {
  * @param sections - Parsed release note sections categorized by type
  * @returns Updated sections with prefixes removed
  */
-async function removeConventionalPrefixes(sections) {
+function removeConventionalPrefixes(sections) {
     const result = {};
     for (const [label, items] of Object.entries(sections)) {
         if (items.length === 0) {
@@ -51494,7 +51503,7 @@ function getPrefix(str, regex) {
  * @param sections - Parsed release note sections categorized by type.
  * @returns Updated release note sections with consolidated dependency update entries.
  */
-async function groupDependencyUpdates(sections) {
+function groupDependencyUpdates(sections) {
     const result = {};
     // Optional pattern part for conventional prefixes - can be used to enhance regexes
     const optionalPrefixPattern = '(?:(?:fix|feat|chore|docs|style|refactor|perf|test|build|ci|revert)(?:\\([^)]+\\))?:\\s+)?';
@@ -51558,6 +51567,7 @@ async function groupDependencyUpdates(sections) {
             result[label] = [];
             continue;
         }
+        // Grouping structures
         const updateGroups = new Map();
         const nonAutomatedItems = new Set();
         // First pass: gather update information
@@ -51768,6 +51778,7 @@ function capitalizeFirstWord(str) {
     return words.join(' ');
 }
 
+const NEXT_RELEASE_SENTINEL = 'next';
 async function getRelease(client, inputs) {
     const releaseResponse = {
         latestRelease: 'v0.0.0',
@@ -51787,7 +51798,7 @@ async function getRelease(client, inputs) {
         const isTag = context.ref.startsWith('refs/tags/');
         releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '');
         debug(`Current branch: ${releaseResponse.branch}`);
-        releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : 'next';
+        releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : NEXT_RELEASE_SENTINEL;
         if (releases.length === 0) {
             debug(`No releases found`);
             return releaseResponse;
@@ -51806,8 +51817,9 @@ async function getRelease(client, inputs) {
             releaseResponse.latestRelease = releaseInCurrent.tag_name;
         }
     }
-    catch (error) {
-        debug(`Error getting releases: ${error}`);
+    catch (error$1) {
+        error(`Error getting releases: ${error$1}`);
+        throw error$1;
     }
     return releaseResponse;
 }
@@ -51817,13 +51829,9 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     const nextRelease = releaseData.nextRelease;
     // find if a release draft already exists for versionIncrease
     const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease);
-    if (releaseDraft === undefined && releaseData.branch === 'tag') {
-        info(`No release draft found for tag ${nextRelease}. Skipping release creation/update.`);
-        return;
-    }
     const draft = releaseData.branch !== 'tag' || !inputs.publish;
-    releaseData.branch = (releaseData.branch === 'tag' && releaseDraft?.target_commitish) || releaseData.branch;
-    debug(`releaseData.branch: ${releaseData.branch}`);
+    const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch;
+    debug(`targetBranch: ${targetBranch}`);
     const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData);
     let response;
     if (!inputs.dryRun) {
@@ -51831,7 +51839,7 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
             ...context.repo,
             tag_name: nextRelease,
             name: nextRelease,
-            target_commitish: releaseData.branch,
+            target_commitish: targetBranch,
             body: newReleaseNotes,
             draft: draft,
         };
@@ -51856,9 +51864,9 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
     debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`);
     endGroup();
-    setOutput('release-notes', newReleaseNotes?.trim());
-    setOutput('release-id', response?.data?.id);
-    setOutput('release-url', response?.data?.html_url?.trim());
+    setOutput('release-notes', newReleaseNotes.trim());
+    setOutput('release-id', response?.data?.id !== undefined ? String(response.data.id) : '');
+    setOutput('release-url', response?.data?.html_url?.trim() ?? '');
 }
 
 /**
@@ -51879,11 +51887,21 @@ async function getTitleForLabel(inputs, label) {
     }
     return category.title;
 }
-// function getVersionIncrease returns the version increase based on the labels. Major, minor, patch
+/**
+ * Computes the next semantic version based on release notes and action inputs.
+ *
+ * @param releaseData - Current release metadata including the latest published version
+ * @param inputs - Action inputs providing label and configuration values
+ * @param notes - Markdown release notes used to detect version bump type
+ * @returns The incremented version string (e.g. `'1.2.3'`), or `''` if the latest release tag is not valid semver
+ */
 async function getVersionIncrease(releaseData, inputs, notes) {
     const majorTitle = await getTitleForLabel(inputs, inputs.majorLabel);
     const minorTitle = await getTitleForLabel(inputs, inputs.minorLabel);
-    const version = parseNotes(notes, majorTitle, minorTitle);
+    const parsedType = parseNotes(notes, majorTitle, minorTitle);
+    // parseNotes always returns one of these three values; validate before casting to catch
+    // any future changes to parseNotes that might introduce unexpected return values.
+    const version = parsedType === 'major' || parsedType === 'minor' || parsedType === 'patch' ? parsedType : 'patch';
     return semverExports.inc(releaseData.latestRelease, version) || '';
 }
 
@@ -51916,10 +51934,14 @@ async function run() {
                 info(`-`.repeat(20));
             });
         });
-        if (releaseData.nextRelease === 'next') {
+        if (releaseData.nextRelease === NEXT_RELEASE_SENTINEL) {
             // generate release notes for the next release
             const releaseNotes = await generateReleaseNotes(client, inputs, releaseData);
-            releaseData.nextRelease = 'v' + (await getVersionIncrease(releaseData, inputs, releaseNotes));
+            const versionIncrease = await getVersionIncrease(releaseData, inputs, releaseNotes);
+            if (!versionIncrease) {
+                throw new Error(`Could not compute next version from latest release '${releaseData.latestRelease}'. Ensure it is a valid semver tag.`);
+            }
+            releaseData.nextRelease = 'v' + versionIncrease;
         }
         setOutput('version', releaseData.nextRelease);
         // create or update release
@@ -51929,7 +51951,6 @@ async function run() {
         if (error instanceof Error)
             setFailed(error.message);
     }
-    return;
 }
 
 /**

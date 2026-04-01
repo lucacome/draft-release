@@ -46,6 +46,12 @@ export interface Category {
 export async function getCategories(inputs: Inputs): Promise<Category[]> {
   const content = await fsPromises.readFile(inputs.configPath, 'utf8')
   const doc = yaml.load(content) as ReleaseYAML
+  if (!doc?.changelog?.categories) {
+    throw new Error(`Invalid release config at '${inputs.configPath}': missing 'changelog.categories'`)
+  }
+  // TODO: doc.changelog.exclude.labels is parsed but not applied — PRs with excluded labels
+  // will still appear in the release notes. Implementing this requires filtering entries
+  // returned by the GitHub generateReleaseNotes API call in generateReleaseNotes().
   return doc.changelog.categories.map((category) => {
     return {
       title: category.title,

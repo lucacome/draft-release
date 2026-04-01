@@ -5,7 +5,7 @@ inputs:
   github-token:
     description: 'GitHub Token as provided by secrets'
     default: ${{ github.token }}
-    required: true
+    required: false
   major-label:
     description: 'Label to use for major version bump'
     default: 'change'

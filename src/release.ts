@@ -6,6 +6,8 @@ import {getContext, Inputs} from './context.js'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 
+export const NEXT_RELEASE_SENTINEL = 'next'
+
 export type ReleaseData = {
   latestRelease: string
   releases: Release[]
@@ -37,7 +39,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
     const isTag = context.ref.startsWith('refs/tags/')
     releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '')
     core.debug(`Current branch: ${releaseResponse.branch}`)
-    releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : 'next'
+    releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : NEXT_RELEASE_SENTINEL
 
     if (releases.length === 0) {
       core.debug(`No releases found`)
@@ -59,7 +61,8 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
       releaseResponse.latestRelease = releaseInCurrent.tag_name
     }
   } catch (error) {
-    core.debug(`Error getting releases: ${error}`)
+    core.error(`Error getting releases: ${error}`)
+    throw error
   }
 
   return releaseResponse
@@ -77,14 +80,9 @@ export async function createOrUpdateRelease(
   // find if a release draft already exists for versionIncrease
   const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease)
 
-  if (releaseDraft === undefined && releaseData.branch === 'tag') {
-    core.info(`No release draft found for tag ${nextRelease}. Skipping release creation/update.`)
-    return
-  }
-
   const draft = releaseData.branch !== 'tag' || !inputs.publish
-  releaseData.branch = (releaseData.branch === 'tag' && releaseDraft?.target_commitish) || releaseData.branch
-  core.debug(`releaseData.branch: ${releaseData.branch}`)
+  const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch
+  core.debug(`targetBranch: ${targetBranch}`)
   const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData)
 
   let response
@@ -93,7 +91,7 @@ export async function createOrUpdateRelease(
       ...context.repo,
       tag_name: nextRelease,
       name: nextRelease,
-      target_commitish: releaseData.branch,
+      target_commitish: targetBranch,
       body: newReleaseNotes,
       draft: draft,
     }
@@ -121,7 +119,7 @@ export async function createOrUpdateRelease(
   core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`)
   core.endGroup()
 
-  core.setOutput('release-notes', newReleaseNotes?.trim())
-  core.setOutput('release-id', response?.data?.id)
-  core.setOutput('release-url', response?.data?.html_url?.trim())
+  core.setOutput('release-notes', newReleaseNotes.trim())
+  core.setOutput('release-id', response?.data?.id !== undefined ? String(response.data.id) : '')
+  core.setOutput('release-url', response?.data?.html_url?.trim() ?? '')
 }
