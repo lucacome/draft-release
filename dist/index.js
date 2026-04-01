@@ -2,11 +2,14 @@ import * as fs from 'fs';
 import fs__default, { existsSync, readFileSync, promises } from 'fs';
 import * as os from 'os';
 import os__default, { EOL } from 'os';
-import http from 'http';
-import https from 'https';
+import * as http from 'http';
+import http__default from 'http';
+import * as https from 'https';
+import https__default from 'https';
 import 'net';
 import require$$1 from 'tls';
-import events$1 from 'events';
+import * as events$1 from 'events';
+import events__default from 'events';
 import 'assert';
 import require$$6 from 'util';
 import require$$0$1 from 'node:assert';
@@ -27,13 +30,13 @@ import require$$1$3 from 'node:url';
 import require$$5$2 from 'node:async_hooks';
 import require$$1$4 from 'node:console';
 import require$$1$5 from 'node:dns';
-import require$$5$3 from 'string_decoder';
+import require$$5$3, { StringDecoder } from 'string_decoder';
 import * as crypto from 'crypto';
 import crypto__default from 'crypto';
 import * as path from 'path';
 import path__default from 'path';
-import 'child_process';
-import 'timers';
+import * as child from 'child_process';
+import { setTimeout as setTimeout$1 } from 'timers';
 
 class Context {
     /**
@@ -204,9 +207,9 @@ function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel$1;
 	hasRequiredTunnel$1 = 1;
 	var tls = require$$1;
-	var http$1 = http;
-	var https$1 = https;
-	var events = events$1;
+	var http = http__default;
+	var https = https__default;
+	var events = events__default;
 	var util = require$$6;
 
 
@@ -218,13 +221,13 @@ function requireTunnel$1 () {
 
 	function httpOverHttp(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = http$1.request;
+	  agent.request = http.request;
 	  return agent;
 	}
 
 	function httpsOverHttp(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = http$1.request;
+	  agent.request = http.request;
 	  agent.createSocket = createSecureSocket;
 	  agent.defaultPort = 443;
 	  return agent;
@@ -232,13 +235,13 @@ function requireTunnel$1 () {
 
 	function httpOverHttps(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = https$1.request;
+	  agent.request = https.request;
 	  return agent;
 	}
 
 	function httpsOverHttps(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = https$1.request;
+	  agent.request = https.request;
 	  agent.createSocket = createSecureSocket;
 	  agent.defaultPort = 443;
 	  return agent;
@@ -249,7 +252,7 @@ function requireTunnel$1 () {
 	  var self = this;
 	  self.options = options || {};
 	  self.proxyOptions = self.options.proxy || {};
-	  self.maxSockets = self.options.maxSockets || http$1.Agent.defaultMaxSockets;
+	  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
 	  self.requests = [];
 	  self.sockets = [];
 
@@ -27923,8 +27926,8 @@ function requireLib$1 () {
 	lib$1.HttpClient = lib$1.HttpClientResponse = lib$1.HttpClientError = lib$1.MediaTypes = lib$1.Headers = lib$1.HttpCodes = void 0;
 	lib$1.getProxyUrl = getProxyUrl;
 	lib$1.isHttps = isHttps;
-	const http$1 = __importStar(http);
-	const https$1 = __importStar(https);
+	const http = __importStar(http__default);
+	const https = __importStar(https__default);
 	const pm = __importStar(requireProxy());
 	const tunnel = __importStar(requireTunnel());
 	const undici_1 = requireUndici();
@@ -28349,7 +28352,7 @@ function requireLib$1 () {
 	        const info = {};
 	        info.parsedUrl = requestUrl;
 	        const usingSsl = info.parsedUrl.protocol === 'https:';
-	        info.httpModule = usingSsl ? https$1 : http$1;
+	        info.httpModule = usingSsl ? https : http;
 	        const defaultPort = usingSsl ? 443 : 80;
 	        info.options = {};
 	        info.options.host = info.parsedUrl.hostname;
@@ -28463,7 +28466,7 @@ function requireLib$1 () {
 	        const usingSsl = parsedUrl.protocol === 'https:';
 	        let maxSockets = 100;
 	        if (this.requestOptions) {
-	            maxSockets = this.requestOptions.maxSockets || http$1.globalAgent.maxSockets;
+	            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
 	        }
 	        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
 	        if (proxyUrl && proxyUrl.hostname) {
@@ -28488,7 +28491,7 @@ function requireLib$1 () {
 	        // if tunneling agent isn't assigned create a new agent
 	        if (!agent) {
 	            const options = { keepAlive: this._keepAlive, maxSockets };
-	            agent = usingSsl ? new https$1.Agent(options) : new http$1.Agent(options);
+	            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
 	            this._agent = agent;
 	        }
 	        if (usingSsl && this._ignoreSslError) {
@@ -28619,7 +28622,7 @@ var libExports$1 = requireLib$1();
 
 var undiciExports = requireUndici();
 
-var __awaiter$3 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$6 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -28647,7 +28650,7 @@ function getProxyAgentDispatcher(destinationUrl) {
 }
 function getProxyFetch(destinationUrl) {
     const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
-    const proxyFetch = (url, opts) => __awaiter$3(this, void 0, void 0, function* () {
+    const proxyFetch = (url, opts) => __awaiter$6(this, void 0, void 0, function* () {
         return undiciExports.fetch(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
     });
     return proxyFetch;
@@ -28818,7 +28821,7 @@ var DEFAULTS = {
 };
 
 // pkg/dist-src/util/lowercase-keys.js
-function lowercaseKeys(object) {
+function lowercaseKeys$1(object) {
   if (!object) {
     return {};
   }
@@ -28870,7 +28873,7 @@ function merge$1(defaults, route, options) {
   } else {
     options = Object.assign({}, route);
   }
-  options.headers = lowercaseKeys(options.headers);
+  options.headers = lowercaseKeys$1(options.headers);
   removeUndefinedProperties(options);
   removeUndefinedProperties(options.headers);
   const mergedOptions = mergeDeep(defaults || {}, options);
@@ -32619,7 +32622,7 @@ const defaults = {
         fetch: getProxyFetch(baseUrl)
     }
 };
-const GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+const GitHub$1 = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
 /**
  * Convience function to correctly format Octokit Options to pass into the constructor.
  *
@@ -32627,7 +32630,7 @@ const GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaul
  * @param     options  other options to set
  */
 function getOctokitOptions(token, options) {
-    const opts = Object.assign({}, {}); // Shallow clone - don't mutate the object provided by the caller
+    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
     // Auth
     const auth = getAuthString(token, opts);
     if (auth) {
@@ -32644,8 +32647,8 @@ const context = new Context();
  * @param     options  other options to set
  */
 function getOctokit(token, options, ...additionalPlugins) {
-    const GitHubWithPlugins = GitHub.plugin(...additionalPlugins);
-    return new GitHubWithPlugins(getOctokitOptions(token));
+    const GitHubWithPlugins = GitHub$1.plugin(...additionalPlugins);
+    return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 
 // We use any as a valid input type
@@ -32802,10 +32805,100 @@ function prepareKeyValueMessage(key, value) {
     return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
 }
 
-requireTunnel();
+function getProxyUrl(reqUrl) {
+    const usingSsl = reqUrl.protocol === 'https:';
+    if (checkBypass(reqUrl)) {
+        return undefined;
+    }
+    const proxyVar = (() => {
+        if (usingSsl) {
+            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+        }
+        else {
+            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+        }
+    })();
+    if (proxyVar) {
+        try {
+            return new DecodedURL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new DecodedURL(`http://${proxyVar}`);
+        }
+    }
+    else {
+        return undefined;
+    }
+}
+function checkBypass(reqUrl) {
+    if (!reqUrl.hostname) {
+        return false;
+    }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
+    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+    if (!noProxy) {
+        return false;
+    }
+    // Determine the request port
+    let reqPort;
+    if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+    }
+    else if (reqUrl.protocol === 'http:') {
+        reqPort = 80;
+    }
+    else if (reqUrl.protocol === 'https:') {
+        reqPort = 443;
+    }
+    // Format the request hostname and hostname with port
+    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+    if (typeof reqPort === 'number') {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+    }
+    // Compare request host against noproxy
+    for (const upperNoProxyItem of noProxy
+        .split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
+            return true;
+        }
+    }
+    return false;
+}
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
+class DecodedURL extends URL {
+    constructor(url, base) {
+        super(url, base);
+        this._decodedUsername = decodeURIComponent(super.username);
+        this._decodedPassword = decodeURIComponent(super.password);
+    }
+    get username() {
+        return this._decodedUsername;
+    }
+    get password() {
+        return this._decodedPassword;
+    }
+}
+
+var tunnelExports = requireTunnel();
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$5 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -32853,18 +32946,635 @@ var MediaTypes;
 (function (MediaTypes) {
     MediaTypes["ApplicationJson"] = "application/json";
 })(MediaTypes || (MediaTypes = {}));
-[
+const HttpRedirectCodes = [
     HttpCodes.MovedPermanently,
     HttpCodes.ResourceMoved,
     HttpCodes.SeeOther,
     HttpCodes.TemporaryRedirect,
     HttpCodes.PermanentRedirect
 ];
-[
+const HttpResponseRetryCodes = [
     HttpCodes.BadGateway,
     HttpCodes.ServiceUnavailable,
     HttpCodes.GatewayTimeout
 ];
+const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+const ExponentialBackoffCeiling = 10;
+const ExponentialBackoffTimeSlice = 5;
+class HttpClientError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.name = 'HttpClientError';
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, HttpClientError.prototype);
+    }
+}
+class HttpClientResponse {
+    constructor(message) {
+        this.message = message;
+    }
+    readBody() {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter$5(this, void 0, void 0, function* () {
+                let output = Buffer.alloc(0);
+                this.message.on('data', (chunk) => {
+                    output = Buffer.concat([output, chunk]);
+                });
+                this.message.on('end', () => {
+                    resolve(output.toString());
+                });
+            }));
+        });
+    }
+    readBodyBuffer() {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter$5(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
+}
+class HttpClient {
+    constructor(userAgent, handlers, requestOptions) {
+        this._ignoreSslError = false;
+        this._allowRedirects = true;
+        this._allowRedirectDowngrade = false;
+        this._maxRedirects = 50;
+        this._allowRetries = false;
+        this._maxRetries = 1;
+        this._keepAlive = false;
+        this._disposed = false;
+        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent);
+        this.handlers = handlers || [];
+        this.requestOptions = requestOptions;
+        if (requestOptions) {
+            if (requestOptions.ignoreSslError != null) {
+                this._ignoreSslError = requestOptions.ignoreSslError;
+            }
+            this._socketTimeout = requestOptions.socketTimeout;
+            if (requestOptions.allowRedirects != null) {
+                this._allowRedirects = requestOptions.allowRedirects;
+            }
+            if (requestOptions.allowRedirectDowngrade != null) {
+                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+            }
+            if (requestOptions.maxRedirects != null) {
+                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+            }
+            if (requestOptions.keepAlive != null) {
+                this._keepAlive = requestOptions.keepAlive;
+            }
+            if (requestOptions.allowRetries != null) {
+                this._allowRetries = requestOptions.allowRetries;
+            }
+            if (requestOptions.maxRetries != null) {
+                this._maxRetries = requestOptions.maxRetries;
+            }
+        }
+    }
+    options(requestUrl, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    get(requestUrl, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('GET', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    del(requestUrl, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    post(requestUrl, data, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('POST', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    patch(requestUrl, data, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    put(requestUrl, data, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+        });
+    }
+    head(requestUrl, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+        });
+    }
+    sendStream(verb, requestUrl, stream, additionalHeaders) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return this.request(verb, requestUrl, stream, additionalHeaders);
+        });
+    }
+    /**
+     * Gets a typed object from an endpoint
+     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+     */
+    getJson(requestUrl_1) {
+        return __awaiter$5(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            const res = yield this.get(requestUrl, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    postJson(requestUrl_1, obj_1) {
+        return __awaiter$5(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] =
+                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+            const res = yield this.post(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    putJson(requestUrl_1, obj_1) {
+        return __awaiter$5(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] =
+                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+            const res = yield this.put(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    patchJson(requestUrl_1, obj_1) {
+        return __awaiter$5(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+            const data = JSON.stringify(obj, null, 2);
+            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+            additionalHeaders[Headers.ContentType] =
+                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+            const res = yield this.patch(requestUrl, data, additionalHeaders);
+            return this._processResponse(res, this.requestOptions);
+        });
+    }
+    /**
+     * Makes a raw http request.
+     * All other methods such as get, post, patch, and request ultimately call this.
+     * Prefer get, del, post and patch
+     */
+    request(verb, requestUrl, data, headers) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            if (this._disposed) {
+                throw new Error('Client has already been disposed.');
+            }
+            const parsedUrl = new URL(requestUrl);
+            let info = this._prepareRequest(verb, parsedUrl, headers);
+            // Only perform retries on reads since writes may not be idempotent.
+            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+                ? this._maxRetries + 1
+                : 1;
+            let numTries = 0;
+            let response;
+            do {
+                response = yield this.requestRaw(info, data);
+                // Check if it's an authentication challenge
+                if (response &&
+                    response.message &&
+                    response.message.statusCode === HttpCodes.Unauthorized) {
+                    let authenticationHandler;
+                    for (const handler of this.handlers) {
+                        if (handler.canHandleAuthentication(response)) {
+                            authenticationHandler = handler;
+                            break;
+                        }
+                    }
+                    if (authenticationHandler) {
+                        return authenticationHandler.handleAuthentication(this, info, data);
+                    }
+                    else {
+                        // We have received an unauthorized response but have no handlers to handle it.
+                        // Let the response return to the caller.
+                        return response;
+                    }
+                }
+                let redirectsRemaining = this._maxRedirects;
+                while (response.message.statusCode &&
+                    HttpRedirectCodes.includes(response.message.statusCode) &&
+                    this._allowRedirects &&
+                    redirectsRemaining > 0) {
+                    const redirectUrl = response.message.headers['location'];
+                    if (!redirectUrl) {
+                        // if there's no location to redirect to, we won't
+                        break;
+                    }
+                    const parsedRedirectUrl = new URL(redirectUrl);
+                    if (parsedUrl.protocol === 'https:' &&
+                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+                        !this._allowRedirectDowngrade) {
+                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+                    }
+                    // we need to finish reading the response before reassigning response
+                    // which will leak the open socket.
+                    yield response.readBody();
+                    // strip authorization header if redirected to a different hostname
+                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+                        for (const header in headers) {
+                            // header names are case insensitive
+                            if (header.toLowerCase() === 'authorization') {
+                                delete headers[header];
+                            }
+                        }
+                    }
+                    // let's make the request with the new redirectUrl
+                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+                    response = yield this.requestRaw(info, data);
+                    redirectsRemaining--;
+                }
+                if (!response.message.statusCode ||
+                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+                    // If not a retry code, return immediately instead of retrying
+                    return response;
+                }
+                numTries += 1;
+                if (numTries < maxTries) {
+                    yield response.readBody();
+                    yield this._performExponentialBackoff(numTries);
+                }
+            } while (numTries < maxTries);
+            return response;
+        });
+    }
+    /**
+     * Needs to be called if keepAlive is set to true in request options.
+     */
+    dispose() {
+        if (this._agent) {
+            this._agent.destroy();
+        }
+        this._disposed = true;
+    }
+    /**
+     * Raw request.
+     * @param info
+     * @param data
+     */
+    requestRaw(info, data) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                function callbackForResult(err, res) {
+                    if (err) {
+                        reject(err);
+                    }
+                    else if (!res) {
+                        // If `err` is not passed, then `res` must be passed.
+                        reject(new Error('Unknown error'));
+                    }
+                    else {
+                        resolve(res);
+                    }
+                }
+                this.requestRawWithCallback(info, data, callbackForResult);
+            });
+        });
+    }
+    /**
+     * Raw request with callback.
+     * @param info
+     * @param data
+     * @param onResult
+     */
+    requestRawWithCallback(info, data, onResult) {
+        if (typeof data === 'string') {
+            if (!info.options.headers) {
+                info.options.headers = {};
+            }
+            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+        }
+        let callbackCalled = false;
+        function handleResult(err, res) {
+            if (!callbackCalled) {
+                callbackCalled = true;
+                onResult(err, res);
+            }
+        }
+        const req = info.httpModule.request(info.options, (msg) => {
+            const res = new HttpClientResponse(msg);
+            handleResult(undefined, res);
+        });
+        let socket;
+        req.on('socket', sock => {
+            socket = sock;
+        });
+        // If we ever get disconnected, we want the socket to timeout eventually
+        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+            if (socket) {
+                socket.end();
+            }
+            handleResult(new Error(`Request timeout: ${info.options.path}`));
+        });
+        req.on('error', function (err) {
+            // err has statusCode property
+            // res should have headers
+            handleResult(err);
+        });
+        if (data && typeof data === 'string') {
+            req.write(data, 'utf8');
+        }
+        if (data && typeof data !== 'string') {
+            data.on('close', function () {
+                req.end();
+            });
+            data.pipe(req);
+        }
+        else {
+            req.end();
+        }
+    }
+    /**
+     * Gets an http agent. This function is useful when you need an http agent that handles
+     * routing through a proxy server - depending upon the url and proxy environment variables.
+     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+     */
+    getAgent(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        return this._getAgent(parsedUrl);
+    }
+    getAgentDispatcher(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        const proxyUrl = getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (!useProxy) {
+            return;
+        }
+        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+    }
+    _prepareRequest(method, requestUrl, headers) {
+        const info = {};
+        info.parsedUrl = requestUrl;
+        const usingSsl = info.parsedUrl.protocol === 'https:';
+        info.httpModule = usingSsl ? https : http;
+        const defaultPort = usingSsl ? 443 : 80;
+        info.options = {};
+        info.options.host = info.parsedUrl.hostname;
+        info.options.port = info.parsedUrl.port
+            ? parseInt(info.parsedUrl.port)
+            : defaultPort;
+        info.options.path =
+            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+        info.options.method = method;
+        info.options.headers = this._mergeHeaders(headers);
+        if (this.userAgent != null) {
+            info.options.headers['user-agent'] = this.userAgent;
+        }
+        info.options.agent = this._getAgent(info.parsedUrl);
+        // gives handlers an opportunity to participate
+        if (this.handlers) {
+            for (const handler of this.handlers) {
+                handler.prepareRequest(info.options);
+            }
+        }
+        return info;
+    }
+    _mergeHeaders(headers) {
+        if (this.requestOptions && this.requestOptions.headers) {
+            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+        }
+        return lowercaseKeys(headers || {});
+    }
+    /**
+     * Gets an existing header value or returns a default.
+     * Handles converting number header values to strings since HTTP headers must be strings.
+     * Note: This returns string | string[] since some headers can have multiple values.
+     * For headers that must always be a single string (like Content-Type), use the
+     * specialized _getExistingOrDefaultContentTypeHeader method instead.
+     */
+    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+            const headerValue = lowercaseKeys(this.requestOptions.headers)[header];
+            if (headerValue) {
+                clientHeader =
+                    typeof headerValue === 'number' ? headerValue.toString() : headerValue;
+            }
+        }
+        const additionalValue = additionalHeaders[header];
+        if (additionalValue !== undefined) {
+            return typeof additionalValue === 'number'
+                ? additionalValue.toString()
+                : additionalValue;
+        }
+        if (clientHeader !== undefined) {
+            return clientHeader;
+        }
+        return _default;
+    }
+    /**
+     * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
+     * Always returns a single string (not an array) since Content-Type should be a single value.
+     * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
+     * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
+     * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
+     */
+    _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+            const headerValue = lowercaseKeys(this.requestOptions.headers)[Headers.ContentType];
+            if (headerValue) {
+                if (typeof headerValue === 'number') {
+                    clientHeader = String(headerValue);
+                }
+                else if (Array.isArray(headerValue)) {
+                    clientHeader = headerValue.join(', ');
+                }
+                else {
+                    clientHeader = headerValue;
+                }
+            }
+        }
+        const additionalValue = additionalHeaders[Headers.ContentType];
+        // Return the first non-undefined value, converting numbers or arrays to strings if necessary
+        if (additionalValue !== undefined) {
+            if (typeof additionalValue === 'number') {
+                return String(additionalValue);
+            }
+            else if (Array.isArray(additionalValue)) {
+                return additionalValue.join(', ');
+            }
+            else {
+                return additionalValue;
+            }
+        }
+        if (clientHeader !== undefined) {
+            return clientHeader;
+        }
+        return _default;
+    }
+    _getAgent(parsedUrl) {
+        let agent;
+        const proxyUrl = getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (this._keepAlive && useProxy) {
+            agent = this._proxyAgent;
+        }
+        if (!useProxy) {
+            agent = this._agent;
+        }
+        // if agent is already assigned use that agent.
+        if (agent) {
+            return agent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        let maxSockets = 100;
+        if (this.requestOptions) {
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+        }
+        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+        if (proxyUrl && proxyUrl.hostname) {
+            const agentOptions = {
+                maxSockets,
+                keepAlive: this._keepAlive,
+                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+            };
+            let tunnelAgent;
+            const overHttps = proxyUrl.protocol === 'https:';
+            if (usingSsl) {
+                tunnelAgent = overHttps ? tunnelExports.httpsOverHttps : tunnelExports.httpsOverHttp;
+            }
+            else {
+                tunnelAgent = overHttps ? tunnelExports.httpOverHttps : tunnelExports.httpOverHttp;
+            }
+            agent = tunnelAgent(agentOptions);
+            this._proxyAgent = agent;
+        }
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
+            const options = { keepAlive: this._keepAlive, maxSockets };
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+            this._agent = agent;
+        }
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            agent.options = Object.assign(agent.options || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return agent;
+    }
+    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+        let proxyAgent;
+        if (this._keepAlive) {
+            proxyAgent = this._proxyAgentDispatcher;
+        }
+        // if agent is already assigned use that agent.
+        if (proxyAgent) {
+            return proxyAgent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        proxyAgent = new undiciExports.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
+        })));
+        this._proxyAgentDispatcher = proxyAgent;
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return proxyAgent;
+    }
+    _getUserAgentWithOrchestrationId(userAgent) {
+        const baseUserAgent = userAgent || 'actions/http-client';
+        const orchId = process.env['ACTIONS_ORCHESTRATION_ID'];
+        if (orchId) {
+            // Sanitize the orchestration ID to ensure it contains only valid characters
+            // Valid characters: 0-9, a-z, _, -, .
+            const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, '_');
+            return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
+        }
+        return baseUserAgent;
+    }
+    _performExponentialBackoff(retryNumber) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+            return new Promise(resolve => setTimeout(() => resolve(), ms));
+        });
+    }
+    _processResponse(res, options) {
+        return __awaiter$5(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter$5(this, void 0, void 0, function* () {
+                const statusCode = res.message.statusCode || 0;
+                const response = {
+                    statusCode,
+                    result: null,
+                    headers: {}
+                };
+                // not found leads to null obj returned
+                if (statusCode === HttpCodes.NotFound) {
+                    resolve(response);
+                }
+                // get the result from the body
+                function dateTimeDeserializer(key, value) {
+                    if (typeof value === 'string') {
+                        const a = new Date(value);
+                        if (!isNaN(a.valueOf())) {
+                            return a;
+                        }
+                    }
+                    return value;
+                }
+                let obj;
+                let contents;
+                try {
+                    contents = yield res.readBody();
+                    if (contents && contents.length > 0) {
+                        if (options && options.deserializeDates) {
+                            obj = JSON.parse(contents, dateTimeDeserializer);
+                        }
+                        else {
+                            obj = JSON.parse(contents);
+                        }
+                        response.result = obj;
+                    }
+                    response.headers = res.message.headers;
+                }
+                catch (err) {
+                    // Invalid resource (contents not json);  leaving result obj null
+                }
+                // note that 3xx redirects are handled by the http layer.
+                if (statusCode > 299) {
+                    let msg;
+                    // if exception/error in body, attempt to get better error
+                    if (obj && obj.message) {
+                        msg = obj.message;
+                    }
+                    else if (contents && contents.length > 0) {
+                        // it may be the case that the exception is in the body message as string
+                        msg = contents;
+                    }
+                    else {
+                        msg = `Failed request: (${statusCode})`;
+                    }
+                    const err = new HttpClientError(msg, statusCode);
+                    err.result = response.result;
+                    reject(err);
+                }
+                else {
+                    resolve(response);
+                }
+            }));
+        });
+    }
+}
+const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
 
 (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -32897,7 +33607,7 @@ var MediaTypes;
 };
 const { access, appendFile, writeFile } = promises;
 
-var __awaiter$2 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$4 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -32908,8 +33618,22 @@ var __awaiter$2 = (undefined && undefined.__awaiter) || function (thisArg, _argu
 };
 const { chmod, copyFile, lstat, mkdir, open, readdir, rename, rm, rmdir, stat, symlink, unlink } = fs.promises;
 // export const {open} = 'fs'
-const IS_WINDOWS = process.platform === 'win32';
+const IS_WINDOWS$1 = process.platform === 'win32';
 fs.constants.O_RDONLY;
+function exists(fsPath) {
+    return __awaiter$4(this, void 0, void 0, function* () {
+        try {
+            yield stat(fsPath);
+        }
+        catch (err) {
+            if (err.code === 'ENOENT') {
+                return false;
+            }
+            throw err;
+        }
+        return true;
+    });
+}
 /**
  * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
  * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
@@ -32919,7 +33643,7 @@ function isRooted(p) {
     if (!p) {
         throw new Error('isRooted() parameter "p" cannot be empty');
     }
-    if (IS_WINDOWS) {
+    if (IS_WINDOWS$1) {
         return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
         ); // e.g. C: or C:\hello
     }
@@ -32932,7 +33656,7 @@ function isRooted(p) {
  * @return if file exists and is executable, returns the file path. otherwise empty string.
  */
 function tryGetExecutablePath(filePath, extensions) {
-    return __awaiter$2(this, void 0, void 0, function* () {
+    return __awaiter$4(this, void 0, void 0, function* () {
         let stats = undefined;
         try {
             // test file exists
@@ -32945,7 +33669,7 @@ function tryGetExecutablePath(filePath, extensions) {
             }
         }
         if (stats && stats.isFile()) {
-            if (IS_WINDOWS) {
+            if (IS_WINDOWS$1) {
                 // on Windows, test for valid extension
                 const upperExt = path.extname(filePath).toUpperCase();
                 if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
@@ -32973,7 +33697,7 @@ function tryGetExecutablePath(filePath, extensions) {
                 }
             }
             if (stats && stats.isFile()) {
-                if (IS_WINDOWS) {
+                if (IS_WINDOWS$1) {
                     // preserve the case of the actual file (since an extension was appended)
                     try {
                         const directory = path.dirname(filePath);
@@ -33003,7 +33727,7 @@ function tryGetExecutablePath(filePath, extensions) {
 }
 function normalizeSeparators(p) {
     p = p || '';
-    if (IS_WINDOWS) {
+    if (IS_WINDOWS$1) {
         // convert slashes on Windows
         p = p.replace(/\//g, '\\');
         // remove redundant slashes
@@ -33025,7 +33749,7 @@ function isUnixExecutable(stats) {
             stats.uid === process.getuid()));
 }
 
-var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$3 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -33043,12 +33767,15 @@ var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _argu
  * @returns   Promise<string>   path to tool
  */
 function which(tool, check) {
-    return __awaiter$1(this, void 0, void 0, function* () {
+    return __awaiter$3(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
         // recursive when check=true
         if (check) {
             const result = yield which(tool, false);
             if (!result) {
-                if (IS_WINDOWS) {
+                if (IS_WINDOWS$1) {
                     throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
                 }
                 else {
@@ -33070,10 +33797,13 @@ function which(tool, check) {
  * @returns   Promise<string[]>  the paths of the tool
  */
 function findInPath(tool) {
-    return __awaiter$1(this, void 0, void 0, function* () {
+    return __awaiter$3(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
         // build the list of extensions to try
         const extensions = [];
-        if (IS_WINDOWS && process.env['PATHEXT']) {
+        if (IS_WINDOWS$1 && process.env['PATHEXT']) {
             for (const extension of process.env['PATHEXT'].split(path.delimiter)) {
                 if (extension) {
                     extensions.push(extension);
@@ -33118,7 +33848,7 @@ function findInPath(tool) {
     });
 }
 
-(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$2 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -33128,9 +33858,577 @@ function findInPath(tool) {
     });
 };
 /* eslint-disable @typescript-eslint/unbound-method */
-process.platform === 'win32';
+const IS_WINDOWS = process.platform === 'win32';
+/*
+ * Class for running command line tools. Handles quoting and arg parsing in a platform agnostic way.
+ */
+class ToolRunner extends events$1.EventEmitter {
+    constructor(toolPath, args, options) {
+        super();
+        if (!toolPath) {
+            throw new Error("Parameter 'toolPath' cannot be null or empty.");
+        }
+        this.toolPath = toolPath;
+        this.args = args || [];
+        this.options = options || {};
+    }
+    _debug(message) {
+        if (this.options.listeners && this.options.listeners.debug) {
+            this.options.listeners.debug(message);
+        }
+    }
+    _getCommandString(options, noPrefix) {
+        const toolPath = this._getSpawnFileName();
+        const args = this._getSpawnArgs(options);
+        let cmd = noPrefix ? '' : '[command]'; // omit prefix when piped to a second tool
+        if (IS_WINDOWS) {
+            // Windows + cmd file
+            if (this._isCmdFile()) {
+                cmd += toolPath;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows + verbatim
+            else if (options.windowsVerbatimArguments) {
+                cmd += `"${toolPath}"`;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows (regular)
+            else {
+                cmd += this._windowsQuoteCmdArg(toolPath);
+                for (const a of args) {
+                    cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+                }
+            }
+        }
+        else {
+            // OSX/Linux - this can likely be improved with some form of quoting.
+            // creating processes on Unix is fundamentally different than Windows.
+            // on Unix, execvp() takes an arg array.
+            cmd += toolPath;
+            for (const a of args) {
+                cmd += ` ${a}`;
+            }
+        }
+        return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+        try {
+            let s = strBuffer + data.toString();
+            let n = s.indexOf(os.EOL);
+            while (n > -1) {
+                const line = s.substring(0, n);
+                onLine(line);
+                // the rest of the string ...
+                s = s.substring(n + os.EOL.length);
+                n = s.indexOf(os.EOL);
+            }
+            return s;
+        }
+        catch (err) {
+            // streaming lines to console is best effort.  Don't fail a build.
+            this._debug(`error processing line. Failed with error ${err}`);
+            return '';
+        }
+    }
+    _getSpawnFileName() {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                return process.env['COMSPEC'] || 'cmd.exe';
+            }
+        }
+        return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+                for (const a of this.args) {
+                    argline += ' ';
+                    argline += options.windowsVerbatimArguments
+                        ? a
+                        : this._windowsQuoteCmdArg(a);
+                }
+                argline += '"';
+                return [argline];
+            }
+        }
+        return this.args;
+    }
+    _endsWith(str, end) {
+        return str.endsWith(end);
+    }
+    _isCmdFile() {
+        const upperToolPath = this.toolPath.toUpperCase();
+        return (this._endsWith(upperToolPath, '.CMD') ||
+            this._endsWith(upperToolPath, '.BAT'));
+    }
+    _windowsQuoteCmdArg(arg) {
+        // for .exe, apply the normal quoting rules that libuv applies
+        if (!this._isCmdFile()) {
+            return this._uvQuoteCmdArg(arg);
+        }
+        // otherwise apply quoting rules specific to the cmd.exe command line parser.
+        // the libuv rules are generic and are not designed specifically for cmd.exe
+        // command line parser.
+        //
+        // for a detailed description of the cmd.exe command line parser, refer to
+        // http://stackoverflow.com/questions/4094699/how-does-the-windows-command-interpreter-cmd-exe-parse-scripts/7970912#7970912
+        // need quotes for empty arg
+        if (!arg) {
+            return '""';
+        }
+        // determine whether the arg needs to be quoted
+        const cmdSpecialChars = [
+            ' ',
+            '\t',
+            '&',
+            '(',
+            ')',
+            '[',
+            ']',
+            '{',
+            '}',
+            '^',
+            '=',
+            ';',
+            '!',
+            "'",
+            '+',
+            ',',
+            '`',
+            '~',
+            '|',
+            '<',
+            '>',
+            '"'
+        ];
+        let needsQuotes = false;
+        for (const char of arg) {
+            if (cmdSpecialChars.some(x => x === char)) {
+                needsQuotes = true;
+                break;
+            }
+        }
+        // short-circuit if quotes not needed
+        if (!needsQuotes) {
+            return arg;
+        }
+        // the following quoting rules are very similar to the rules that by libuv applies.
+        //
+        // 1) wrap the string in quotes
+        //
+        // 2) double-up quotes - i.e. " => ""
+        //
+        //    this is different from the libuv quoting rules. libuv replaces " with \", which unfortunately
+        //    doesn't work well with a cmd.exe command line.
+        //
+        //    note, replacing " with "" also works well if the arg is passed to a downstream .NET console app.
+        //    for example, the command line:
+        //          foo.exe "myarg:""my val"""
+        //    is parsed by a .NET console app into an arg array:
+        //          [ "myarg:\"my val\"" ]
+        //    which is the same end result when applying libuv quoting rules. although the actual
+        //    command line from libuv quoting rules would look like:
+        //          foo.exe "myarg:\"my val\""
+        //
+        // 3) double-up slashes that precede a quote,
+        //    e.g.  hello \world    => "hello \world"
+        //          hello\"world    => "hello\\""world"
+        //          hello\\"world   => "hello\\\\""world"
+        //          hello world\    => "hello world\\"
+        //
+        //    technically this is not required for a cmd.exe command line, or the batch argument parser.
+        //    the reasons for including this as a .cmd quoting rule are:
+        //
+        //    a) this is optimized for the scenario where the argument is passed from the .cmd file to an
+        //       external program. many programs (e.g. .NET console apps) rely on the slash-doubling rule.
+        //
+        //    b) it's what we've been doing previously (by deferring to node default behavior) and we
+        //       haven't heard any complaints about that aspect.
+        //
+        // note, a weakness of the quoting rules chosen here, is that % is not escaped. in fact, % cannot be
+        // escaped when used on the command line directly - even though within a .cmd file % can be escaped
+        // by using %%.
+        //
+        // the saving grace is, on the command line, %var% is left as-is if var is not defined. this contrasts
+        // the line parsing rules within a .cmd file, where if var is not defined it is replaced with nothing.
+        //
+        // one option that was explored was replacing % with ^% - i.e. %var% => ^%var^%. this hack would
+        // often work, since it is unlikely that var^ would exist, and the ^ character is removed when the
+        // variable is used. the problem, however, is that ^ is not removed when %* is used to pass the args
+        // to an external program.
+        //
+        // an unexplored potential solution for the % escaping problem, is to create a wrapper .cmd file.
+        // % can be escaped within a .cmd file.
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\'; // double the slash
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '"'; // double the quote
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse.split('').reverse().join('');
+    }
+    _uvQuoteCmdArg(arg) {
+        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
+        // Node in certain cases where the undocumented spawn option windowsVerbatimArguments
+        // is used.
+        //
+        // Since this function is a port of quote_cmd_arg from Node 4.x (technically, lib UV,
+        // see https://github.com/nodejs/node/blob/v4.x/deps/uv/src/win/process.c for details),
+        // pasting copyright notice from Node within this function:
+        //
+        //      Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+        //
+        //      Permission is hereby granted, free of charge, to any person obtaining a copy
+        //      of this software and associated documentation files (the "Software"), to
+        //      deal in the Software without restriction, including without limitation the
+        //      rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+        //      sell copies of the Software, and to permit persons to whom the Software is
+        //      furnished to do so, subject to the following conditions:
+        //
+        //      The above copyright notice and this permission notice shall be included in
+        //      all copies or substantial portions of the Software.
+        //
+        //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        //      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        //      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        //      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        //      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+        //      FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+        //      IN THE SOFTWARE.
+        if (!arg) {
+            // Need double quotation for empty argument
+            return '""';
+        }
+        if (!arg.includes(' ') && !arg.includes('\t') && !arg.includes('"')) {
+            // No quotation needed
+            return arg;
+        }
+        if (!arg.includes('"') && !arg.includes('\\')) {
+            // No embedded double quotes or backslashes, so I can just wrap
+            // quote marks around the whole thing.
+            return `"${arg}"`;
+        }
+        // Expected input/output:
+        //   input : hello"world
+        //   output: "hello\"world"
+        //   input : hello""world
+        //   output: "hello\"\"world"
+        //   input : hello\world
+        //   output: hello\world
+        //   input : hello\\world
+        //   output: hello\\world
+        //   input : hello\"world
+        //   output: "hello\\\"world"
+        //   input : hello\\"world
+        //   output: "hello\\\\\"world"
+        //   input : hello world\
+        //   output: "hello world\\" - note the comment in libuv actually reads "hello world\"
+        //                             but it appears the comment is wrong, it should be "hello world\\"
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\';
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '\\';
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse.split('').reverse().join('');
+    }
+    _cloneExecOptions(options) {
+        options = options || {};
+        const result = {
+            cwd: options.cwd || process.cwd(),
+            env: options.env || process.env,
+            silent: options.silent || false,
+            windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+            failOnStdErr: options.failOnStdErr || false,
+            ignoreReturnCode: options.ignoreReturnCode || false,
+            delay: options.delay || 10000
+        };
+        result.outStream = options.outStream || process.stdout;
+        result.errStream = options.errStream || process.stderr;
+        return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+        options = options || {};
+        const result = {};
+        result.cwd = options.cwd;
+        result.env = options.env;
+        result['windowsVerbatimArguments'] =
+            options.windowsVerbatimArguments || this._isCmdFile();
+        if (options.windowsVerbatimArguments) {
+            result.argv0 = `"${toolPath}"`;
+        }
+        return result;
+    }
+    /**
+     * Exec a tool.
+     * Output will be streamed to the live console.
+     * Returns promise with return code
+     *
+     * @param     tool     path to tool to exec
+     * @param     options  optional exec options.  See ExecOptions
+     * @returns   number
+     */
+    exec() {
+        return __awaiter$2(this, void 0, void 0, function* () {
+            // root the tool path if it is unrooted and contains relative pathing
+            if (!isRooted(this.toolPath) &&
+                (this.toolPath.includes('/') ||
+                    (IS_WINDOWS && this.toolPath.includes('\\')))) {
+                // prefer options.cwd if it is specified, however options.cwd may also need to be rooted
+                this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            }
+            // if the tool is only a file name, then resolve it from the PATH
+            // otherwise verify it exists (add extension on Windows if necessary)
+            this.toolPath = yield which(this.toolPath, true);
+            return new Promise((resolve, reject) => __awaiter$2(this, void 0, void 0, function* () {
+                this._debug(`exec tool: ${this.toolPath}`);
+                this._debug('arguments:');
+                for (const arg of this.args) {
+                    this._debug(`   ${arg}`);
+                }
+                const optionsNonNull = this._cloneExecOptions(this.options);
+                if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                    optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
+                }
+                const state = new ExecState(optionsNonNull, this.toolPath);
+                state.on('debug', (message) => {
+                    this._debug(message);
+                });
+                if (this.options.cwd && !(yield exists(this.options.cwd))) {
+                    return reject(new Error(`The cwd: ${this.options.cwd} does not exist!`));
+                }
+                const fileName = this._getSpawnFileName();
+                const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+                let stdbuffer = '';
+                if (cp.stdout) {
+                    cp.stdout.on('data', (data) => {
+                        if (this.options.listeners && this.options.listeners.stdout) {
+                            this.options.listeners.stdout(data);
+                        }
+                        if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                            optionsNonNull.outStream.write(data);
+                        }
+                        stdbuffer = this._processLineBuffer(data, stdbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.stdline) {
+                                this.options.listeners.stdline(line);
+                            }
+                        });
+                    });
+                }
+                let errbuffer = '';
+                if (cp.stderr) {
+                    cp.stderr.on('data', (data) => {
+                        state.processStderr = true;
+                        if (this.options.listeners && this.options.listeners.stderr) {
+                            this.options.listeners.stderr(data);
+                        }
+                        if (!optionsNonNull.silent &&
+                            optionsNonNull.errStream &&
+                            optionsNonNull.outStream) {
+                            const s = optionsNonNull.failOnStdErr
+                                ? optionsNonNull.errStream
+                                : optionsNonNull.outStream;
+                            s.write(data);
+                        }
+                        errbuffer = this._processLineBuffer(data, errbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.errline) {
+                                this.options.listeners.errline(line);
+                            }
+                        });
+                    });
+                }
+                cp.on('error', (err) => {
+                    state.processError = err.message;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    state.CheckComplete();
+                });
+                cp.on('exit', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                cp.on('close', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                state.on('done', (error, exitCode) => {
+                    if (stdbuffer.length > 0) {
+                        this.emit('stdline', stdbuffer);
+                    }
+                    if (errbuffer.length > 0) {
+                        this.emit('errline', errbuffer);
+                    }
+                    cp.removeAllListeners();
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve(exitCode);
+                    }
+                });
+                if (this.options.input) {
+                    if (!cp.stdin) {
+                        throw new Error('child process missing stdin');
+                    }
+                    cp.stdin.end(this.options.input);
+                }
+            }));
+        });
+    }
+}
+/**
+ * Convert an arg string to an array of args. Handles escaping
+ *
+ * @param    argString   string of arguments
+ * @returns  string[]    array of arguments
+ */
+function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = '';
+    function append(c) {
+        // we only escape double quotes.
+        if (escaped && c !== '"') {
+            arg += '\\';
+        }
+        arg += c;
+        escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+        const c = argString.charAt(i);
+        if (c === '"') {
+            if (!escaped) {
+                inQuotes = !inQuotes;
+            }
+            else {
+                append(c);
+            }
+            continue;
+        }
+        if (c === '\\' && escaped) {
+            append(c);
+            continue;
+        }
+        if (c === '\\' && inQuotes) {
+            escaped = true;
+            continue;
+        }
+        if (c === ' ' && !inQuotes) {
+            if (arg.length > 0) {
+                args.push(arg);
+                arg = '';
+            }
+            continue;
+        }
+        append(c);
+    }
+    if (arg.length > 0) {
+        args.push(arg.trim());
+    }
+    return args;
+}
+class ExecState extends events$1.EventEmitter {
+    constructor(options, toolPath) {
+        super();
+        this.processClosed = false; // tracks whether the process has exited and stdio is closed
+        this.processError = '';
+        this.processExitCode = 0;
+        this.processExited = false; // tracks whether the process has exited
+        this.processStderr = false; // tracks whether stderr was written to
+        this.delay = 10000; // 10 seconds
+        this.done = false;
+        this.timeout = null;
+        if (!toolPath) {
+            throw new Error('toolPath must not be empty');
+        }
+        this.options = options;
+        this.toolPath = toolPath;
+        if (options.delay) {
+            this.delay = options.delay;
+        }
+    }
+    CheckComplete() {
+        if (this.done) {
+            return;
+        }
+        if (this.processClosed) {
+            this._setResult();
+        }
+        else if (this.processExited) {
+            this.timeout = setTimeout$1(ExecState.HandleTimeout, this.delay, this);
+        }
+    }
+    _debug(message) {
+        this.emit('debug', message);
+    }
+    _setResult() {
+        // determine whether there is an error
+        let error;
+        if (this.processExited) {
+            if (this.processError) {
+                error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+            }
+            else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+                error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+            }
+            else if (this.processStderr && this.options.failOnStdErr) {
+                error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+            }
+        }
+        // clear the timeout
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        this.done = true;
+        this.emit('done', error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+        if (state.done) {
+            return;
+        }
+        if (!state.processClosed && state.processExited) {
+            const message = `The STDIO streams did not close within ${state.delay / 1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+            state._debug(message);
+        }
+        state._setResult();
+    }
+}
 
-(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -33139,6 +34437,73 @@ process.platform === 'win32';
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+/**
+ * Exec a command.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param     commandLine        command to execute (can include additional args). Must be correctly escaped.
+ * @param     args               optional arguments for tool. Escaping is handled by the lib.
+ * @param     options            optional exec options.  See ExecOptions
+ * @returns   Promise<number>    exit code
+ */
+function exec(commandLine, args, options) {
+    return __awaiter$1(this, void 0, void 0, function* () {
+        const commandArgs = argStringToArray(commandLine);
+        if (commandArgs.length === 0) {
+            throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
+        }
+        // Path to tool to execute should be first arg
+        const toolPath = commandArgs[0];
+        args = commandArgs.slice(1).concat(args || []);
+        const runner = new ToolRunner(toolPath, args, options);
+        return runner.exec();
+    });
+}
+/**
+ * Exec a command and get the output.
+ * Output will be streamed to the live console.
+ * Returns promise with the exit code and collected stdout and stderr
+ *
+ * @param     commandLine           command to execute (can include additional args). Must be correctly escaped.
+ * @param     args                  optional arguments for tool. Escaping is handled by the lib.
+ * @param     options               optional exec options.  See ExecOptions
+ * @returns   Promise<ExecOutput>   exit code, stdout, and stderr
+ */
+function getExecOutput(commandLine, args, options) {
+    return __awaiter$1(this, void 0, void 0, function* () {
+        var _a, _b;
+        let stdout = '';
+        let stderr = '';
+        //Using string decoder covers the case where a mult-byte character is split
+        const stdoutDecoder = new StringDecoder('utf8');
+        const stderrDecoder = new StringDecoder('utf8');
+        const originalStdoutListener = (_a = options === null || options === void 0 ? void 0 : options.listeners) === null || _a === void 0 ? void 0 : _a.stdout;
+        const originalStdErrListener = (_b = options === null || options === void 0 ? void 0 : options.listeners) === null || _b === void 0 ? void 0 : _b.stderr;
+        const stdErrListener = (data) => {
+            stderr += stderrDecoder.write(data);
+            if (originalStdErrListener) {
+                originalStdErrListener(data);
+            }
+        };
+        const stdOutListener = (data) => {
+            stdout += stdoutDecoder.write(data);
+            if (originalStdoutListener) {
+                originalStdoutListener(data);
+            }
+        };
+        const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
+        const exitCode = yield exec(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        //flush any remaining characters
+        stdout += stdoutDecoder.end();
+        stderr += stderrDecoder.end();
+        return {
+            exitCode,
+            stdout,
+            stderr
+        };
+    });
+}
 
 (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -33175,6 +34540,38 @@ var ExitCode;
      */
     ExitCode[ExitCode["Failure"] = 1] = "Failure";
 })(ExitCode || (ExitCode = {}));
+/**
+ * Registers a secret which will get masked from logs
+ *
+ * @param secret - Value of the secret to be masked
+ * @remarks
+ * This function instructs the Actions runner to mask the specified value in any
+ * logs produced during the workflow run. Once registered, the secret value will
+ * be replaced with asterisks (***) whenever it appears in console output, logs,
+ * or error messages.
+ *
+ * This is useful for protecting sensitive information such as:
+ * - API keys
+ * - Access tokens
+ * - Authentication credentials
+ * - URL parameters containing signatures (SAS tokens)
+ *
+ * Note that masking only affects future logs; any previous appearances of the
+ * secret in logs before calling this function will remain unmasked.
+ *
+ * @example
+ * ```typescript
+ * // Register an API token as a secret
+ * const apiToken = "abc123xyz456";
+ * setSecret(apiToken);
+ *
+ * // Now any logs containing this value will show *** instead
+ * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
+ * ```
+ */
+function setSecret(secret) {
+    issueCommand('add-mask', {}, secret);
+}
 /**
  * Gets the value of an input.
  * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
@@ -44513,6 +45910,2434 @@ function requireLib () {
 var libExports = requireLib();
 var Handlebars = /*@__PURE__*/getDefaultExportFromCjs(libExports);
 
+class CsvError extends Error {
+  constructor(code, message, options, ...contexts) {
+    if (Array.isArray(message)) message = message.join(" ").trim();
+    super(message);
+    if (Error.captureStackTrace !== undefined) {
+      Error.captureStackTrace(this, CsvError);
+    }
+    this.code = code;
+    for (const context of contexts) {
+      for (const key in context) {
+        const value = context[key];
+        this[key] = Buffer.isBuffer(value)
+          ? value.toString(options.encoding)
+          : value == null
+            ? value
+            : JSON.parse(JSON.stringify(value));
+      }
+    }
+  }
+}
+
+const is_object = function (obj) {
+  return typeof obj === "object" && obj !== null && !Array.isArray(obj);
+};
+
+const normalize_columns_array = function (columns) {
+  const normalizedColumns = [];
+  for (let i = 0, l = columns.length; i < l; i++) {
+    const column = columns[i];
+    if (column === undefined || column === null || column === false) {
+      normalizedColumns[i] = { disabled: true };
+    } else if (typeof column === "string" || typeof column === "number") {
+      normalizedColumns[i] = { name: `${column}` };
+    } else if (is_object(column)) {
+      if (typeof column.name !== "string") {
+        throw new CsvError("CSV_OPTION_COLUMNS_MISSING_NAME", [
+          "Option columns missing name:",
+          `property "name" is required at position ${i}`,
+          "when column is an object literal",
+        ]);
+      }
+      normalizedColumns[i] = column;
+    } else {
+      throw new CsvError("CSV_INVALID_COLUMN_DEFINITION", [
+        "Invalid column definition:",
+        "expect a string or a literal object,",
+        `got ${JSON.stringify(column)} at position ${i}`,
+      ]);
+    }
+  }
+  return normalizedColumns;
+};
+
+class ResizeableBuffer {
+  constructor(size = 100) {
+    this.size = size;
+    this.length = 0;
+    this.buf = Buffer.allocUnsafe(size);
+  }
+  prepend(val) {
+    if (Buffer.isBuffer(val)) {
+      const length = this.length + val.length;
+      if (length >= this.size) {
+        this.resize();
+        if (length >= this.size) {
+          throw Error("INVALID_BUFFER_STATE");
+        }
+      }
+      const buf = this.buf;
+      this.buf = Buffer.allocUnsafe(this.size);
+      val.copy(this.buf, 0);
+      buf.copy(this.buf, val.length);
+      this.length += val.length;
+    } else {
+      const length = this.length++;
+      if (length === this.size) {
+        this.resize();
+      }
+      const buf = this.clone();
+      this.buf[0] = val;
+      buf.copy(this.buf, 1, 0, length);
+    }
+  }
+  append(val) {
+    const length = this.length++;
+    if (length === this.size) {
+      this.resize();
+    }
+    this.buf[length] = val;
+  }
+  clone() {
+    return Buffer.from(this.buf.slice(0, this.length));
+  }
+  resize() {
+    const length = this.length;
+    this.size = this.size * 2;
+    const buf = Buffer.allocUnsafe(this.size);
+    this.buf.copy(buf, 0, 0, length);
+    this.buf = buf;
+  }
+  toString(encoding) {
+    if (encoding) {
+      return this.buf.slice(0, this.length).toString(encoding);
+    } else {
+      return Uint8Array.prototype.slice.call(this.buf.slice(0, this.length));
+    }
+  }
+  toJSON() {
+    return this.toString("utf8");
+  }
+  reset() {
+    this.length = 0;
+  }
+}
+
+// white space characters
+// https://en.wikipedia.org/wiki/Whitespace_character
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#Types
+// \f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
+const np = 12;
+const cr$1 = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
+const nl$1 = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
+const space = 32;
+const tab = 9;
+
+const init_state = function (options) {
+  return {
+    bomSkipped: false,
+    bufBytesStart: 0,
+    castField: options.cast_function,
+    commenting: false,
+    // Current error encountered by a record
+    error: undefined,
+    enabled: options.from_line === 1,
+    escaping: false,
+    escapeIsQuote:
+      Buffer.isBuffer(options.escape) &&
+      Buffer.isBuffer(options.quote) &&
+      Buffer.compare(options.escape, options.quote) === 0,
+    // columns can be `false`, `true`, `Array`
+    expectedRecordLength: Array.isArray(options.columns)
+      ? options.columns.length
+      : undefined,
+    field: new ResizeableBuffer(20),
+    firstLineToHeaders: options.cast_first_line_to_header,
+    needMoreDataSize: Math.max(
+      // Skip if the remaining buffer smaller than comment
+      options.comment !== null ? options.comment.length : 0,
+      // Skip if the remaining buffer can be delimiter
+      ...options.delimiter.map((delimiter) => delimiter.length),
+      // Skip if the remaining buffer can be escape sequence
+      options.quote !== null ? options.quote.length : 0,
+    ),
+    previousBuf: undefined,
+    quoting: false,
+    stop: false,
+    rawBuffer: new ResizeableBuffer(100),
+    record: [],
+    recordHasError: false,
+    record_length: 0,
+    recordDelimiterMaxLength:
+      options.record_delimiter.length === 0
+        ? 0
+        : Math.max(...options.record_delimiter.map((v) => v.length)),
+    trimChars: [
+      Buffer.from(" ", options.encoding)[0],
+      Buffer.from("\t", options.encoding)[0],
+    ],
+    wasQuoting: false,
+    wasRowDelimiter: false,
+    timchars: [
+      Buffer.from(Buffer.from([cr$1], "utf8").toString(), options.encoding),
+      Buffer.from(Buffer.from([nl$1], "utf8").toString(), options.encoding),
+      Buffer.from(Buffer.from([np], "utf8").toString(), options.encoding),
+      Buffer.from(Buffer.from([space], "utf8").toString(), options.encoding),
+      Buffer.from(Buffer.from([tab], "utf8").toString(), options.encoding),
+    ],
+  };
+};
+
+const underscore = function (str) {
+  return str.replace(/([A-Z])/g, function (_, match) {
+    return "_" + match.toLowerCase();
+  });
+};
+
+const normalize_options = function (opts) {
+  const options = {};
+  // Merge with user options
+  for (const opt in opts) {
+    options[underscore(opt)] = opts[opt];
+  }
+  // Normalize option `encoding`
+  // Note: defined first because other options depends on it
+  // to convert chars/strings into buffers.
+  if (options.encoding === undefined || options.encoding === true) {
+    options.encoding = "utf8";
+  } else if (options.encoding === null || options.encoding === false) {
+    options.encoding = null;
+  } else if (
+    typeof options.encoding !== "string" &&
+    options.encoding !== null
+  ) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_ENCODING",
+      [
+        "Invalid option encoding:",
+        "encoding must be a string or null to return a buffer,",
+        `got ${JSON.stringify(options.encoding)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `bom`
+  if (
+    options.bom === undefined ||
+    options.bom === null ||
+    options.bom === false
+  ) {
+    options.bom = false;
+  } else if (options.bom !== true) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_BOM",
+      [
+        "Invalid option bom:",
+        "bom must be true,",
+        `got ${JSON.stringify(options.bom)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `cast`
+  options.cast_function = null;
+  if (
+    options.cast === undefined ||
+    options.cast === null ||
+    options.cast === false ||
+    options.cast === ""
+  ) {
+    options.cast = undefined;
+  } else if (typeof options.cast === "function") {
+    options.cast_function = options.cast;
+    options.cast = true;
+  } else if (options.cast !== true) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_CAST",
+      [
+        "Invalid option cast:",
+        "cast must be true or a function,",
+        `got ${JSON.stringify(options.cast)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `cast_date`
+  if (
+    options.cast_date === undefined ||
+    options.cast_date === null ||
+    options.cast_date === false ||
+    options.cast_date === ""
+  ) {
+    options.cast_date = false;
+  } else if (options.cast_date === true) {
+    options.cast_date = function (value) {
+      const date = Date.parse(value);
+      return !isNaN(date) ? new Date(date) : value;
+    };
+  } else if (typeof options.cast_date !== "function") {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_CAST_DATE",
+      [
+        "Invalid option cast_date:",
+        "cast_date must be true or a function,",
+        `got ${JSON.stringify(options.cast_date)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `columns`
+  options.cast_first_line_to_header = undefined;
+  if (options.columns === true) {
+    // Fields in the first line are converted as-is to columns
+    options.cast_first_line_to_header = undefined;
+  } else if (typeof options.columns === "function") {
+    options.cast_first_line_to_header = options.columns;
+    options.columns = true;
+  } else if (Array.isArray(options.columns)) {
+    options.columns = normalize_columns_array(options.columns);
+  } else if (
+    options.columns === undefined ||
+    options.columns === null ||
+    options.columns === false
+  ) {
+    options.columns = false;
+  } else {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_COLUMNS",
+      [
+        "Invalid option columns:",
+        "expect an array, a function or true,",
+        `got ${JSON.stringify(options.columns)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `group_columns_by_name`
+  if (
+    options.group_columns_by_name === undefined ||
+    options.group_columns_by_name === null ||
+    options.group_columns_by_name === false
+  ) {
+    options.group_columns_by_name = false;
+  } else if (options.group_columns_by_name !== true) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME",
+      [
+        "Invalid option group_columns_by_name:",
+        "expect an boolean,",
+        `got ${JSON.stringify(options.group_columns_by_name)}`,
+      ],
+      options,
+    );
+  } else if (options.columns === false) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME",
+      [
+        "Invalid option group_columns_by_name:",
+        "the `columns` mode must be activated.",
+      ],
+      options,
+    );
+  }
+  // Normalize option `comment`
+  if (
+    options.comment === undefined ||
+    options.comment === null ||
+    options.comment === false ||
+    options.comment === ""
+  ) {
+    options.comment = null;
+  } else {
+    if (typeof options.comment === "string") {
+      options.comment = Buffer.from(options.comment, options.encoding);
+    }
+    if (!Buffer.isBuffer(options.comment)) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_COMMENT",
+        [
+          "Invalid option comment:",
+          "comment must be a buffer or a string,",
+          `got ${JSON.stringify(options.comment)}`,
+        ],
+        options,
+      );
+    }
+  }
+  // Normalize option `comment_no_infix`
+  if (
+    options.comment_no_infix === undefined ||
+    options.comment_no_infix === null ||
+    options.comment_no_infix === false
+  ) {
+    options.comment_no_infix = false;
+  } else if (options.comment_no_infix !== true) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_COMMENT",
+      [
+        "Invalid option comment_no_infix:",
+        "value must be a boolean,",
+        `got ${JSON.stringify(options.comment_no_infix)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `delimiter`
+  const delimiter_json = JSON.stringify(options.delimiter);
+  if (!Array.isArray(options.delimiter))
+    options.delimiter = [options.delimiter];
+  if (options.delimiter.length === 0) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_DELIMITER",
+      [
+        "Invalid option delimiter:",
+        "delimiter must be a non empty string or buffer or array of string|buffer,",
+        `got ${delimiter_json}`,
+      ],
+      options,
+    );
+  }
+  options.delimiter = options.delimiter.map(function (delimiter) {
+    if (delimiter === undefined || delimiter === null || delimiter === false) {
+      return Buffer.from(",", options.encoding);
+    }
+    if (typeof delimiter === "string") {
+      delimiter = Buffer.from(delimiter, options.encoding);
+    }
+    if (!Buffer.isBuffer(delimiter) || delimiter.length === 0) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_DELIMITER",
+        [
+          "Invalid option delimiter:",
+          "delimiter must be a non empty string or buffer or array of string|buffer,",
+          `got ${delimiter_json}`,
+        ],
+        options,
+      );
+    }
+    return delimiter;
+  });
+  // Normalize option `escape`
+  if (options.escape === undefined || options.escape === true) {
+    options.escape = Buffer.from('"', options.encoding);
+  } else if (typeof options.escape === "string") {
+    options.escape = Buffer.from(options.escape, options.encoding);
+  } else if (options.escape === null || options.escape === false) {
+    options.escape = null;
+  }
+  if (options.escape !== null) {
+    if (!Buffer.isBuffer(options.escape)) {
+      throw new Error(
+        `Invalid Option: escape must be a buffer, a string or a boolean, got ${JSON.stringify(options.escape)}`,
+      );
+    }
+  }
+  // Normalize option `from`
+  if (options.from === undefined || options.from === null) {
+    options.from = 1;
+  } else {
+    if (typeof options.from === "string" && /\d+/.test(options.from)) {
+      options.from = parseInt(options.from);
+    }
+    if (Number.isInteger(options.from)) {
+      if (options.from < 0) {
+        throw new Error(
+          `Invalid Option: from must be a positive integer, got ${JSON.stringify(opts.from)}`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Invalid Option: from must be an integer, got ${JSON.stringify(options.from)}`,
+      );
+    }
+  }
+  // Normalize option `from_line`
+  if (options.from_line === undefined || options.from_line === null) {
+    options.from_line = 1;
+  } else {
+    if (
+      typeof options.from_line === "string" &&
+      /\d+/.test(options.from_line)
+    ) {
+      options.from_line = parseInt(options.from_line);
+    }
+    if (Number.isInteger(options.from_line)) {
+      if (options.from_line <= 0) {
+        throw new Error(
+          `Invalid Option: from_line must be a positive integer greater than 0, got ${JSON.stringify(opts.from_line)}`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Invalid Option: from_line must be an integer, got ${JSON.stringify(opts.from_line)}`,
+      );
+    }
+  }
+  // Normalize options `ignore_last_delimiters`
+  if (
+    options.ignore_last_delimiters === undefined ||
+    options.ignore_last_delimiters === null
+  ) {
+    options.ignore_last_delimiters = false;
+  } else if (typeof options.ignore_last_delimiters === "number") {
+    options.ignore_last_delimiters = Math.floor(options.ignore_last_delimiters);
+    if (options.ignore_last_delimiters === 0) {
+      options.ignore_last_delimiters = false;
+    }
+  } else if (typeof options.ignore_last_delimiters !== "boolean") {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_IGNORE_LAST_DELIMITERS",
+      [
+        "Invalid option `ignore_last_delimiters`:",
+        "the value must be a boolean value or an integer,",
+        `got ${JSON.stringify(options.ignore_last_delimiters)}`,
+      ],
+      options,
+    );
+  }
+  if (options.ignore_last_delimiters === true && options.columns === false) {
+    throw new CsvError(
+      "CSV_IGNORE_LAST_DELIMITERS_REQUIRES_COLUMNS",
+      [
+        "The option `ignore_last_delimiters`",
+        "requires the activation of the `columns` option",
+      ],
+      options,
+    );
+  }
+  // Normalize option `info`
+  if (
+    options.info === undefined ||
+    options.info === null ||
+    options.info === false
+  ) {
+    options.info = false;
+  } else if (options.info !== true) {
+    throw new Error(
+      `Invalid Option: info must be true, got ${JSON.stringify(options.info)}`,
+    );
+  }
+  // Normalize option `max_record_size`
+  if (
+    options.max_record_size === undefined ||
+    options.max_record_size === null ||
+    options.max_record_size === false
+  ) {
+    options.max_record_size = 0;
+  } else if (
+    Number.isInteger(options.max_record_size) &&
+    options.max_record_size >= 0
+  ) ; else if (
+    typeof options.max_record_size === "string" &&
+    /\d+/.test(options.max_record_size)
+  ) {
+    options.max_record_size = parseInt(options.max_record_size);
+  } else {
+    throw new Error(
+      `Invalid Option: max_record_size must be a positive integer, got ${JSON.stringify(options.max_record_size)}`,
+    );
+  }
+  // Normalize option `objname`
+  if (
+    options.objname === undefined ||
+    options.objname === null ||
+    options.objname === false
+  ) {
+    options.objname = undefined;
+  } else if (Buffer.isBuffer(options.objname)) {
+    if (options.objname.length === 0) {
+      throw new Error(`Invalid Option: objname must be a non empty buffer`);
+    }
+    if (options.encoding === null) ; else {
+      options.objname = options.objname.toString(options.encoding);
+    }
+  } else if (typeof options.objname === "string") {
+    if (options.objname.length === 0) {
+      throw new Error(`Invalid Option: objname must be a non empty string`);
+    }
+    // Great, nothing to do
+  } else if (typeof options.objname === "number") ; else {
+    throw new Error(
+      `Invalid Option: objname must be a string or a buffer, got ${options.objname}`,
+    );
+  }
+  if (options.objname !== undefined) {
+    if (typeof options.objname === "number") {
+      if (options.columns !== false) {
+        throw Error(
+          "Invalid Option: objname index cannot be combined with columns or be defined as a field",
+        );
+      }
+    } else {
+      // A string or a buffer
+      if (options.columns === false) {
+        throw Error(
+          "Invalid Option: objname field must be combined with columns or be defined as an index",
+        );
+      }
+    }
+  }
+  // Normalize option `on_record`
+  if (options.on_record === undefined || options.on_record === null) {
+    options.on_record = undefined;
+  } else if (typeof options.on_record !== "function") {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_ON_RECORD",
+      [
+        "Invalid option `on_record`:",
+        "expect a function,",
+        `got ${JSON.stringify(options.on_record)}`,
+      ],
+      options,
+    );
+  }
+  // Normalize option `on_skip`
+  // options.on_skip ??= (err, chunk) => {
+  //   this.emit('skip', err, chunk);
+  // };
+  if (
+    options.on_skip !== undefined &&
+    options.on_skip !== null &&
+    typeof options.on_skip !== "function"
+  ) {
+    throw new Error(
+      `Invalid Option: on_skip must be a function, got ${JSON.stringify(options.on_skip)}`,
+    );
+  }
+  // Normalize option `quote`
+  if (
+    options.quote === null ||
+    options.quote === false ||
+    options.quote === ""
+  ) {
+    options.quote = null;
+  } else {
+    if (options.quote === undefined || options.quote === true) {
+      options.quote = Buffer.from('"', options.encoding);
+    } else if (typeof options.quote === "string") {
+      options.quote = Buffer.from(options.quote, options.encoding);
+    }
+    if (!Buffer.isBuffer(options.quote)) {
+      throw new Error(
+        `Invalid Option: quote must be a buffer or a string, got ${JSON.stringify(options.quote)}`,
+      );
+    }
+  }
+  // Normalize option `raw`
+  if (
+    options.raw === undefined ||
+    options.raw === null ||
+    options.raw === false
+  ) {
+    options.raw = false;
+  } else if (options.raw !== true) {
+    throw new Error(
+      `Invalid Option: raw must be true, got ${JSON.stringify(options.raw)}`,
+    );
+  }
+  // Normalize option `record_delimiter`
+  if (options.record_delimiter === undefined) {
+    options.record_delimiter = [];
+  } else if (
+    typeof options.record_delimiter === "string" ||
+    Buffer.isBuffer(options.record_delimiter)
+  ) {
+    if (options.record_delimiter.length === 0) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_RECORD_DELIMITER",
+        [
+          "Invalid option `record_delimiter`:",
+          "value must be a non empty string or buffer,",
+          `got ${JSON.stringify(options.record_delimiter)}`,
+        ],
+        options,
+      );
+    }
+    options.record_delimiter = [options.record_delimiter];
+  } else if (!Array.isArray(options.record_delimiter)) {
+    throw new CsvError(
+      "CSV_INVALID_OPTION_RECORD_DELIMITER",
+      [
+        "Invalid option `record_delimiter`:",
+        "value must be a string, a buffer or array of string|buffer,",
+        `got ${JSON.stringify(options.record_delimiter)}`,
+      ],
+      options,
+    );
+  }
+  options.record_delimiter = options.record_delimiter.map(function (rd, i) {
+    if (typeof rd !== "string" && !Buffer.isBuffer(rd)) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_RECORD_DELIMITER",
+        [
+          "Invalid option `record_delimiter`:",
+          "value must be a string, a buffer or array of string|buffer",
+          `at index ${i},`,
+          `got ${JSON.stringify(rd)}`,
+        ],
+        options,
+      );
+    } else if (rd.length === 0) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_RECORD_DELIMITER",
+        [
+          "Invalid option `record_delimiter`:",
+          "value must be a non empty string or buffer",
+          `at index ${i},`,
+          `got ${JSON.stringify(rd)}`,
+        ],
+        options,
+      );
+    }
+    if (typeof rd === "string") {
+      rd = Buffer.from(rd, options.encoding);
+    }
+    return rd;
+  });
+  // Normalize option `relax_column_count`
+  if (typeof options.relax_column_count === "boolean") ; else if (
+    options.relax_column_count === undefined ||
+    options.relax_column_count === null
+  ) {
+    options.relax_column_count = false;
+  } else {
+    throw new Error(
+      `Invalid Option: relax_column_count must be a boolean, got ${JSON.stringify(options.relax_column_count)}`,
+    );
+  }
+  if (typeof options.relax_column_count_less === "boolean") ; else if (
+    options.relax_column_count_less === undefined ||
+    options.relax_column_count_less === null
+  ) {
+    options.relax_column_count_less = false;
+  } else {
+    throw new Error(
+      `Invalid Option: relax_column_count_less must be a boolean, got ${JSON.stringify(options.relax_column_count_less)}`,
+    );
+  }
+  if (typeof options.relax_column_count_more === "boolean") ; else if (
+    options.relax_column_count_more === undefined ||
+    options.relax_column_count_more === null
+  ) {
+    options.relax_column_count_more = false;
+  } else {
+    throw new Error(
+      `Invalid Option: relax_column_count_more must be a boolean, got ${JSON.stringify(options.relax_column_count_more)}`,
+    );
+  }
+  // Normalize option `relax_quotes`
+  if (typeof options.relax_quotes === "boolean") ; else if (
+    options.relax_quotes === undefined ||
+    options.relax_quotes === null
+  ) {
+    options.relax_quotes = false;
+  } else {
+    throw new Error(
+      `Invalid Option: relax_quotes must be a boolean, got ${JSON.stringify(options.relax_quotes)}`,
+    );
+  }
+  // Normalize option `skip_empty_lines`
+  if (typeof options.skip_empty_lines === "boolean") ; else if (
+    options.skip_empty_lines === undefined ||
+    options.skip_empty_lines === null
+  ) {
+    options.skip_empty_lines = false;
+  } else {
+    throw new Error(
+      `Invalid Option: skip_empty_lines must be a boolean, got ${JSON.stringify(options.skip_empty_lines)}`,
+    );
+  }
+  // Normalize option `skip_records_with_empty_values`
+  if (typeof options.skip_records_with_empty_values === "boolean") ; else if (
+    options.skip_records_with_empty_values === undefined ||
+    options.skip_records_with_empty_values === null
+  ) {
+    options.skip_records_with_empty_values = false;
+  } else {
+    throw new Error(
+      `Invalid Option: skip_records_with_empty_values must be a boolean, got ${JSON.stringify(options.skip_records_with_empty_values)}`,
+    );
+  }
+  // Normalize option `skip_records_with_error`
+  if (typeof options.skip_records_with_error === "boolean") ; else if (
+    options.skip_records_with_error === undefined ||
+    options.skip_records_with_error === null
+  ) {
+    options.skip_records_with_error = false;
+  } else {
+    throw new Error(
+      `Invalid Option: skip_records_with_error must be a boolean, got ${JSON.stringify(options.skip_records_with_error)}`,
+    );
+  }
+  // Normalize option `rtrim`
+  if (
+    options.rtrim === undefined ||
+    options.rtrim === null ||
+    options.rtrim === false
+  ) {
+    options.rtrim = false;
+  } else if (options.rtrim !== true) {
+    throw new Error(
+      `Invalid Option: rtrim must be a boolean, got ${JSON.stringify(options.rtrim)}`,
+    );
+  }
+  // Normalize option `ltrim`
+  if (
+    options.ltrim === undefined ||
+    options.ltrim === null ||
+    options.ltrim === false
+  ) {
+    options.ltrim = false;
+  } else if (options.ltrim !== true) {
+    throw new Error(
+      `Invalid Option: ltrim must be a boolean, got ${JSON.stringify(options.ltrim)}`,
+    );
+  }
+  // Normalize option `trim`
+  if (
+    options.trim === undefined ||
+    options.trim === null ||
+    options.trim === false
+  ) {
+    options.trim = false;
+  } else if (options.trim !== true) {
+    throw new Error(
+      `Invalid Option: trim must be a boolean, got ${JSON.stringify(options.trim)}`,
+    );
+  }
+  // Normalize options `trim`, `ltrim` and `rtrim`
+  if (options.trim === true && opts.ltrim !== false) {
+    options.ltrim = true;
+  } else if (options.ltrim !== true) {
+    options.ltrim = false;
+  }
+  if (options.trim === true && opts.rtrim !== false) {
+    options.rtrim = true;
+  } else if (options.rtrim !== true) {
+    options.rtrim = false;
+  }
+  // Normalize option `to`
+  if (options.to === undefined || options.to === null) {
+    options.to = -1;
+  } else if (options.to !== -1) {
+    if (typeof options.to === "string" && /\d+/.test(options.to)) {
+      options.to = parseInt(options.to);
+    }
+    if (Number.isInteger(options.to)) {
+      if (options.to <= 0) {
+        throw new Error(
+          `Invalid Option: to must be a positive integer greater than 0, got ${JSON.stringify(opts.to)}`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Invalid Option: to must be an integer, got ${JSON.stringify(opts.to)}`,
+      );
+    }
+  }
+  // Normalize option `to_line`
+  if (options.to_line === undefined || options.to_line === null) {
+    options.to_line = -1;
+  } else if (options.to_line !== -1) {
+    if (typeof options.to_line === "string" && /\d+/.test(options.to_line)) {
+      options.to_line = parseInt(options.to_line);
+    }
+    if (Number.isInteger(options.to_line)) {
+      if (options.to_line <= 0) {
+        throw new Error(
+          `Invalid Option: to_line must be a positive integer greater than 0, got ${JSON.stringify(opts.to_line)}`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Invalid Option: to_line must be an integer, got ${JSON.stringify(opts.to_line)}`,
+      );
+    }
+  }
+  return options;
+};
+
+const isRecordEmpty = function (record) {
+  return record.every(
+    (field) =>
+      field == null || (field.toString && field.toString().trim() === ""),
+  );
+};
+
+const cr = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
+const nl = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
+
+const boms = {
+  // Note, the following are equals:
+  // Buffer.from("\ufeff")
+  // Buffer.from([239, 187, 191])
+  // Buffer.from('EFBBBF', 'hex')
+  utf8: Buffer.from([239, 187, 191]),
+  // Note, the following are equals:
+  // Buffer.from "\ufeff", 'utf16le
+  // Buffer.from([255, 254])
+  utf16le: Buffer.from([255, 254]),
+};
+
+const transform = function (original_options = {}) {
+  const info = {
+    bytes: 0,
+    bytes_records: 0,
+    comment_lines: 0,
+    empty_lines: 0,
+    invalid_field_length: 0,
+    lines: 1,
+    records: 0,
+  };
+  const options = normalize_options(original_options);
+  return {
+    info: info,
+    original_options: original_options,
+    options: options,
+    state: init_state(options),
+    __needMoreData: function (i, bufLen, end) {
+      if (end) return false;
+      const { encoding, escape, quote } = this.options;
+      const { quoting, needMoreDataSize, recordDelimiterMaxLength } =
+        this.state;
+      const numOfCharLeft = bufLen - i - 1;
+      const requiredLength = Math.max(
+        needMoreDataSize,
+        // Skip if the remaining buffer smaller than record delimiter
+        // If "record_delimiter" is yet to be discovered:
+        // 1. It is equals to `[]` and "recordDelimiterMaxLength" equals `0`
+        // 2. We set the length to windows line ending in the current encoding
+        // Note, that encoding is known from user or bom discovery at that point
+        // recordDelimiterMaxLength,
+        recordDelimiterMaxLength === 0
+          ? Buffer.from("\r\n", encoding).length
+          : recordDelimiterMaxLength,
+        // Skip if remaining buffer can be an escaped quote
+        quoting ? (escape === null ? 0 : escape.length) + quote.length : 0,
+        // Skip if remaining buffer can be record delimiter following the closing quote
+        quoting ? quote.length + recordDelimiterMaxLength : 0,
+      );
+      return numOfCharLeft < requiredLength;
+    },
+    // Central parser implementation
+    parse: function (nextBuf, end, push, close) {
+      const {
+        bom,
+        comment_no_infix,
+        encoding,
+        from_line,
+        ltrim,
+        max_record_size,
+        raw,
+        relax_quotes,
+        rtrim,
+        skip_empty_lines,
+        to,
+        to_line,
+      } = this.options;
+      let { comment, escape, quote, record_delimiter } = this.options;
+      const { bomSkipped, previousBuf, rawBuffer, escapeIsQuote } = this.state;
+      let buf;
+      if (previousBuf === undefined) {
+        if (nextBuf === undefined) {
+          // Handle empty string
+          close();
+          return;
+        } else {
+          buf = nextBuf;
+        }
+      } else if (previousBuf !== undefined && nextBuf === undefined) {
+        buf = previousBuf;
+      } else {
+        buf = Buffer.concat([previousBuf, nextBuf]);
+      }
+      // Handle UTF BOM
+      if (bomSkipped === false) {
+        if (bom === false) {
+          this.state.bomSkipped = true;
+        } else if (buf.length < 3) {
+          // No enough data
+          if (end === false) {
+            // Wait for more data
+            this.state.previousBuf = buf;
+            return;
+          }
+        } else {
+          for (const encoding in boms) {
+            if (boms[encoding].compare(buf, 0, boms[encoding].length) === 0) {
+              // Skip BOM
+              const bomLength = boms[encoding].length;
+              this.state.bufBytesStart += bomLength;
+              buf = buf.slice(bomLength);
+              // Renormalize original options with the new encoding
+              const options = normalize_options({
+                ...this.original_options,
+                encoding: encoding,
+              });
+              // Properties are merged with the existing options instance
+              for (const key in options) {
+                this.options[key] = options[key];
+              }
+              // Options will re-evaluate the Buffer with the new encoding
+              ({ comment, escape, quote } = this.options);
+              break;
+            }
+          }
+          this.state.bomSkipped = true;
+        }
+      }
+      const bufLen = buf.length;
+      let pos;
+      for (pos = 0; pos < bufLen; pos++) {
+        // Ensure we get enough space to look ahead
+        // There should be a way to move this out of the loop
+        if (this.__needMoreData(pos, bufLen, end)) {
+          break;
+        }
+        if (this.state.wasRowDelimiter === true) {
+          this.info.lines++;
+          this.state.wasRowDelimiter = false;
+        }
+        if (to_line !== -1 && this.info.lines > to_line) {
+          this.state.stop = true;
+          close();
+          return;
+        }
+        // Auto discovery of record_delimiter, unix, mac and windows supported
+        if (this.state.quoting === false && record_delimiter.length === 0) {
+          const record_delimiterCount = this.__autoDiscoverRecordDelimiter(
+            buf,
+            pos,
+          );
+          if (record_delimiterCount) {
+            record_delimiter = this.options.record_delimiter;
+          }
+        }
+        const chr = buf[pos];
+        if (raw === true) {
+          rawBuffer.append(chr);
+        }
+        if (
+          (chr === cr || chr === nl) &&
+          this.state.wasRowDelimiter === false
+        ) {
+          this.state.wasRowDelimiter = true;
+        }
+        // Previous char was a valid escape char
+        // treat the current char as a regular char
+        if (this.state.escaping === true) {
+          this.state.escaping = false;
+        } else {
+          // Escape is only active inside quoted fields
+          // We are quoting, the char is an escape chr and there is a chr to escape
+          // if(escape !== null && this.state.quoting === true && chr === escape && pos + 1 < bufLen){
+          if (
+            escape !== null &&
+            this.state.quoting === true &&
+            this.__isEscape(buf, pos, chr) &&
+            pos + escape.length < bufLen
+          ) {
+            if (escapeIsQuote) {
+              if (this.__isQuote(buf, pos + escape.length)) {
+                this.state.escaping = true;
+                pos += escape.length - 1;
+                continue;
+              }
+            } else {
+              this.state.escaping = true;
+              pos += escape.length - 1;
+              continue;
+            }
+          }
+          // Not currently escaping and chr is a quote
+          // TODO: need to compare bytes instead of single char
+          if (this.state.commenting === false && this.__isQuote(buf, pos)) {
+            if (this.state.quoting === true) {
+              const nextChr = buf[pos + quote.length];
+              const isNextChrTrimable =
+                rtrim && this.__isCharTrimable(buf, pos + quote.length);
+              const isNextChrComment =
+                comment !== null &&
+                this.__compareBytes(comment, buf, pos + quote.length, nextChr);
+              const isNextChrDelimiter = this.__isDelimiter(
+                buf,
+                pos + quote.length,
+                nextChr,
+              );
+              const isNextChrRecordDelimiter =
+                record_delimiter.length === 0
+                  ? this.__autoDiscoverRecordDelimiter(buf, pos + quote.length)
+                  : this.__isRecordDelimiter(nextChr, buf, pos + quote.length);
+              // Escape a quote
+              // Treat next char as a regular character
+              if (
+                escape !== null &&
+                this.__isEscape(buf, pos, chr) &&
+                this.__isQuote(buf, pos + escape.length)
+              ) {
+                pos += escape.length - 1;
+              } else if (
+                !nextChr ||
+                isNextChrDelimiter ||
+                isNextChrRecordDelimiter ||
+                isNextChrComment ||
+                isNextChrTrimable
+              ) {
+                this.state.quoting = false;
+                this.state.wasQuoting = true;
+                pos += quote.length - 1;
+                continue;
+              } else if (relax_quotes === false) {
+                const err = this.__error(
+                  new CsvError(
+                    "CSV_INVALID_CLOSING_QUOTE",
+                    [
+                      "Invalid Closing Quote:",
+                      `got "${String.fromCharCode(nextChr)}"`,
+                      `at line ${this.info.lines}`,
+                      "instead of delimiter, record delimiter, trimable character",
+                      "(if activated) or comment",
+                    ],
+                    this.options,
+                    this.__infoField(),
+                  ),
+                );
+                if (err !== undefined) return err;
+              } else {
+                this.state.quoting = false;
+                this.state.wasQuoting = true;
+                this.state.field.prepend(quote);
+                pos += quote.length - 1;
+              }
+            } else {
+              if (this.state.field.length !== 0) {
+                // In relax_quotes mode, treat opening quote preceded by chrs as regular
+                if (relax_quotes === false) {
+                  const info = this.__infoField();
+                  const bom = Object.keys(boms)
+                    .map((b) =>
+                      boms[b].equals(this.state.field.toString()) ? b : false,
+                    )
+                    .filter(Boolean)[0];
+                  const err = this.__error(
+                    new CsvError(
+                      "INVALID_OPENING_QUOTE",
+                      [
+                        "Invalid Opening Quote:",
+                        `a quote is found on field ${JSON.stringify(info.column)} at line ${info.lines}, value is ${JSON.stringify(this.state.field.toString(encoding))}`,
+                        bom ? `(${bom} bom)` : undefined,
+                      ],
+                      this.options,
+                      info,
+                      {
+                        field: this.state.field,
+                      },
+                    ),
+                  );
+                  if (err !== undefined) return err;
+                }
+              } else {
+                this.state.quoting = true;
+                pos += quote.length - 1;
+                continue;
+              }
+            }
+          }
+          if (this.state.quoting === false) {
+            const recordDelimiterLength = this.__isRecordDelimiter(
+              chr,
+              buf,
+              pos,
+            );
+            if (recordDelimiterLength !== 0) {
+              // Do not emit comments which take a full line
+              const skipCommentLine =
+                this.state.commenting &&
+                this.state.wasQuoting === false &&
+                this.state.record.length === 0 &&
+                this.state.field.length === 0;
+              if (skipCommentLine) {
+                this.info.comment_lines++;
+                // Skip full comment line
+              } else {
+                // Activate records emission if above from_line
+                if (
+                  this.state.enabled === false &&
+                  this.info.lines +
+                    (this.state.wasRowDelimiter === true ? 1 : 0) >=
+                    from_line
+                ) {
+                  this.state.enabled = true;
+                  this.__resetField();
+                  this.__resetRecord();
+                  pos += recordDelimiterLength - 1;
+                  continue;
+                }
+                // Skip if line is empty and skip_empty_lines activated
+                if (
+                  skip_empty_lines === true &&
+                  this.state.wasQuoting === false &&
+                  this.state.record.length === 0 &&
+                  this.state.field.length === 0
+                ) {
+                  this.info.empty_lines++;
+                  pos += recordDelimiterLength - 1;
+                  continue;
+                }
+                this.info.bytes = this.state.bufBytesStart + pos;
+                const errField = this.__onField();
+                if (errField !== undefined) return errField;
+                this.info.bytes =
+                  this.state.bufBytesStart + pos + recordDelimiterLength;
+                const errRecord = this.__onRecord(push);
+                if (errRecord !== undefined) return errRecord;
+                if (to !== -1 && this.info.records >= to) {
+                  this.state.stop = true;
+                  close();
+                  return;
+                }
+              }
+              this.state.commenting = false;
+              pos += recordDelimiterLength - 1;
+              continue;
+            }
+            if (this.state.commenting) {
+              continue;
+            }
+            if (
+              comment !== null &&
+              (comment_no_infix === false ||
+                (this.state.record.length === 0 &&
+                  this.state.field.length === 0))
+            ) {
+              const commentCount = this.__compareBytes(comment, buf, pos, chr);
+              if (commentCount !== 0) {
+                this.state.commenting = true;
+                continue;
+              }
+            }
+            const delimiterLength = this.__isDelimiter(buf, pos, chr);
+            if (delimiterLength !== 0) {
+              this.info.bytes = this.state.bufBytesStart + pos;
+              const errField = this.__onField();
+              if (errField !== undefined) return errField;
+              pos += delimiterLength - 1;
+              continue;
+            }
+          }
+        }
+        if (this.state.commenting === false) {
+          if (
+            max_record_size !== 0 &&
+            this.state.record_length + this.state.field.length > max_record_size
+          ) {
+            return this.__error(
+              new CsvError(
+                "CSV_MAX_RECORD_SIZE",
+                [
+                  "Max Record Size:",
+                  "record exceed the maximum number of tolerated bytes",
+                  `of ${max_record_size}`,
+                  `at line ${this.info.lines}`,
+                ],
+                this.options,
+                this.__infoField(),
+              ),
+            );
+          }
+        }
+        const lappend =
+          ltrim === false ||
+          this.state.quoting === true ||
+          this.state.field.length !== 0 ||
+          !this.__isCharTrimable(buf, pos);
+        // rtrim in non quoting is handle in __onField
+        const rappend = rtrim === false || this.state.wasQuoting === false;
+        if (lappend === true && rappend === true) {
+          this.state.field.append(chr);
+        } else if (rtrim === true && !this.__isCharTrimable(buf, pos)) {
+          return this.__error(
+            new CsvError(
+              "CSV_NON_TRIMABLE_CHAR_AFTER_CLOSING_QUOTE",
+              [
+                "Invalid Closing Quote:",
+                "found non trimable byte after quote",
+                `at line ${this.info.lines}`,
+              ],
+              this.options,
+              this.__infoField(),
+            ),
+          );
+        } else {
+          if (lappend === false) {
+            pos += this.__isCharTrimable(buf, pos) - 1;
+          }
+          continue;
+        }
+      }
+      if (end === true) {
+        // Ensure we are not ending in a quoting state
+        if (this.state.quoting === true) {
+          const err = this.__error(
+            new CsvError(
+              "CSV_QUOTE_NOT_CLOSED",
+              [
+                "Quote Not Closed:",
+                `the parsing is finished with an opening quote at line ${this.info.lines}`,
+              ],
+              this.options,
+              this.__infoField(),
+            ),
+          );
+          if (err !== undefined) return err;
+        } else {
+          // Skip last line if it has no characters
+          if (
+            this.state.wasQuoting === true ||
+            this.state.record.length !== 0 ||
+            this.state.field.length !== 0
+          ) {
+            this.info.bytes = this.state.bufBytesStart + pos;
+            const errField = this.__onField();
+            if (errField !== undefined) return errField;
+            const errRecord = this.__onRecord(push);
+            if (errRecord !== undefined) return errRecord;
+          } else if (this.state.wasRowDelimiter === true) {
+            this.info.empty_lines++;
+          } else if (this.state.commenting === true) {
+            this.info.comment_lines++;
+          }
+        }
+      } else {
+        this.state.bufBytesStart += pos;
+        this.state.previousBuf = buf.slice(pos);
+      }
+      if (this.state.wasRowDelimiter === true) {
+        this.info.lines++;
+        this.state.wasRowDelimiter = false;
+      }
+    },
+    __onRecord: function (push) {
+      const {
+        columns,
+        group_columns_by_name,
+        encoding,
+        info,
+        from,
+        relax_column_count,
+        relax_column_count_less,
+        relax_column_count_more,
+        raw,
+        skip_records_with_empty_values,
+      } = this.options;
+      const { enabled, record } = this.state;
+      if (enabled === false) {
+        return this.__resetRecord();
+      }
+      // Convert the first line into column names
+      const recordLength = record.length;
+      if (columns === true) {
+        if (skip_records_with_empty_values === true && isRecordEmpty(record)) {
+          this.__resetRecord();
+          return;
+        }
+        return this.__firstLineToColumns(record);
+      }
+      if (columns === false && this.info.records === 0) {
+        this.state.expectedRecordLength = recordLength;
+      }
+      if (recordLength !== this.state.expectedRecordLength) {
+        const err =
+          columns === false
+            ? new CsvError(
+                "CSV_RECORD_INCONSISTENT_FIELDS_LENGTH",
+                [
+                  "Invalid Record Length:",
+                  `expect ${this.state.expectedRecordLength},`,
+                  `got ${recordLength} on line ${this.info.lines}`,
+                ],
+                this.options,
+                this.__infoField(),
+                {
+                  record: record,
+                },
+              )
+            : new CsvError(
+                "CSV_RECORD_INCONSISTENT_COLUMNS",
+                [
+                  "Invalid Record Length:",
+                  `columns length is ${columns.length},`, // rename columns
+                  `got ${recordLength} on line ${this.info.lines}`,
+                ],
+                this.options,
+                this.__infoField(),
+                {
+                  record: record,
+                },
+              );
+        if (
+          relax_column_count === true ||
+          (relax_column_count_less === true &&
+            recordLength < this.state.expectedRecordLength) ||
+          (relax_column_count_more === true &&
+            recordLength > this.state.expectedRecordLength)
+        ) {
+          this.info.invalid_field_length++;
+          this.state.error = err;
+          // Error is undefined with skip_records_with_error
+        } else {
+          const finalErr = this.__error(err);
+          if (finalErr) return finalErr;
+        }
+      }
+      if (skip_records_with_empty_values === true && isRecordEmpty(record)) {
+        this.__resetRecord();
+        return;
+      }
+      if (this.state.recordHasError === true) {
+        this.__resetRecord();
+        this.state.recordHasError = false;
+        return;
+      }
+      this.info.records++;
+      if (from === 1 || this.info.records >= from) {
+        const { objname } = this.options;
+        // With columns, records are object
+        if (columns !== false) {
+          const obj = {};
+          // Transform record array to an object
+          for (let i = 0, l = record.length; i < l; i++) {
+            if (columns[i] === undefined || columns[i].disabled) continue;
+            // Turn duplicate columns into an array
+            if (
+              group_columns_by_name === true &&
+              obj[columns[i].name] !== undefined
+            ) {
+              if (Array.isArray(obj[columns[i].name])) {
+                obj[columns[i].name] = obj[columns[i].name].concat(record[i]);
+              } else {
+                obj[columns[i].name] = [obj[columns[i].name], record[i]];
+              }
+            } else {
+              obj[columns[i].name] = record[i];
+            }
+          }
+          // Without objname (default)
+          if (raw === true || info === true) {
+            const extRecord = Object.assign(
+              { record: obj },
+              raw === true
+                ? { raw: this.state.rawBuffer.toString(encoding) }
+                : {},
+              info === true ? { info: this.__infoRecord() } : {},
+            );
+            const err = this.__push(
+              objname === undefined ? extRecord : [obj[objname], extRecord],
+              push,
+            );
+            if (err) {
+              return err;
+            }
+          } else {
+            const err = this.__push(
+              objname === undefined ? obj : [obj[objname], obj],
+              push,
+            );
+            if (err) {
+              return err;
+            }
+          }
+          // Without columns, records are array
+        } else {
+          if (raw === true || info === true) {
+            const extRecord = Object.assign(
+              { record: record },
+              raw === true
+                ? { raw: this.state.rawBuffer.toString(encoding) }
+                : {},
+              info === true ? { info: this.__infoRecord() } : {},
+            );
+            const err = this.__push(
+              objname === undefined ? extRecord : [record[objname], extRecord],
+              push,
+            );
+            if (err) {
+              return err;
+            }
+          } else {
+            const err = this.__push(
+              objname === undefined ? record : [record[objname], record],
+              push,
+            );
+            if (err) {
+              return err;
+            }
+          }
+        }
+      }
+      this.__resetRecord();
+    },
+    __firstLineToColumns: function (record) {
+      const { firstLineToHeaders } = this.state;
+      try {
+        const headers =
+          firstLineToHeaders === undefined
+            ? record
+            : firstLineToHeaders.call(null, record);
+        if (!Array.isArray(headers)) {
+          return this.__error(
+            new CsvError(
+              "CSV_INVALID_COLUMN_MAPPING",
+              [
+                "Invalid Column Mapping:",
+                "expect an array from column function,",
+                `got ${JSON.stringify(headers)}`,
+              ],
+              this.options,
+              this.__infoField(),
+              {
+                headers: headers,
+              },
+            ),
+          );
+        }
+        const normalizedHeaders = normalize_columns_array(headers);
+        this.state.expectedRecordLength = normalizedHeaders.length;
+        this.options.columns = normalizedHeaders;
+        this.__resetRecord();
+        return;
+      } catch (err) {
+        return err;
+      }
+    },
+    __resetRecord: function () {
+      if (this.options.raw === true) {
+        this.state.rawBuffer.reset();
+      }
+      this.state.error = undefined;
+      this.state.record = [];
+      this.state.record_length = 0;
+    },
+    __onField: function () {
+      const { cast, encoding, rtrim, max_record_size } = this.options;
+      const { enabled, wasQuoting } = this.state;
+      // Short circuit for the from_line options
+      if (enabled === false) {
+        return this.__resetField();
+      }
+      let field = this.state.field.toString(encoding);
+      if (rtrim === true && wasQuoting === false) {
+        field = field.trimRight();
+      }
+      if (cast === true) {
+        const [err, f] = this.__cast(field);
+        if (err !== undefined) return err;
+        field = f;
+      }
+      this.state.record.push(field);
+      // Increment record length if record size must not exceed a limit
+      if (max_record_size !== 0 && typeof field === "string") {
+        this.state.record_length += field.length;
+      }
+      this.__resetField();
+    },
+    __resetField: function () {
+      this.state.field.reset();
+      this.state.wasQuoting = false;
+    },
+    __push: function (record, push) {
+      const { on_record } = this.options;
+      if (on_record !== undefined) {
+        const info = this.__infoRecord();
+        try {
+          record = on_record.call(null, record, info);
+        } catch (err) {
+          return err;
+        }
+        if (record === undefined || record === null) {
+          return;
+        }
+      }
+      this.info.bytes_records += this.info.bytes;
+      push(record);
+    },
+    // Return a tuple with the error and the casted value
+    __cast: function (field) {
+      const { columns, relax_column_count } = this.options;
+      const isColumns = Array.isArray(columns);
+      // Dont loose time calling cast
+      // because the final record is an object
+      // and this field can't be associated to a key present in columns
+      if (
+        isColumns === true &&
+        relax_column_count &&
+        this.options.columns.length <= this.state.record.length
+      ) {
+        return [undefined, undefined];
+      }
+      if (this.state.castField !== null) {
+        try {
+          const info = this.__infoField();
+          return [undefined, this.state.castField.call(null, field, info)];
+        } catch (err) {
+          return [err];
+        }
+      }
+      if (this.__isFloat(field)) {
+        return [undefined, parseFloat(field)];
+      } else if (this.options.cast_date !== false) {
+        const info = this.__infoField();
+        return [undefined, this.options.cast_date.call(null, field, info)];
+      }
+      return [undefined, field];
+    },
+    // Helper to test if a character is a space or a line delimiter
+    __isCharTrimable: function (buf, pos) {
+      const isTrim = (buf, pos) => {
+        const { timchars } = this.state;
+        loop1: for (let i = 0; i < timchars.length; i++) {
+          const timchar = timchars[i];
+          for (let j = 0; j < timchar.length; j++) {
+            if (timchar[j] !== buf[pos + j]) continue loop1;
+          }
+          return timchar.length;
+        }
+        return 0;
+      };
+      return isTrim(buf, pos);
+    },
+    // Keep it in case we implement the `cast_int` option
+    // __isInt(value){
+    //   // return Number.isInteger(parseInt(value))
+    //   // return !isNaN( parseInt( obj ) );
+    //   return /^(\-|\+)?[1-9][0-9]*$/.test(value)
+    // }
+    __isFloat: function (value) {
+      return value - parseFloat(value) + 1 >= 0; // Borrowed from jquery
+    },
+    __compareBytes: function (sourceBuf, targetBuf, targetPos, firstByte) {
+      if (sourceBuf[0] !== firstByte) return 0;
+      const sourceLength = sourceBuf.length;
+      for (let i = 1; i < sourceLength; i++) {
+        if (sourceBuf[i] !== targetBuf[targetPos + i]) return 0;
+      }
+      return sourceLength;
+    },
+    __isDelimiter: function (buf, pos, chr) {
+      const { delimiter, ignore_last_delimiters } = this.options;
+      if (
+        ignore_last_delimiters === true &&
+        this.state.record.length === this.options.columns.length - 1
+      ) {
+        return 0;
+      } else if (
+        ignore_last_delimiters !== false &&
+        typeof ignore_last_delimiters === "number" &&
+        this.state.record.length === ignore_last_delimiters - 1
+      ) {
+        return 0;
+      }
+      loop1: for (let i = 0; i < delimiter.length; i++) {
+        const del = delimiter[i];
+        if (del[0] === chr) {
+          for (let j = 1; j < del.length; j++) {
+            if (del[j] !== buf[pos + j]) continue loop1;
+          }
+          return del.length;
+        }
+      }
+      return 0;
+    },
+    __isRecordDelimiter: function (chr, buf, pos) {
+      const { record_delimiter } = this.options;
+      const recordDelimiterLength = record_delimiter.length;
+      loop1: for (let i = 0; i < recordDelimiterLength; i++) {
+        const rd = record_delimiter[i];
+        const rdLength = rd.length;
+        if (rd[0] !== chr) {
+          continue;
+        }
+        for (let j = 1; j < rdLength; j++) {
+          if (rd[j] !== buf[pos + j]) {
+            continue loop1;
+          }
+        }
+        return rd.length;
+      }
+      return 0;
+    },
+    __isEscape: function (buf, pos, chr) {
+      const { escape } = this.options;
+      if (escape === null) return false;
+      const l = escape.length;
+      if (escape[0] === chr) {
+        for (let i = 0; i < l; i++) {
+          if (escape[i] !== buf[pos + i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    },
+    __isQuote: function (buf, pos) {
+      const { quote } = this.options;
+      if (quote === null) return false;
+      const l = quote.length;
+      for (let i = 0; i < l; i++) {
+        if (quote[i] !== buf[pos + i]) {
+          return false;
+        }
+      }
+      return true;
+    },
+    __autoDiscoverRecordDelimiter: function (buf, pos) {
+      const { encoding } = this.options;
+      // Note, we don't need to cache this information in state,
+      // It is only called on the first line until we find out a suitable
+      // record delimiter.
+      const rds = [
+        // Important, the windows line ending must be before mac os 9
+        Buffer.from("\r\n", encoding),
+        Buffer.from("\n", encoding),
+        Buffer.from("\r", encoding),
+      ];
+      loop: for (let i = 0; i < rds.length; i++) {
+        const l = rds[i].length;
+        for (let j = 0; j < l; j++) {
+          if (rds[i][j] !== buf[pos + j]) {
+            continue loop;
+          }
+        }
+        this.options.record_delimiter.push(rds[i]);
+        this.state.recordDelimiterMaxLength = rds[i].length;
+        return rds[i].length;
+      }
+      return 0;
+    },
+    __error: function (msg) {
+      const { encoding, raw, skip_records_with_error } = this.options;
+      const err = typeof msg === "string" ? new Error(msg) : msg;
+      if (skip_records_with_error) {
+        this.state.recordHasError = true;
+        if (this.options.on_skip !== undefined) {
+          try {
+            this.options.on_skip(
+              err,
+              raw ? this.state.rawBuffer.toString(encoding) : undefined,
+            );
+          } catch (err) {
+            return err;
+          }
+        }
+        // this.emit('skip', err, raw ? this.state.rawBuffer.toString(encoding) : undefined);
+        return undefined;
+      } else {
+        return err;
+      }
+    },
+    __infoDataSet: function () {
+      return {
+        ...this.info,
+        columns: this.options.columns,
+      };
+    },
+    __infoRecord: function () {
+      const { columns, raw, encoding } = this.options;
+      return {
+        ...this.__infoDataSet(),
+        bytes_records: this.info.bytes,
+        error: this.state.error,
+        header: columns === true,
+        index: this.state.record.length,
+        raw: raw ? this.state.rawBuffer.toString(encoding) : undefined,
+      };
+    },
+    __infoField: function () {
+      const { columns } = this.options;
+      const isColumns = Array.isArray(columns);
+      // Bytes records are only incremented when all records'fields are parsed
+      const bytes_records = this.info.bytes_records;
+      return {
+        ...this.__infoRecord(),
+        bytes_records: bytes_records,
+        column:
+          isColumns === true
+            ? columns.length > this.state.record.length
+              ? columns[this.state.record.length].name
+              : null
+            : this.state.record.length,
+        quoting: this.state.wasQuoting,
+      };
+    },
+  };
+};
+
+const parse = function (data, opts = {}) {
+  if (typeof data === "string") {
+    data = Buffer.from(data);
+  }
+  const records = opts && opts.objname ? {} : [];
+  const parser = transform(opts);
+  const push = (record) => {
+    if (parser.options.objname === undefined) records.push(record);
+    else {
+      records[record[0]] = record[1];
+    }
+  };
+  const close = () => {};
+  const error = parser.parse(data, true, push, close);
+  if (error !== undefined) throw error;
+  // 250606: `parser.parse` was implemented as 2 calls:
+  // const err1 = parser.parse(data, false, push, close);
+  // if (err1 !== undefined) throw err1;
+  // const err2 = parser.parse(undefined, true, push, close);
+  // if (err2 !== undefined) throw err2;
+  return records;
+};
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class Util {
+    static getInputList(name, opts) {
+        return this.getList(getInput(name), opts);
+    }
+    static getList(input, opts) {
+        const res = [];
+        if (input == '') {
+            return res;
+        }
+        const records = parse(input, {
+            columns: false,
+            relaxQuotes: true,
+            comment: opts?.comment,
+            comment_no_infix: opts?.commentNoInfix,
+            relaxColumnCount: true,
+            skipEmptyLines: true,
+            quote: opts?.quote
+        });
+        for (const record of records) {
+            if (record.length == 1) {
+                if (opts?.ignoreComma) {
+                    res.push(record[0]);
+                }
+                else {
+                    res.push(...record[0].split(','));
+                }
+            }
+            else if (!opts?.ignoreComma) {
+                res.push(...record);
+            }
+            else {
+                res.push(record.join(','));
+            }
+        }
+        return res.filter(item => item).map(pat => pat.trim());
+    }
+    static getInputNumber(name) {
+        const value = getInput(name);
+        if (!value) {
+            return undefined;
+        }
+        return parseInt(value);
+    }
+    static async asyncForEach(array, callback) {
+        for (let index = 0; index < array.length; index++) {
+            await callback(array[index], index, array);
+        }
+    }
+    static isValidURL(urlStr) {
+        let url;
+        try {
+            url = new URL(urlStr);
+        }
+        catch {
+            return false;
+        }
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    }
+    static isValidRef(refStr) {
+        if (Util.isValidURL(refStr)) {
+            return true;
+        }
+        for (const prefix of ['git://', 'github.com/', 'git@']) {
+            if (refStr.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static async powershellCommand(script, params) {
+        const powershellPath = await which('powershell', true);
+        const escapedScript = script.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+        const escapedParams = [];
+        if (params) {
+            for (const key in params) {
+                escapedParams.push(`-${key} '${params[key].replace(/'/g, "''").replace(/"|\n|\r/g, '')}'`);
+            }
+        }
+        return {
+            command: `"${powershellPath}"`,
+            args: ['-NoLogo', '-Sta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Unrestricted', '-Command', `& '${escapedScript}' ${escapedParams.join(' ')}`]
+        };
+    }
+    static isDirectory(p) {
+        try {
+            return fs__default.lstatSync(p).isDirectory();
+        }
+        catch {
+            // noop
+        }
+        return false;
+    }
+    static trimPrefix(str, suffix) {
+        if (!str || !suffix) {
+            return str;
+        }
+        const index = str.indexOf(suffix);
+        if (index !== 0) {
+            return str;
+        }
+        return str.substring(suffix.length);
+    }
+    static trimSuffix(str, suffix) {
+        if (!str || !suffix) {
+            return str;
+        }
+        const index = str.lastIndexOf(suffix);
+        if (index === -1 || index + suffix.length !== str.length) {
+            return str;
+        }
+        return str.substring(0, index);
+    }
+    static sleep(seconds) {
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+    static hash(input) {
+        return crypto__default.createHash('sha256').update(input).digest('hex');
+    }
+    // https://github.com/golang/go/blob/f6b93a4c358b28b350dd8fe1780c1f78e520c09c/src/strconv/atob.go#L7-L18
+    static parseBool(str) {
+        if (str === undefined) {
+            return false;
+        }
+        switch (str) {
+            case '1':
+            case 't':
+            case 'T':
+            case 'true':
+            case 'TRUE':
+            case 'True':
+                return true;
+            case '0':
+            case 'f':
+            case 'F':
+            case 'false':
+            case 'FALSE':
+            case 'False':
+                return false;
+            default:
+                throw new Error(`parseBool syntax error: ${str}`);
+        }
+    }
+    static parseBoolOrDefault(str, defaultValue = false) {
+        try {
+            return this.parseBool(str);
+        }
+        catch {
+            return defaultValue;
+        }
+    }
+    static formatFileSize(bytes) {
+        if (bytes === 0)
+            return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    static generateRandomString(length = 10) {
+        const bytes = crypto__default.randomBytes(Math.ceil(length / 2));
+        return bytes.toString('hex').slice(0, length);
+    }
+    static stringToUnicodeEntities(str) {
+        return Array.from(str)
+            .map(char => `&#x${char.charCodeAt(0).toString(16)};`)
+            .join('');
+    }
+    static countLines(input) {
+        return input.split(/\r\n|\r|\n/).length;
+    }
+    static isPathRelativeTo(parentPath, childPath) {
+        const rpp = path__default.resolve(parentPath);
+        const rcp = path__default.resolve(childPath);
+        return rcp.startsWith(rpp.endsWith(path__default.sep) ? rpp : `${rpp}${path__default.sep}`);
+    }
+    static formatDuration(ns) {
+        if (ns === 0)
+            return '0s';
+        const totalSeconds = Math.floor(ns / 1e9);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const parts = [];
+        if (hours)
+            parts.push(`${hours}h`);
+        if (minutes)
+            parts.push(`${minutes}m`);
+        if (seconds || parts.length === 0)
+            parts.push(`${seconds}s`);
+        return parts.join('');
+    }
+}
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class Exec {
+    static async exec(commandLine, args, options) {
+        debug(`Exec.exec: ${commandLine} ${args?.join(' ')}`);
+        return exec(commandLine, args, options);
+    }
+    static async getExecOutput(commandLine, args, options) {
+        debug(`Exec.getExecOutput: ${commandLine} ${args?.join(' ')}`);
+        return getExecOutput(commandLine, args, options);
+    }
+}
+
+class InvalidTokenError extends Error {
+}
+InvalidTokenError.prototype.name = "InvalidTokenError";
+function b64DecodeUnicode(str) {
+    return decodeURIComponent(atob(str).replace(/(.)/g, (m, p) => {
+        let code = p.charCodeAt(0).toString(16).toUpperCase();
+        if (code.length < 2) {
+            code = "0" + code;
+        }
+        return "%" + code;
+    }));
+}
+function base64UrlDecode(str) {
+    let output = str.replace(/-/g, "+").replace(/_/g, "/");
+    switch (output.length % 4) {
+        case 0:
+            break;
+        case 2:
+            output += "==";
+            break;
+        case 3:
+            output += "=";
+            break;
+        default:
+            throw new Error("base64 string is not of the correct length");
+    }
+    try {
+        return b64DecodeUnicode(output);
+    }
+    catch (err) {
+        return atob(output);
+    }
+}
+function jwtDecode(token, options) {
+    if (typeof token !== "string") {
+        throw new InvalidTokenError("Invalid token specified: must be a string");
+    }
+    options || (options = {});
+    const pos = options.header === true ? 0 : 1;
+    const part = token.split(".")[pos];
+    if (typeof part !== "string") {
+        throw new InvalidTokenError(`Invalid token specified: missing part #${pos + 1}`);
+    }
+    let decoded;
+    try {
+        decoded = base64UrlDecode(part);
+    }
+    catch (e) {
+        throw new InvalidTokenError(`Invalid token specified: invalid base64 for part #${pos + 1} (${e.message})`);
+    }
+    try {
+        return JSON.parse(decoded);
+    }
+    catch (e) {
+        throw new InvalidTokenError(`Invalid token specified: invalid json for part #${pos + 1} (${e.message})`);
+    }
+}
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class GitHub {
+    githubToken;
+    octokit;
+    constructor(opts) {
+        this.githubToken = opts?.token || process.env.GITHUB_TOKEN;
+        this.octokit = getOctokit(`${this.githubToken}`);
+    }
+    repoData() {
+        return this.octokit.rest.repos.get({ ...context.repo }).then(response => response.data);
+    }
+    async releases(name, opts) {
+        let releases;
+        try {
+            // try without token first
+            releases = await this.releasesRaw(name, opts);
+        }
+        catch (error) {
+            if (!this.githubToken) {
+                throw error;
+            }
+            // try with token
+            releases = await this.releasesRaw(name, opts, this.githubToken);
+        }
+        return releases;
+    }
+    async releasesRaw(name, opts, token) {
+        const url = `https://raw.githubusercontent.com/${opts.owner}/${opts.repo}/${opts.ref}/${opts.path}`;
+        const http = new HttpClient('docker-actions-toolkit');
+        // prettier-ignore
+        const httpResp = await http.get(url, token ? {
+            Authorization: `token ${token}`
+        } : undefined);
+        const dt = await httpResp.readBody();
+        const statusCode = httpResp.message.statusCode || 500;
+        if (statusCode >= 400) {
+            throw new Error(`Failed to get ${name} releases from ${url} with status code ${statusCode}: ${dt}`);
+        }
+        return JSON.parse(dt);
+    }
+    static get context() {
+        return context;
+    }
+    static get serverURL() {
+        return process.env.GITHUB_SERVER_URL || 'https://github.com';
+    }
+    static get apiURL() {
+        return process.env.GITHUB_API_URL || 'https://api.github.com';
+    }
+    // Can't use the isGhes() func from @actions/artifact due to @actions/artifact/lib/internal/shared/config
+    // being internal since ESM-only packages do not support internal exports.
+    // https://github.com/actions/toolkit/blob/8351a5d84d862813d1bb8bdeef87b215f8a946f9/packages/artifact/src/internal/shared/config.ts#L27
+    static get isGHES() {
+        const ghURL = new URL(GitHub.serverURL);
+        const hostname = ghURL.hostname.trimEnd().toUpperCase();
+        const isGitHubHost = hostname === 'GITHUB.COM';
+        const isGitHubEnterpriseCloudHost = hostname.endsWith('.GHE.COM');
+        const isLocalHost = hostname.endsWith('.LOCALHOST');
+        return !isGitHubHost && !isGitHubEnterpriseCloudHost && !isLocalHost;
+    }
+    static get repository() {
+        return `${context.repo.owner}/${context.repo.repo}`;
+    }
+    static get workspace() {
+        return process.env.GITHUB_WORKSPACE || process.cwd();
+    }
+    static get runId() {
+        return process.env.GITHUB_RUN_ID ? +process.env.GITHUB_RUN_ID : context.runId;
+    }
+    static get runAttempt() {
+        // TODO: runAttempt is not yet part of github.context but will be in a
+        //  future release of @actions/github package: https://github.com/actions/toolkit/commit/faa425440f86f9c16587a19dfb59491253a2c92a
+        return process.env.GITHUB_RUN_ATTEMPT ? +process.env.GITHUB_RUN_ATTEMPT : 1;
+    }
+    static workflowRunURL(setAttempts) {
+        return `${GitHub.serverURL}/${GitHub.repository}/actions/runs/${GitHub.runId}${setAttempts ? `/attempts/${GitHub.runAttempt}` : ''}`;
+    }
+    static get actionsRuntimeToken() {
+        const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
+        return token ? jwtDecode(token) : undefined;
+    }
+    static async printActionsRuntimeTokenACs() {
+        let jwt;
+        try {
+            jwt = GitHub.actionsRuntimeToken;
+        }
+        catch (e) {
+            throw new Error(`Cannot parse GitHub Actions Runtime Token: ${e.message}`);
+        }
+        if (!jwt) {
+            throw new Error(`ACTIONS_RUNTIME_TOKEN not set`);
+        }
+        try {
+            JSON.parse(`${jwt.ac}`).forEach(ac => {
+                let permission;
+                switch (ac.Permission) {
+                    case 1:
+                        permission = 'read';
+                        break;
+                    case 2:
+                        permission = 'write';
+                        break;
+                    case 3:
+                        permission = 'read/write';
+                        break;
+                    default:
+                        permission = `unimplemented (${ac.Permission})`;
+                }
+                info(`${ac.Scope}: ${permission}`);
+            });
+        }
+        catch (e) {
+            throw new Error(`Cannot parse GitHub Actions Runtime Token ACs: ${e.message}`);
+        }
+    }
+}
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+class Git {
+    static async context() {
+        const ctx = { ...context };
+        ctx.ref = await Git.ref();
+        ctx.sha = await Git.fullCommit();
+        return ctx;
+    }
+    static async isInsideWorkTree() {
+        return await Git.exec(['rev-parse', '--is-inside-work-tree'])
+            .then(out => {
+            return out === 'true';
+        })
+            .catch(() => {
+            return false;
+        });
+    }
+    static async remoteSha(repo, ref, token) {
+        const repoMatch = repo.match(/github.com\/([^/]+)\/([^/]+?)(?:\.git)?(\/|$)/);
+        // if we have a token and this is a GitHub repo we can use the GitHub API
+        if (token && repoMatch) {
+            setSecret(token);
+            const octokit = getOctokit(token, {
+                baseUrl: GitHub.apiURL
+            });
+            const [owner, repoName] = repoMatch.slice(1, 3);
+            try {
+                return (await octokit.rest.repos.listCommits({
+                    owner: owner,
+                    repo: repoName,
+                    sha: ref,
+                    per_page: 1
+                })).data[0].sha;
+            }
+            catch (e) {
+                throw new Error(`Cannot find remote ref for ${repo}#${ref}: ${e.message}`);
+            }
+        }
+        // otherwise we fall back to git ls-remote
+        return await Git.exec(['ls-remote', repo, ref]).then(out => {
+            const [rsha] = out.split(/[\s\t]/);
+            if (rsha.length == 0) {
+                throw new Error(`Cannot find remote ref for ${repo}#${ref}`);
+            }
+            return rsha;
+        });
+    }
+    static async remoteURL() {
+        return await Git.exec(['remote', 'get-url', 'origin']).then(rurl => {
+            if (rurl.length == 0) {
+                return Git.exec(['remote', 'get-url', 'upstream']).then(rurl => {
+                    if (rurl.length == 0) {
+                        throw new Error(`Cannot find remote URL for origin or upstream`);
+                    }
+                    return rurl;
+                });
+            }
+            return rurl;
+        });
+    }
+    static async ref() {
+        const isHeadDetached = await Git.isHeadDetached();
+        if (isHeadDetached) {
+            return await Git.getDetachedRef();
+        }
+        return await Git.exec(['symbolic-ref', 'HEAD']);
+    }
+    static async fullCommit() {
+        return await Git.exec(['show', '--format=%H', 'HEAD', '--quiet', '--']);
+    }
+    static async shortCommit() {
+        return await Git.exec(['show', '--format=%h', 'HEAD', '--quiet', '--']);
+    }
+    static async tag() {
+        return await Git.exec(['tag', '--points-at', 'HEAD', '--sort', '-version:creatordate']).then(tags => {
+            if (tags.length == 0) {
+                return Git.exec(['describe', '--tags', '--abbrev=0']);
+            }
+            return tags.split('\n')[0];
+        });
+    }
+    static async isHeadDetached() {
+        return await Git.exec(['branch', '--show-current']).then(res => {
+            return res.length == 0;
+        });
+    }
+    static async getDetachedRef() {
+        const res = await Git.exec(['show', '-s', '--pretty=%D']);
+        debug(`detached HEAD ref: ${res}`);
+        const normalizedRef = res.replace(/^grafted, /, '').trim();
+        if (normalizedRef === 'HEAD') {
+            return await Git.inferRefFromHead();
+        }
+        // Can be "HEAD, <tagname>" or "grafted, HEAD, <tagname>"
+        const refMatch = normalizedRef.match(/^HEAD, (.*)$/);
+        if (!refMatch || !refMatch[1]) {
+            throw new Error(`Cannot find detached HEAD ref in "${res}"`);
+        }
+        const ref = refMatch[1].trim();
+        // Tag refs are formatted as "tag: <tagname>"
+        if (ref.startsWith('tag: ')) {
+            return `refs/tags/${ref.split(':')[1].trim()}`;
+        }
+        // Pull request merge refs are formatted as "pull/<number>/<state>"
+        const prMatch = ref.match(/^pull\/\d+\/(head|merge)$/);
+        if (prMatch) {
+            return `refs/${ref}`;
+        }
+        // Branch refs can be formatted as "<origin>/<branch-name>, <branch-name>"
+        const branchMatch = ref.match(/^[^/]+\/[^/]+, (.+)$/);
+        if (branchMatch) {
+            return `refs/heads/${branchMatch[1].trim()}`;
+        }
+        // Branch refs checked out by its latest SHA can be formatted as "<origin>/<branch-name>"
+        const shaBranchMatch = ref.match(/^[^/]+\/(.+)$/);
+        if (shaBranchMatch) {
+            return `refs/heads/${shaBranchMatch[1].trim()}`;
+        }
+        throw new Error(`Unsupported detached HEAD ref in "${res}"`);
+    }
+    static async exec(args = []) {
+        return await Exec.getExecOutput(`git`, args, {
+            ignoreReturnCode: true,
+            silent: true
+        }).then(res => {
+            if (res.stderr.length > 0 && res.exitCode != 0) {
+                throw new Error(res.stderr);
+            }
+            return res.stdout.trim();
+        });
+    }
+    static async inferRefFromHead() {
+        const localRef = await Git.findContainingRef('refs/heads/');
+        if (localRef) {
+            return localRef;
+        }
+        const remoteRef = await Git.findContainingRef('refs/remotes/');
+        if (remoteRef) {
+            const remoteMatch = remoteRef.match(/^refs\/remotes\/[^/]+\/(.+)$/);
+            if (remoteMatch) {
+                return `refs/heads/${remoteMatch[1]}`;
+            }
+            return remoteRef;
+        }
+        const tagRef = await Git.exec(['tag', '--contains', 'HEAD']);
+        const [firstTag] = tagRef
+            .split('\n')
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0);
+        if (firstTag) {
+            return `refs/tags/${firstTag}`;
+        }
+        throw new Error(`Cannot infer ref from detached HEAD`);
+    }
+    static async findContainingRef(scope) {
+        const refs = await Git.exec(['for-each-ref', '--format=%(refname)', '--contains', 'HEAD', '--sort=-committerdate', scope]);
+        const [first] = refs
+            .split('\n')
+            .map(r => r.trim())
+            .filter(r => r.length > 0);
+        return first;
+    }
+    static async commitDate(ref) {
+        return new Date(await Git.exec(['show', '-s', '--format="%ci"', ref]));
+    }
+}
+
+var ContextSource;
+(function (ContextSource) {
+    ContextSource["workflow"] = "workflow";
+    ContextSource["git"] = "git";
+})(ContextSource || (ContextSource = {}));
+/**
+ * Retrieves and parses the inputs for the GitHub Action.
+ *
+ * This function collects input values using the GitHub Actions core utilities and
+ * returns them as an object that conforms to the Inputs interface. It converts string
+ * inputs to appropriate types where necessary, such as parsing the 'collapse-after'
+ * input to an integer and interpreting 'publish', 'dry-run', and 'group-dependencies' as booleans.
+ *
+ * @returns An object containing the structured inputs for the action.
+ */
+function getInputs() {
+    return {
+        githubToken: getInput('github-token'),
+        majorLabel: getInput('major-label'),
+        minorLabel: getInput('minor-label'),
+        header: getInput('notes-header'),
+        footer: getInput('notes-footer'),
+        variables: Util.getInputList('variables'),
+        collapseAfter: parseInt(getInput('collapse-after'), 10),
+        publish: getBooleanInput('publish'),
+        configPath: getInput('config-path'),
+        dryRun: getBooleanInput('dry-run'),
+        groupDependencies: getBooleanInput('group-dependencies'),
+        removeConventionalPrefixes: getBooleanInput('remove-conventional-prefixes'),
+        context: (getInput('context') || ContextSource.workflow),
+    };
+}
+async function getContext(source) {
+    return source === ContextSource.git ? await Git.context() : context;
+}
+
 /*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -47351,7 +51176,7 @@ const conventionalPrefixRegex = /^\* (fix|feat|chore|docs|style|refactor|perf|te
  * @returns The fully formatted release notes in markdown format.
  */
 async function generateReleaseNotes(client, inputs, releaseData) {
-    const context$1 = context;
+    const context = await getContext(inputs.context);
     const latestRelease = releaseData.latestRelease;
     const nextRelease = releaseData.nextRelease;
     const configPath = inputs.configPath;
@@ -47359,7 +51184,7 @@ async function generateReleaseNotes(client, inputs, releaseData) {
     let sections = {};
     try {
         const notes = await client.rest.repos.generateReleaseNotes({
-            ...context$1.repo,
+            ...context.repo,
             tag_name: nextRelease,
             previous_tag_name: semverExports.gt(latestRelease, '0.0.0') ? latestRelease : '',
             target_commitish: releaseData.branch,
@@ -47943,26 +51768,26 @@ function capitalizeFirstWord(str) {
     return words.join(' ');
 }
 
-async function getRelease(client) {
+async function getRelease(client, inputs) {
     const releaseResponse = {
         latestRelease: 'v0.0.0',
         releases: [],
         branch: '',
         nextRelease: '',
     };
-    const context$1 = context;
+    const context = await getContext(inputs.context);
     try {
         // get all releases
         const releases = await client.paginate(client.rest.repos.listReleases, {
-            ...context$1.repo,
+            ...context.repo,
             per_page: 100,
         });
         releases.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         releaseResponse.releases = releases;
-        const isTag = context$1.ref.startsWith('refs/tags/');
-        releaseResponse.branch = isTag ? 'tag' : context$1.ref.replace('refs/heads/', '');
+        const isTag = context.ref.startsWith('refs/tags/');
+        releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '');
         debug(`Current branch: ${releaseResponse.branch}`);
-        releaseResponse.nextRelease = isTag ? context$1.ref.replace('refs/tags/', '') : 'next';
+        releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : 'next';
         if (releases.length === 0) {
             debug(`No releases found`);
             return releaseResponse;
@@ -47987,7 +51812,7 @@ async function getRelease(client) {
     return releaseResponse;
 }
 async function createOrUpdateRelease(client, inputs, releaseData) {
-    const context$1 = context;
+    const context = await getContext(inputs.context);
     const releases = releaseData.releases;
     const nextRelease = releaseData.nextRelease;
     // find if a release draft already exists for versionIncrease
@@ -48003,7 +51828,7 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     let response;
     if (!inputs.dryRun) {
         const releaseParams = {
-            ...context$1.repo,
+            ...context.repo,
             tag_name: nextRelease,
             name: nextRelease,
             target_commitish: releaseData.branch,
@@ -48062,2058 +51887,35 @@ async function getVersionIncrease(releaseData, inputs, notes) {
     return semverExports.inc(releaseData.latestRelease, version) || '';
 }
 
-class CsvError extends Error {
-  constructor(code, message, options, ...contexts) {
-    if (Array.isArray(message)) message = message.join(" ").trim();
-    super(message);
-    if (Error.captureStackTrace !== undefined) {
-      Error.captureStackTrace(this, CsvError);
-    }
-    this.code = code;
-    for (const context of contexts) {
-      for (const key in context) {
-        const value = context[key];
-        this[key] = Buffer.isBuffer(value)
-          ? value.toString(options.encoding)
-          : value == null
-            ? value
-            : JSON.parse(JSON.stringify(value));
-      }
-    }
-  }
-}
-
-const is_object = function (obj) {
-  return typeof obj === "object" && obj !== null && !Array.isArray(obj);
-};
-
-const normalize_columns_array = function (columns) {
-  const normalizedColumns = [];
-  for (let i = 0, l = columns.length; i < l; i++) {
-    const column = columns[i];
-    if (column === undefined || column === null || column === false) {
-      normalizedColumns[i] = { disabled: true };
-    } else if (typeof column === "string" || typeof column === "number") {
-      normalizedColumns[i] = { name: `${column}` };
-    } else if (is_object(column)) {
-      if (typeof column.name !== "string") {
-        throw new CsvError("CSV_OPTION_COLUMNS_MISSING_NAME", [
-          "Option columns missing name:",
-          `property "name" is required at position ${i}`,
-          "when column is an object literal",
-        ]);
-      }
-      normalizedColumns[i] = column;
-    } else {
-      throw new CsvError("CSV_INVALID_COLUMN_DEFINITION", [
-        "Invalid column definition:",
-        "expect a string or a literal object,",
-        `got ${JSON.stringify(column)} at position ${i}`,
-      ]);
-    }
-  }
-  return normalizedColumns;
-};
-
-class ResizeableBuffer {
-  constructor(size = 100) {
-    this.size = size;
-    this.length = 0;
-    this.buf = Buffer.allocUnsafe(size);
-  }
-  prepend(val) {
-    if (Buffer.isBuffer(val)) {
-      const length = this.length + val.length;
-      if (length >= this.size) {
-        this.resize();
-        if (length >= this.size) {
-          throw Error("INVALID_BUFFER_STATE");
-        }
-      }
-      const buf = this.buf;
-      this.buf = Buffer.allocUnsafe(this.size);
-      val.copy(this.buf, 0);
-      buf.copy(this.buf, val.length);
-      this.length += val.length;
-    } else {
-      const length = this.length++;
-      if (length === this.size) {
-        this.resize();
-      }
-      const buf = this.clone();
-      this.buf[0] = val;
-      buf.copy(this.buf, 1, 0, length);
-    }
-  }
-  append(val) {
-    const length = this.length++;
-    if (length === this.size) {
-      this.resize();
-    }
-    this.buf[length] = val;
-  }
-  clone() {
-    return Buffer.from(this.buf.slice(0, this.length));
-  }
-  resize() {
-    const length = this.length;
-    this.size = this.size * 2;
-    const buf = Buffer.allocUnsafe(this.size);
-    this.buf.copy(buf, 0, 0, length);
-    this.buf = buf;
-  }
-  toString(encoding) {
-    if (encoding) {
-      return this.buf.slice(0, this.length).toString(encoding);
-    } else {
-      return Uint8Array.prototype.slice.call(this.buf.slice(0, this.length));
-    }
-  }
-  toJSON() {
-    return this.toString("utf8");
-  }
-  reset() {
-    this.length = 0;
-  }
-}
-
-// white space characters
-// https://en.wikipedia.org/wiki/Whitespace_character
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#Types
-// \f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
-const np = 12;
-const cr$1 = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
-const nl$1 = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
-const space = 32;
-const tab = 9;
-
-const init_state = function (options) {
-  return {
-    bomSkipped: false,
-    bufBytesStart: 0,
-    castField: options.cast_function,
-    commenting: false,
-    // Current error encountered by a record
-    error: undefined,
-    enabled: options.from_line === 1,
-    escaping: false,
-    escapeIsQuote:
-      Buffer.isBuffer(options.escape) &&
-      Buffer.isBuffer(options.quote) &&
-      Buffer.compare(options.escape, options.quote) === 0,
-    // columns can be `false`, `true`, `Array`
-    expectedRecordLength: Array.isArray(options.columns)
-      ? options.columns.length
-      : undefined,
-    field: new ResizeableBuffer(20),
-    firstLineToHeaders: options.cast_first_line_to_header,
-    needMoreDataSize: Math.max(
-      // Skip if the remaining buffer smaller than comment
-      options.comment !== null ? options.comment.length : 0,
-      // Skip if the remaining buffer can be delimiter
-      ...options.delimiter.map((delimiter) => delimiter.length),
-      // Skip if the remaining buffer can be escape sequence
-      options.quote !== null ? options.quote.length : 0,
-    ),
-    previousBuf: undefined,
-    quoting: false,
-    stop: false,
-    rawBuffer: new ResizeableBuffer(100),
-    record: [],
-    recordHasError: false,
-    record_length: 0,
-    recordDelimiterMaxLength:
-      options.record_delimiter.length === 0
-        ? 0
-        : Math.max(...options.record_delimiter.map((v) => v.length)),
-    trimChars: [
-      Buffer.from(" ", options.encoding)[0],
-      Buffer.from("\t", options.encoding)[0],
-    ],
-    wasQuoting: false,
-    wasRowDelimiter: false,
-    timchars: [
-      Buffer.from(Buffer.from([cr$1], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([nl$1], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([np], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([space], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([tab], "utf8").toString(), options.encoding),
-    ],
-  };
-};
-
-const underscore = function (str) {
-  return str.replace(/([A-Z])/g, function (_, match) {
-    return "_" + match.toLowerCase();
-  });
-};
-
-const normalize_options = function (opts) {
-  const options = {};
-  // Merge with user options
-  for (const opt in opts) {
-    options[underscore(opt)] = opts[opt];
-  }
-  // Normalize option `encoding`
-  // Note: defined first because other options depends on it
-  // to convert chars/strings into buffers.
-  if (options.encoding === undefined || options.encoding === true) {
-    options.encoding = "utf8";
-  } else if (options.encoding === null || options.encoding === false) {
-    options.encoding = null;
-  } else if (
-    typeof options.encoding !== "string" &&
-    options.encoding !== null
-  ) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_ENCODING",
-      [
-        "Invalid option encoding:",
-        "encoding must be a string or null to return a buffer,",
-        `got ${JSON.stringify(options.encoding)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `bom`
-  if (
-    options.bom === undefined ||
-    options.bom === null ||
-    options.bom === false
-  ) {
-    options.bom = false;
-  } else if (options.bom !== true) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_BOM",
-      [
-        "Invalid option bom:",
-        "bom must be true,",
-        `got ${JSON.stringify(options.bom)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `cast`
-  options.cast_function = null;
-  if (
-    options.cast === undefined ||
-    options.cast === null ||
-    options.cast === false ||
-    options.cast === ""
-  ) {
-    options.cast = undefined;
-  } else if (typeof options.cast === "function") {
-    options.cast_function = options.cast;
-    options.cast = true;
-  } else if (options.cast !== true) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_CAST",
-      [
-        "Invalid option cast:",
-        "cast must be true or a function,",
-        `got ${JSON.stringify(options.cast)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `cast_date`
-  if (
-    options.cast_date === undefined ||
-    options.cast_date === null ||
-    options.cast_date === false ||
-    options.cast_date === ""
-  ) {
-    options.cast_date = false;
-  } else if (options.cast_date === true) {
-    options.cast_date = function (value) {
-      const date = Date.parse(value);
-      return !isNaN(date) ? new Date(date) : value;
-    };
-  } else if (typeof options.cast_date !== "function") {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_CAST_DATE",
-      [
-        "Invalid option cast_date:",
-        "cast_date must be true or a function,",
-        `got ${JSON.stringify(options.cast_date)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `columns`
-  options.cast_first_line_to_header = undefined;
-  if (options.columns === true) {
-    // Fields in the first line are converted as-is to columns
-    options.cast_first_line_to_header = undefined;
-  } else if (typeof options.columns === "function") {
-    options.cast_first_line_to_header = options.columns;
-    options.columns = true;
-  } else if (Array.isArray(options.columns)) {
-    options.columns = normalize_columns_array(options.columns);
-  } else if (
-    options.columns === undefined ||
-    options.columns === null ||
-    options.columns === false
-  ) {
-    options.columns = false;
-  } else {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_COLUMNS",
-      [
-        "Invalid option columns:",
-        "expect an array, a function or true,",
-        `got ${JSON.stringify(options.columns)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `group_columns_by_name`
-  if (
-    options.group_columns_by_name === undefined ||
-    options.group_columns_by_name === null ||
-    options.group_columns_by_name === false
-  ) {
-    options.group_columns_by_name = false;
-  } else if (options.group_columns_by_name !== true) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME",
-      [
-        "Invalid option group_columns_by_name:",
-        "expect an boolean,",
-        `got ${JSON.stringify(options.group_columns_by_name)}`,
-      ],
-      options,
-    );
-  } else if (options.columns === false) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_GROUP_COLUMNS_BY_NAME",
-      [
-        "Invalid option group_columns_by_name:",
-        "the `columns` mode must be activated.",
-      ],
-      options,
-    );
-  }
-  // Normalize option `comment`
-  if (
-    options.comment === undefined ||
-    options.comment === null ||
-    options.comment === false ||
-    options.comment === ""
-  ) {
-    options.comment = null;
-  } else {
-    if (typeof options.comment === "string") {
-      options.comment = Buffer.from(options.comment, options.encoding);
-    }
-    if (!Buffer.isBuffer(options.comment)) {
-      throw new CsvError(
-        "CSV_INVALID_OPTION_COMMENT",
-        [
-          "Invalid option comment:",
-          "comment must be a buffer or a string,",
-          `got ${JSON.stringify(options.comment)}`,
-        ],
-        options,
-      );
-    }
-  }
-  // Normalize option `comment_no_infix`
-  if (
-    options.comment_no_infix === undefined ||
-    options.comment_no_infix === null ||
-    options.comment_no_infix === false
-  ) {
-    options.comment_no_infix = false;
-  } else if (options.comment_no_infix !== true) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_COMMENT",
-      [
-        "Invalid option comment_no_infix:",
-        "value must be a boolean,",
-        `got ${JSON.stringify(options.comment_no_infix)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `delimiter`
-  const delimiter_json = JSON.stringify(options.delimiter);
-  if (!Array.isArray(options.delimiter))
-    options.delimiter = [options.delimiter];
-  if (options.delimiter.length === 0) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_DELIMITER",
-      [
-        "Invalid option delimiter:",
-        "delimiter must be a non empty string or buffer or array of string|buffer,",
-        `got ${delimiter_json}`,
-      ],
-      options,
-    );
-  }
-  options.delimiter = options.delimiter.map(function (delimiter) {
-    if (delimiter === undefined || delimiter === null || delimiter === false) {
-      return Buffer.from(",", options.encoding);
-    }
-    if (typeof delimiter === "string") {
-      delimiter = Buffer.from(delimiter, options.encoding);
-    }
-    if (!Buffer.isBuffer(delimiter) || delimiter.length === 0) {
-      throw new CsvError(
-        "CSV_INVALID_OPTION_DELIMITER",
-        [
-          "Invalid option delimiter:",
-          "delimiter must be a non empty string or buffer or array of string|buffer,",
-          `got ${delimiter_json}`,
-        ],
-        options,
-      );
-    }
-    return delimiter;
-  });
-  // Normalize option `escape`
-  if (options.escape === undefined || options.escape === true) {
-    options.escape = Buffer.from('"', options.encoding);
-  } else if (typeof options.escape === "string") {
-    options.escape = Buffer.from(options.escape, options.encoding);
-  } else if (options.escape === null || options.escape === false) {
-    options.escape = null;
-  }
-  if (options.escape !== null) {
-    if (!Buffer.isBuffer(options.escape)) {
-      throw new Error(
-        `Invalid Option: escape must be a buffer, a string or a boolean, got ${JSON.stringify(options.escape)}`,
-      );
-    }
-  }
-  // Normalize option `from`
-  if (options.from === undefined || options.from === null) {
-    options.from = 1;
-  } else {
-    if (typeof options.from === "string" && /\d+/.test(options.from)) {
-      options.from = parseInt(options.from);
-    }
-    if (Number.isInteger(options.from)) {
-      if (options.from < 0) {
-        throw new Error(
-          `Invalid Option: from must be a positive integer, got ${JSON.stringify(opts.from)}`,
-        );
-      }
-    } else {
-      throw new Error(
-        `Invalid Option: from must be an integer, got ${JSON.stringify(options.from)}`,
-      );
-    }
-  }
-  // Normalize option `from_line`
-  if (options.from_line === undefined || options.from_line === null) {
-    options.from_line = 1;
-  } else {
-    if (
-      typeof options.from_line === "string" &&
-      /\d+/.test(options.from_line)
-    ) {
-      options.from_line = parseInt(options.from_line);
-    }
-    if (Number.isInteger(options.from_line)) {
-      if (options.from_line <= 0) {
-        throw new Error(
-          `Invalid Option: from_line must be a positive integer greater than 0, got ${JSON.stringify(opts.from_line)}`,
-        );
-      }
-    } else {
-      throw new Error(
-        `Invalid Option: from_line must be an integer, got ${JSON.stringify(opts.from_line)}`,
-      );
-    }
-  }
-  // Normalize options `ignore_last_delimiters`
-  if (
-    options.ignore_last_delimiters === undefined ||
-    options.ignore_last_delimiters === null
-  ) {
-    options.ignore_last_delimiters = false;
-  } else if (typeof options.ignore_last_delimiters === "number") {
-    options.ignore_last_delimiters = Math.floor(options.ignore_last_delimiters);
-    if (options.ignore_last_delimiters === 0) {
-      options.ignore_last_delimiters = false;
-    }
-  } else if (typeof options.ignore_last_delimiters !== "boolean") {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_IGNORE_LAST_DELIMITERS",
-      [
-        "Invalid option `ignore_last_delimiters`:",
-        "the value must be a boolean value or an integer,",
-        `got ${JSON.stringify(options.ignore_last_delimiters)}`,
-      ],
-      options,
-    );
-  }
-  if (options.ignore_last_delimiters === true && options.columns === false) {
-    throw new CsvError(
-      "CSV_IGNORE_LAST_DELIMITERS_REQUIRES_COLUMNS",
-      [
-        "The option `ignore_last_delimiters`",
-        "requires the activation of the `columns` option",
-      ],
-      options,
-    );
-  }
-  // Normalize option `info`
-  if (
-    options.info === undefined ||
-    options.info === null ||
-    options.info === false
-  ) {
-    options.info = false;
-  } else if (options.info !== true) {
-    throw new Error(
-      `Invalid Option: info must be true, got ${JSON.stringify(options.info)}`,
-    );
-  }
-  // Normalize option `max_record_size`
-  if (
-    options.max_record_size === undefined ||
-    options.max_record_size === null ||
-    options.max_record_size === false
-  ) {
-    options.max_record_size = 0;
-  } else if (
-    Number.isInteger(options.max_record_size) &&
-    options.max_record_size >= 0
-  ) ; else if (
-    typeof options.max_record_size === "string" &&
-    /\d+/.test(options.max_record_size)
-  ) {
-    options.max_record_size = parseInt(options.max_record_size);
-  } else {
-    throw new Error(
-      `Invalid Option: max_record_size must be a positive integer, got ${JSON.stringify(options.max_record_size)}`,
-    );
-  }
-  // Normalize option `objname`
-  if (
-    options.objname === undefined ||
-    options.objname === null ||
-    options.objname === false
-  ) {
-    options.objname = undefined;
-  } else if (Buffer.isBuffer(options.objname)) {
-    if (options.objname.length === 0) {
-      throw new Error(`Invalid Option: objname must be a non empty buffer`);
-    }
-    if (options.encoding === null) ; else {
-      options.objname = options.objname.toString(options.encoding);
-    }
-  } else if (typeof options.objname === "string") {
-    if (options.objname.length === 0) {
-      throw new Error(`Invalid Option: objname must be a non empty string`);
-    }
-    // Great, nothing to do
-  } else if (typeof options.objname === "number") ; else {
-    throw new Error(
-      `Invalid Option: objname must be a string or a buffer, got ${options.objname}`,
-    );
-  }
-  if (options.objname !== undefined) {
-    if (typeof options.objname === "number") {
-      if (options.columns !== false) {
-        throw Error(
-          "Invalid Option: objname index cannot be combined with columns or be defined as a field",
-        );
-      }
-    } else {
-      // A string or a buffer
-      if (options.columns === false) {
-        throw Error(
-          "Invalid Option: objname field must be combined with columns or be defined as an index",
-        );
-      }
-    }
-  }
-  // Normalize option `on_record`
-  if (options.on_record === undefined || options.on_record === null) {
-    options.on_record = undefined;
-  } else if (typeof options.on_record !== "function") {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_ON_RECORD",
-      [
-        "Invalid option `on_record`:",
-        "expect a function,",
-        `got ${JSON.stringify(options.on_record)}`,
-      ],
-      options,
-    );
-  }
-  // Normalize option `on_skip`
-  // options.on_skip ??= (err, chunk) => {
-  //   this.emit('skip', err, chunk);
-  // };
-  if (
-    options.on_skip !== undefined &&
-    options.on_skip !== null &&
-    typeof options.on_skip !== "function"
-  ) {
-    throw new Error(
-      `Invalid Option: on_skip must be a function, got ${JSON.stringify(options.on_skip)}`,
-    );
-  }
-  // Normalize option `quote`
-  if (
-    options.quote === null ||
-    options.quote === false ||
-    options.quote === ""
-  ) {
-    options.quote = null;
-  } else {
-    if (options.quote === undefined || options.quote === true) {
-      options.quote = Buffer.from('"', options.encoding);
-    } else if (typeof options.quote === "string") {
-      options.quote = Buffer.from(options.quote, options.encoding);
-    }
-    if (!Buffer.isBuffer(options.quote)) {
-      throw new Error(
-        `Invalid Option: quote must be a buffer or a string, got ${JSON.stringify(options.quote)}`,
-      );
-    }
-  }
-  // Normalize option `raw`
-  if (
-    options.raw === undefined ||
-    options.raw === null ||
-    options.raw === false
-  ) {
-    options.raw = false;
-  } else if (options.raw !== true) {
-    throw new Error(
-      `Invalid Option: raw must be true, got ${JSON.stringify(options.raw)}`,
-    );
-  }
-  // Normalize option `record_delimiter`
-  if (options.record_delimiter === undefined) {
-    options.record_delimiter = [];
-  } else if (
-    typeof options.record_delimiter === "string" ||
-    Buffer.isBuffer(options.record_delimiter)
-  ) {
-    if (options.record_delimiter.length === 0) {
-      throw new CsvError(
-        "CSV_INVALID_OPTION_RECORD_DELIMITER",
-        [
-          "Invalid option `record_delimiter`:",
-          "value must be a non empty string or buffer,",
-          `got ${JSON.stringify(options.record_delimiter)}`,
-        ],
-        options,
-      );
-    }
-    options.record_delimiter = [options.record_delimiter];
-  } else if (!Array.isArray(options.record_delimiter)) {
-    throw new CsvError(
-      "CSV_INVALID_OPTION_RECORD_DELIMITER",
-      [
-        "Invalid option `record_delimiter`:",
-        "value must be a string, a buffer or array of string|buffer,",
-        `got ${JSON.stringify(options.record_delimiter)}`,
-      ],
-      options,
-    );
-  }
-  options.record_delimiter = options.record_delimiter.map(function (rd, i) {
-    if (typeof rd !== "string" && !Buffer.isBuffer(rd)) {
-      throw new CsvError(
-        "CSV_INVALID_OPTION_RECORD_DELIMITER",
-        [
-          "Invalid option `record_delimiter`:",
-          "value must be a string, a buffer or array of string|buffer",
-          `at index ${i},`,
-          `got ${JSON.stringify(rd)}`,
-        ],
-        options,
-      );
-    } else if (rd.length === 0) {
-      throw new CsvError(
-        "CSV_INVALID_OPTION_RECORD_DELIMITER",
-        [
-          "Invalid option `record_delimiter`:",
-          "value must be a non empty string or buffer",
-          `at index ${i},`,
-          `got ${JSON.stringify(rd)}`,
-        ],
-        options,
-      );
-    }
-    if (typeof rd === "string") {
-      rd = Buffer.from(rd, options.encoding);
-    }
-    return rd;
-  });
-  // Normalize option `relax_column_count`
-  if (typeof options.relax_column_count === "boolean") ; else if (
-    options.relax_column_count === undefined ||
-    options.relax_column_count === null
-  ) {
-    options.relax_column_count = false;
-  } else {
-    throw new Error(
-      `Invalid Option: relax_column_count must be a boolean, got ${JSON.stringify(options.relax_column_count)}`,
-    );
-  }
-  if (typeof options.relax_column_count_less === "boolean") ; else if (
-    options.relax_column_count_less === undefined ||
-    options.relax_column_count_less === null
-  ) {
-    options.relax_column_count_less = false;
-  } else {
-    throw new Error(
-      `Invalid Option: relax_column_count_less must be a boolean, got ${JSON.stringify(options.relax_column_count_less)}`,
-    );
-  }
-  if (typeof options.relax_column_count_more === "boolean") ; else if (
-    options.relax_column_count_more === undefined ||
-    options.relax_column_count_more === null
-  ) {
-    options.relax_column_count_more = false;
-  } else {
-    throw new Error(
-      `Invalid Option: relax_column_count_more must be a boolean, got ${JSON.stringify(options.relax_column_count_more)}`,
-    );
-  }
-  // Normalize option `relax_quotes`
-  if (typeof options.relax_quotes === "boolean") ; else if (
-    options.relax_quotes === undefined ||
-    options.relax_quotes === null
-  ) {
-    options.relax_quotes = false;
-  } else {
-    throw new Error(
-      `Invalid Option: relax_quotes must be a boolean, got ${JSON.stringify(options.relax_quotes)}`,
-    );
-  }
-  // Normalize option `skip_empty_lines`
-  if (typeof options.skip_empty_lines === "boolean") ; else if (
-    options.skip_empty_lines === undefined ||
-    options.skip_empty_lines === null
-  ) {
-    options.skip_empty_lines = false;
-  } else {
-    throw new Error(
-      `Invalid Option: skip_empty_lines must be a boolean, got ${JSON.stringify(options.skip_empty_lines)}`,
-    );
-  }
-  // Normalize option `skip_records_with_empty_values`
-  if (typeof options.skip_records_with_empty_values === "boolean") ; else if (
-    options.skip_records_with_empty_values === undefined ||
-    options.skip_records_with_empty_values === null
-  ) {
-    options.skip_records_with_empty_values = false;
-  } else {
-    throw new Error(
-      `Invalid Option: skip_records_with_empty_values must be a boolean, got ${JSON.stringify(options.skip_records_with_empty_values)}`,
-    );
-  }
-  // Normalize option `skip_records_with_error`
-  if (typeof options.skip_records_with_error === "boolean") ; else if (
-    options.skip_records_with_error === undefined ||
-    options.skip_records_with_error === null
-  ) {
-    options.skip_records_with_error = false;
-  } else {
-    throw new Error(
-      `Invalid Option: skip_records_with_error must be a boolean, got ${JSON.stringify(options.skip_records_with_error)}`,
-    );
-  }
-  // Normalize option `rtrim`
-  if (
-    options.rtrim === undefined ||
-    options.rtrim === null ||
-    options.rtrim === false
-  ) {
-    options.rtrim = false;
-  } else if (options.rtrim !== true) {
-    throw new Error(
-      `Invalid Option: rtrim must be a boolean, got ${JSON.stringify(options.rtrim)}`,
-    );
-  }
-  // Normalize option `ltrim`
-  if (
-    options.ltrim === undefined ||
-    options.ltrim === null ||
-    options.ltrim === false
-  ) {
-    options.ltrim = false;
-  } else if (options.ltrim !== true) {
-    throw new Error(
-      `Invalid Option: ltrim must be a boolean, got ${JSON.stringify(options.ltrim)}`,
-    );
-  }
-  // Normalize option `trim`
-  if (
-    options.trim === undefined ||
-    options.trim === null ||
-    options.trim === false
-  ) {
-    options.trim = false;
-  } else if (options.trim !== true) {
-    throw new Error(
-      `Invalid Option: trim must be a boolean, got ${JSON.stringify(options.trim)}`,
-    );
-  }
-  // Normalize options `trim`, `ltrim` and `rtrim`
-  if (options.trim === true && opts.ltrim !== false) {
-    options.ltrim = true;
-  } else if (options.ltrim !== true) {
-    options.ltrim = false;
-  }
-  if (options.trim === true && opts.rtrim !== false) {
-    options.rtrim = true;
-  } else if (options.rtrim !== true) {
-    options.rtrim = false;
-  }
-  // Normalize option `to`
-  if (options.to === undefined || options.to === null) {
-    options.to = -1;
-  } else if (options.to !== -1) {
-    if (typeof options.to === "string" && /\d+/.test(options.to)) {
-      options.to = parseInt(options.to);
-    }
-    if (Number.isInteger(options.to)) {
-      if (options.to <= 0) {
-        throw new Error(
-          `Invalid Option: to must be a positive integer greater than 0, got ${JSON.stringify(opts.to)}`,
-        );
-      }
-    } else {
-      throw new Error(
-        `Invalid Option: to must be an integer, got ${JSON.stringify(opts.to)}`,
-      );
-    }
-  }
-  // Normalize option `to_line`
-  if (options.to_line === undefined || options.to_line === null) {
-    options.to_line = -1;
-  } else if (options.to_line !== -1) {
-    if (typeof options.to_line === "string" && /\d+/.test(options.to_line)) {
-      options.to_line = parseInt(options.to_line);
-    }
-    if (Number.isInteger(options.to_line)) {
-      if (options.to_line <= 0) {
-        throw new Error(
-          `Invalid Option: to_line must be a positive integer greater than 0, got ${JSON.stringify(opts.to_line)}`,
-        );
-      }
-    } else {
-      throw new Error(
-        `Invalid Option: to_line must be an integer, got ${JSON.stringify(opts.to_line)}`,
-      );
-    }
-  }
-  return options;
-};
-
-const isRecordEmpty = function (record) {
-  return record.every(
-    (field) =>
-      field == null || (field.toString && field.toString().trim() === ""),
-  );
-};
-
-const cr = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
-const nl = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
-
-const boms = {
-  // Note, the following are equals:
-  // Buffer.from("\ufeff")
-  // Buffer.from([239, 187, 191])
-  // Buffer.from('EFBBBF', 'hex')
-  utf8: Buffer.from([239, 187, 191]),
-  // Note, the following are equals:
-  // Buffer.from "\ufeff", 'utf16le
-  // Buffer.from([255, 254])
-  utf16le: Buffer.from([255, 254]),
-};
-
-const transform = function (original_options = {}) {
-  const info = {
-    bytes: 0,
-    bytes_records: 0,
-    comment_lines: 0,
-    empty_lines: 0,
-    invalid_field_length: 0,
-    lines: 1,
-    records: 0,
-  };
-  const options = normalize_options(original_options);
-  return {
-    info: info,
-    original_options: original_options,
-    options: options,
-    state: init_state(options),
-    __needMoreData: function (i, bufLen, end) {
-      if (end) return false;
-      const { encoding, escape, quote } = this.options;
-      const { quoting, needMoreDataSize, recordDelimiterMaxLength } =
-        this.state;
-      const numOfCharLeft = bufLen - i - 1;
-      const requiredLength = Math.max(
-        needMoreDataSize,
-        // Skip if the remaining buffer smaller than record delimiter
-        // If "record_delimiter" is yet to be discovered:
-        // 1. It is equals to `[]` and "recordDelimiterMaxLength" equals `0`
-        // 2. We set the length to windows line ending in the current encoding
-        // Note, that encoding is known from user or bom discovery at that point
-        // recordDelimiterMaxLength,
-        recordDelimiterMaxLength === 0
-          ? Buffer.from("\r\n", encoding).length
-          : recordDelimiterMaxLength,
-        // Skip if remaining buffer can be an escaped quote
-        quoting ? (escape === null ? 0 : escape.length) + quote.length : 0,
-        // Skip if remaining buffer can be record delimiter following the closing quote
-        quoting ? quote.length + recordDelimiterMaxLength : 0,
-      );
-      return numOfCharLeft < requiredLength;
-    },
-    // Central parser implementation
-    parse: function (nextBuf, end, push, close) {
-      const {
-        bom,
-        comment_no_infix,
-        encoding,
-        from_line,
-        ltrim,
-        max_record_size,
-        raw,
-        relax_quotes,
-        rtrim,
-        skip_empty_lines,
-        to,
-        to_line,
-      } = this.options;
-      let { comment, escape, quote, record_delimiter } = this.options;
-      const { bomSkipped, previousBuf, rawBuffer, escapeIsQuote } = this.state;
-      let buf;
-      if (previousBuf === undefined) {
-        if (nextBuf === undefined) {
-          // Handle empty string
-          close();
-          return;
-        } else {
-          buf = nextBuf;
-        }
-      } else if (previousBuf !== undefined && nextBuf === undefined) {
-        buf = previousBuf;
-      } else {
-        buf = Buffer.concat([previousBuf, nextBuf]);
-      }
-      // Handle UTF BOM
-      if (bomSkipped === false) {
-        if (bom === false) {
-          this.state.bomSkipped = true;
-        } else if (buf.length < 3) {
-          // No enough data
-          if (end === false) {
-            // Wait for more data
-            this.state.previousBuf = buf;
-            return;
-          }
-        } else {
-          for (const encoding in boms) {
-            if (boms[encoding].compare(buf, 0, boms[encoding].length) === 0) {
-              // Skip BOM
-              const bomLength = boms[encoding].length;
-              this.state.bufBytesStart += bomLength;
-              buf = buf.slice(bomLength);
-              // Renormalize original options with the new encoding
-              const options = normalize_options({
-                ...this.original_options,
-                encoding: encoding,
-              });
-              // Properties are merged with the existing options instance
-              for (const key in options) {
-                this.options[key] = options[key];
-              }
-              // Options will re-evaluate the Buffer with the new encoding
-              ({ comment, escape, quote } = this.options);
-              break;
-            }
-          }
-          this.state.bomSkipped = true;
-        }
-      }
-      const bufLen = buf.length;
-      let pos;
-      for (pos = 0; pos < bufLen; pos++) {
-        // Ensure we get enough space to look ahead
-        // There should be a way to move this out of the loop
-        if (this.__needMoreData(pos, bufLen, end)) {
-          break;
-        }
-        if (this.state.wasRowDelimiter === true) {
-          this.info.lines++;
-          this.state.wasRowDelimiter = false;
-        }
-        if (to_line !== -1 && this.info.lines > to_line) {
-          this.state.stop = true;
-          close();
-          return;
-        }
-        // Auto discovery of record_delimiter, unix, mac and windows supported
-        if (this.state.quoting === false && record_delimiter.length === 0) {
-          const record_delimiterCount = this.__autoDiscoverRecordDelimiter(
-            buf,
-            pos,
-          );
-          if (record_delimiterCount) {
-            record_delimiter = this.options.record_delimiter;
-          }
-        }
-        const chr = buf[pos];
-        if (raw === true) {
-          rawBuffer.append(chr);
-        }
-        if (
-          (chr === cr || chr === nl) &&
-          this.state.wasRowDelimiter === false
-        ) {
-          this.state.wasRowDelimiter = true;
-        }
-        // Previous char was a valid escape char
-        // treat the current char as a regular char
-        if (this.state.escaping === true) {
-          this.state.escaping = false;
-        } else {
-          // Escape is only active inside quoted fields
-          // We are quoting, the char is an escape chr and there is a chr to escape
-          // if(escape !== null && this.state.quoting === true && chr === escape && pos + 1 < bufLen){
-          if (
-            escape !== null &&
-            this.state.quoting === true &&
-            this.__isEscape(buf, pos, chr) &&
-            pos + escape.length < bufLen
-          ) {
-            if (escapeIsQuote) {
-              if (this.__isQuote(buf, pos + escape.length)) {
-                this.state.escaping = true;
-                pos += escape.length - 1;
-                continue;
-              }
-            } else {
-              this.state.escaping = true;
-              pos += escape.length - 1;
-              continue;
-            }
-          }
-          // Not currently escaping and chr is a quote
-          // TODO: need to compare bytes instead of single char
-          if (this.state.commenting === false && this.__isQuote(buf, pos)) {
-            if (this.state.quoting === true) {
-              const nextChr = buf[pos + quote.length];
-              const isNextChrTrimable =
-                rtrim && this.__isCharTrimable(buf, pos + quote.length);
-              const isNextChrComment =
-                comment !== null &&
-                this.__compareBytes(comment, buf, pos + quote.length, nextChr);
-              const isNextChrDelimiter = this.__isDelimiter(
-                buf,
-                pos + quote.length,
-                nextChr,
-              );
-              const isNextChrRecordDelimiter =
-                record_delimiter.length === 0
-                  ? this.__autoDiscoverRecordDelimiter(buf, pos + quote.length)
-                  : this.__isRecordDelimiter(nextChr, buf, pos + quote.length);
-              // Escape a quote
-              // Treat next char as a regular character
-              if (
-                escape !== null &&
-                this.__isEscape(buf, pos, chr) &&
-                this.__isQuote(buf, pos + escape.length)
-              ) {
-                pos += escape.length - 1;
-              } else if (
-                !nextChr ||
-                isNextChrDelimiter ||
-                isNextChrRecordDelimiter ||
-                isNextChrComment ||
-                isNextChrTrimable
-              ) {
-                this.state.quoting = false;
-                this.state.wasQuoting = true;
-                pos += quote.length - 1;
-                continue;
-              } else if (relax_quotes === false) {
-                const err = this.__error(
-                  new CsvError(
-                    "CSV_INVALID_CLOSING_QUOTE",
-                    [
-                      "Invalid Closing Quote:",
-                      `got "${String.fromCharCode(nextChr)}"`,
-                      `at line ${this.info.lines}`,
-                      "instead of delimiter, record delimiter, trimable character",
-                      "(if activated) or comment",
-                    ],
-                    this.options,
-                    this.__infoField(),
-                  ),
-                );
-                if (err !== undefined) return err;
-              } else {
-                this.state.quoting = false;
-                this.state.wasQuoting = true;
-                this.state.field.prepend(quote);
-                pos += quote.length - 1;
-              }
-            } else {
-              if (this.state.field.length !== 0) {
-                // In relax_quotes mode, treat opening quote preceded by chrs as regular
-                if (relax_quotes === false) {
-                  const info = this.__infoField();
-                  const bom = Object.keys(boms)
-                    .map((b) =>
-                      boms[b].equals(this.state.field.toString()) ? b : false,
-                    )
-                    .filter(Boolean)[0];
-                  const err = this.__error(
-                    new CsvError(
-                      "INVALID_OPENING_QUOTE",
-                      [
-                        "Invalid Opening Quote:",
-                        `a quote is found on field ${JSON.stringify(info.column)} at line ${info.lines}, value is ${JSON.stringify(this.state.field.toString(encoding))}`,
-                        bom ? `(${bom} bom)` : undefined,
-                      ],
-                      this.options,
-                      info,
-                      {
-                        field: this.state.field,
-                      },
-                    ),
-                  );
-                  if (err !== undefined) return err;
-                }
-              } else {
-                this.state.quoting = true;
-                pos += quote.length - 1;
-                continue;
-              }
-            }
-          }
-          if (this.state.quoting === false) {
-            const recordDelimiterLength = this.__isRecordDelimiter(
-              chr,
-              buf,
-              pos,
-            );
-            if (recordDelimiterLength !== 0) {
-              // Do not emit comments which take a full line
-              const skipCommentLine =
-                this.state.commenting &&
-                this.state.wasQuoting === false &&
-                this.state.record.length === 0 &&
-                this.state.field.length === 0;
-              if (skipCommentLine) {
-                this.info.comment_lines++;
-                // Skip full comment line
-              } else {
-                // Activate records emission if above from_line
-                if (
-                  this.state.enabled === false &&
-                  this.info.lines +
-                    (this.state.wasRowDelimiter === true ? 1 : 0) >=
-                    from_line
-                ) {
-                  this.state.enabled = true;
-                  this.__resetField();
-                  this.__resetRecord();
-                  pos += recordDelimiterLength - 1;
-                  continue;
-                }
-                // Skip if line is empty and skip_empty_lines activated
-                if (
-                  skip_empty_lines === true &&
-                  this.state.wasQuoting === false &&
-                  this.state.record.length === 0 &&
-                  this.state.field.length === 0
-                ) {
-                  this.info.empty_lines++;
-                  pos += recordDelimiterLength - 1;
-                  continue;
-                }
-                this.info.bytes = this.state.bufBytesStart + pos;
-                const errField = this.__onField();
-                if (errField !== undefined) return errField;
-                this.info.bytes =
-                  this.state.bufBytesStart + pos + recordDelimiterLength;
-                const errRecord = this.__onRecord(push);
-                if (errRecord !== undefined) return errRecord;
-                if (to !== -1 && this.info.records >= to) {
-                  this.state.stop = true;
-                  close();
-                  return;
-                }
-              }
-              this.state.commenting = false;
-              pos += recordDelimiterLength - 1;
-              continue;
-            }
-            if (this.state.commenting) {
-              continue;
-            }
-            if (
-              comment !== null &&
-              (comment_no_infix === false ||
-                (this.state.record.length === 0 &&
-                  this.state.field.length === 0))
-            ) {
-              const commentCount = this.__compareBytes(comment, buf, pos, chr);
-              if (commentCount !== 0) {
-                this.state.commenting = true;
-                continue;
-              }
-            }
-            const delimiterLength = this.__isDelimiter(buf, pos, chr);
-            if (delimiterLength !== 0) {
-              this.info.bytes = this.state.bufBytesStart + pos;
-              const errField = this.__onField();
-              if (errField !== undefined) return errField;
-              pos += delimiterLength - 1;
-              continue;
-            }
-          }
-        }
-        if (this.state.commenting === false) {
-          if (
-            max_record_size !== 0 &&
-            this.state.record_length + this.state.field.length > max_record_size
-          ) {
-            return this.__error(
-              new CsvError(
-                "CSV_MAX_RECORD_SIZE",
-                [
-                  "Max Record Size:",
-                  "record exceed the maximum number of tolerated bytes",
-                  `of ${max_record_size}`,
-                  `at line ${this.info.lines}`,
-                ],
-                this.options,
-                this.__infoField(),
-              ),
-            );
-          }
-        }
-        const lappend =
-          ltrim === false ||
-          this.state.quoting === true ||
-          this.state.field.length !== 0 ||
-          !this.__isCharTrimable(buf, pos);
-        // rtrim in non quoting is handle in __onField
-        const rappend = rtrim === false || this.state.wasQuoting === false;
-        if (lappend === true && rappend === true) {
-          this.state.field.append(chr);
-        } else if (rtrim === true && !this.__isCharTrimable(buf, pos)) {
-          return this.__error(
-            new CsvError(
-              "CSV_NON_TRIMABLE_CHAR_AFTER_CLOSING_QUOTE",
-              [
-                "Invalid Closing Quote:",
-                "found non trimable byte after quote",
-                `at line ${this.info.lines}`,
-              ],
-              this.options,
-              this.__infoField(),
-            ),
-          );
-        } else {
-          if (lappend === false) {
-            pos += this.__isCharTrimable(buf, pos) - 1;
-          }
-          continue;
-        }
-      }
-      if (end === true) {
-        // Ensure we are not ending in a quoting state
-        if (this.state.quoting === true) {
-          const err = this.__error(
-            new CsvError(
-              "CSV_QUOTE_NOT_CLOSED",
-              [
-                "Quote Not Closed:",
-                `the parsing is finished with an opening quote at line ${this.info.lines}`,
-              ],
-              this.options,
-              this.__infoField(),
-            ),
-          );
-          if (err !== undefined) return err;
-        } else {
-          // Skip last line if it has no characters
-          if (
-            this.state.wasQuoting === true ||
-            this.state.record.length !== 0 ||
-            this.state.field.length !== 0
-          ) {
-            this.info.bytes = this.state.bufBytesStart + pos;
-            const errField = this.__onField();
-            if (errField !== undefined) return errField;
-            const errRecord = this.__onRecord(push);
-            if (errRecord !== undefined) return errRecord;
-          } else if (this.state.wasRowDelimiter === true) {
-            this.info.empty_lines++;
-          } else if (this.state.commenting === true) {
-            this.info.comment_lines++;
-          }
-        }
-      } else {
-        this.state.bufBytesStart += pos;
-        this.state.previousBuf = buf.slice(pos);
-      }
-      if (this.state.wasRowDelimiter === true) {
-        this.info.lines++;
-        this.state.wasRowDelimiter = false;
-      }
-    },
-    __onRecord: function (push) {
-      const {
-        columns,
-        group_columns_by_name,
-        encoding,
-        info,
-        from,
-        relax_column_count,
-        relax_column_count_less,
-        relax_column_count_more,
-        raw,
-        skip_records_with_empty_values,
-      } = this.options;
-      const { enabled, record } = this.state;
-      if (enabled === false) {
-        return this.__resetRecord();
-      }
-      // Convert the first line into column names
-      const recordLength = record.length;
-      if (columns === true) {
-        if (skip_records_with_empty_values === true && isRecordEmpty(record)) {
-          this.__resetRecord();
-          return;
-        }
-        return this.__firstLineToColumns(record);
-      }
-      if (columns === false && this.info.records === 0) {
-        this.state.expectedRecordLength = recordLength;
-      }
-      if (recordLength !== this.state.expectedRecordLength) {
-        const err =
-          columns === false
-            ? new CsvError(
-                "CSV_RECORD_INCONSISTENT_FIELDS_LENGTH",
-                [
-                  "Invalid Record Length:",
-                  `expect ${this.state.expectedRecordLength},`,
-                  `got ${recordLength} on line ${this.info.lines}`,
-                ],
-                this.options,
-                this.__infoField(),
-                {
-                  record: record,
-                },
-              )
-            : new CsvError(
-                "CSV_RECORD_INCONSISTENT_COLUMNS",
-                [
-                  "Invalid Record Length:",
-                  `columns length is ${columns.length},`, // rename columns
-                  `got ${recordLength} on line ${this.info.lines}`,
-                ],
-                this.options,
-                this.__infoField(),
-                {
-                  record: record,
-                },
-              );
-        if (
-          relax_column_count === true ||
-          (relax_column_count_less === true &&
-            recordLength < this.state.expectedRecordLength) ||
-          (relax_column_count_more === true &&
-            recordLength > this.state.expectedRecordLength)
-        ) {
-          this.info.invalid_field_length++;
-          this.state.error = err;
-          // Error is undefined with skip_records_with_error
-        } else {
-          const finalErr = this.__error(err);
-          if (finalErr) return finalErr;
-        }
-      }
-      if (skip_records_with_empty_values === true && isRecordEmpty(record)) {
-        this.__resetRecord();
-        return;
-      }
-      if (this.state.recordHasError === true) {
-        this.__resetRecord();
-        this.state.recordHasError = false;
-        return;
-      }
-      this.info.records++;
-      if (from === 1 || this.info.records >= from) {
-        const { objname } = this.options;
-        // With columns, records are object
-        if (columns !== false) {
-          const obj = {};
-          // Transform record array to an object
-          for (let i = 0, l = record.length; i < l; i++) {
-            if (columns[i] === undefined || columns[i].disabled) continue;
-            // Turn duplicate columns into an array
-            if (
-              group_columns_by_name === true &&
-              obj[columns[i].name] !== undefined
-            ) {
-              if (Array.isArray(obj[columns[i].name])) {
-                obj[columns[i].name] = obj[columns[i].name].concat(record[i]);
-              } else {
-                obj[columns[i].name] = [obj[columns[i].name], record[i]];
-              }
-            } else {
-              obj[columns[i].name] = record[i];
-            }
-          }
-          // Without objname (default)
-          if (raw === true || info === true) {
-            const extRecord = Object.assign(
-              { record: obj },
-              raw === true
-                ? { raw: this.state.rawBuffer.toString(encoding) }
-                : {},
-              info === true ? { info: this.__infoRecord() } : {},
-            );
-            const err = this.__push(
-              objname === undefined ? extRecord : [obj[objname], extRecord],
-              push,
-            );
-            if (err) {
-              return err;
-            }
-          } else {
-            const err = this.__push(
-              objname === undefined ? obj : [obj[objname], obj],
-              push,
-            );
-            if (err) {
-              return err;
-            }
-          }
-          // Without columns, records are array
-        } else {
-          if (raw === true || info === true) {
-            const extRecord = Object.assign(
-              { record: record },
-              raw === true
-                ? { raw: this.state.rawBuffer.toString(encoding) }
-                : {},
-              info === true ? { info: this.__infoRecord() } : {},
-            );
-            const err = this.__push(
-              objname === undefined ? extRecord : [record[objname], extRecord],
-              push,
-            );
-            if (err) {
-              return err;
-            }
-          } else {
-            const err = this.__push(
-              objname === undefined ? record : [record[objname], record],
-              push,
-            );
-            if (err) {
-              return err;
-            }
-          }
-        }
-      }
-      this.__resetRecord();
-    },
-    __firstLineToColumns: function (record) {
-      const { firstLineToHeaders } = this.state;
-      try {
-        const headers =
-          firstLineToHeaders === undefined
-            ? record
-            : firstLineToHeaders.call(null, record);
-        if (!Array.isArray(headers)) {
-          return this.__error(
-            new CsvError(
-              "CSV_INVALID_COLUMN_MAPPING",
-              [
-                "Invalid Column Mapping:",
-                "expect an array from column function,",
-                `got ${JSON.stringify(headers)}`,
-              ],
-              this.options,
-              this.__infoField(),
-              {
-                headers: headers,
-              },
-            ),
-          );
-        }
-        const normalizedHeaders = normalize_columns_array(headers);
-        this.state.expectedRecordLength = normalizedHeaders.length;
-        this.options.columns = normalizedHeaders;
-        this.__resetRecord();
-        return;
-      } catch (err) {
-        return err;
-      }
-    },
-    __resetRecord: function () {
-      if (this.options.raw === true) {
-        this.state.rawBuffer.reset();
-      }
-      this.state.error = undefined;
-      this.state.record = [];
-      this.state.record_length = 0;
-    },
-    __onField: function () {
-      const { cast, encoding, rtrim, max_record_size } = this.options;
-      const { enabled, wasQuoting } = this.state;
-      // Short circuit for the from_line options
-      if (enabled === false) {
-        return this.__resetField();
-      }
-      let field = this.state.field.toString(encoding);
-      if (rtrim === true && wasQuoting === false) {
-        field = field.trimRight();
-      }
-      if (cast === true) {
-        const [err, f] = this.__cast(field);
-        if (err !== undefined) return err;
-        field = f;
-      }
-      this.state.record.push(field);
-      // Increment record length if record size must not exceed a limit
-      if (max_record_size !== 0 && typeof field === "string") {
-        this.state.record_length += field.length;
-      }
-      this.__resetField();
-    },
-    __resetField: function () {
-      this.state.field.reset();
-      this.state.wasQuoting = false;
-    },
-    __push: function (record, push) {
-      const { on_record } = this.options;
-      if (on_record !== undefined) {
-        const info = this.__infoRecord();
-        try {
-          record = on_record.call(null, record, info);
-        } catch (err) {
-          return err;
-        }
-        if (record === undefined || record === null) {
-          return;
-        }
-      }
-      this.info.bytes_records += this.info.bytes;
-      push(record);
-    },
-    // Return a tuple with the error and the casted value
-    __cast: function (field) {
-      const { columns, relax_column_count } = this.options;
-      const isColumns = Array.isArray(columns);
-      // Dont loose time calling cast
-      // because the final record is an object
-      // and this field can't be associated to a key present in columns
-      if (
-        isColumns === true &&
-        relax_column_count &&
-        this.options.columns.length <= this.state.record.length
-      ) {
-        return [undefined, undefined];
-      }
-      if (this.state.castField !== null) {
-        try {
-          const info = this.__infoField();
-          return [undefined, this.state.castField.call(null, field, info)];
-        } catch (err) {
-          return [err];
-        }
-      }
-      if (this.__isFloat(field)) {
-        return [undefined, parseFloat(field)];
-      } else if (this.options.cast_date !== false) {
-        const info = this.__infoField();
-        return [undefined, this.options.cast_date.call(null, field, info)];
-      }
-      return [undefined, field];
-    },
-    // Helper to test if a character is a space or a line delimiter
-    __isCharTrimable: function (buf, pos) {
-      const isTrim = (buf, pos) => {
-        const { timchars } = this.state;
-        loop1: for (let i = 0; i < timchars.length; i++) {
-          const timchar = timchars[i];
-          for (let j = 0; j < timchar.length; j++) {
-            if (timchar[j] !== buf[pos + j]) continue loop1;
-          }
-          return timchar.length;
-        }
-        return 0;
-      };
-      return isTrim(buf, pos);
-    },
-    // Keep it in case we implement the `cast_int` option
-    // __isInt(value){
-    //   // return Number.isInteger(parseInt(value))
-    //   // return !isNaN( parseInt( obj ) );
-    //   return /^(\-|\+)?[1-9][0-9]*$/.test(value)
-    // }
-    __isFloat: function (value) {
-      return value - parseFloat(value) + 1 >= 0; // Borrowed from jquery
-    },
-    __compareBytes: function (sourceBuf, targetBuf, targetPos, firstByte) {
-      if (sourceBuf[0] !== firstByte) return 0;
-      const sourceLength = sourceBuf.length;
-      for (let i = 1; i < sourceLength; i++) {
-        if (sourceBuf[i] !== targetBuf[targetPos + i]) return 0;
-      }
-      return sourceLength;
-    },
-    __isDelimiter: function (buf, pos, chr) {
-      const { delimiter, ignore_last_delimiters } = this.options;
-      if (
-        ignore_last_delimiters === true &&
-        this.state.record.length === this.options.columns.length - 1
-      ) {
-        return 0;
-      } else if (
-        ignore_last_delimiters !== false &&
-        typeof ignore_last_delimiters === "number" &&
-        this.state.record.length === ignore_last_delimiters - 1
-      ) {
-        return 0;
-      }
-      loop1: for (let i = 0; i < delimiter.length; i++) {
-        const del = delimiter[i];
-        if (del[0] === chr) {
-          for (let j = 1; j < del.length; j++) {
-            if (del[j] !== buf[pos + j]) continue loop1;
-          }
-          return del.length;
-        }
-      }
-      return 0;
-    },
-    __isRecordDelimiter: function (chr, buf, pos) {
-      const { record_delimiter } = this.options;
-      const recordDelimiterLength = record_delimiter.length;
-      loop1: for (let i = 0; i < recordDelimiterLength; i++) {
-        const rd = record_delimiter[i];
-        const rdLength = rd.length;
-        if (rd[0] !== chr) {
-          continue;
-        }
-        for (let j = 1; j < rdLength; j++) {
-          if (rd[j] !== buf[pos + j]) {
-            continue loop1;
-          }
-        }
-        return rd.length;
-      }
-      return 0;
-    },
-    __isEscape: function (buf, pos, chr) {
-      const { escape } = this.options;
-      if (escape === null) return false;
-      const l = escape.length;
-      if (escape[0] === chr) {
-        for (let i = 0; i < l; i++) {
-          if (escape[i] !== buf[pos + i]) {
-            return false;
-          }
-        }
-        return true;
-      }
-      return false;
-    },
-    __isQuote: function (buf, pos) {
-      const { quote } = this.options;
-      if (quote === null) return false;
-      const l = quote.length;
-      for (let i = 0; i < l; i++) {
-        if (quote[i] !== buf[pos + i]) {
-          return false;
-        }
-      }
-      return true;
-    },
-    __autoDiscoverRecordDelimiter: function (buf, pos) {
-      const { encoding } = this.options;
-      // Note, we don't need to cache this information in state,
-      // It is only called on the first line until we find out a suitable
-      // record delimiter.
-      const rds = [
-        // Important, the windows line ending must be before mac os 9
-        Buffer.from("\r\n", encoding),
-        Buffer.from("\n", encoding),
-        Buffer.from("\r", encoding),
-      ];
-      loop: for (let i = 0; i < rds.length; i++) {
-        const l = rds[i].length;
-        for (let j = 0; j < l; j++) {
-          if (rds[i][j] !== buf[pos + j]) {
-            continue loop;
-          }
-        }
-        this.options.record_delimiter.push(rds[i]);
-        this.state.recordDelimiterMaxLength = rds[i].length;
-        return rds[i].length;
-      }
-      return 0;
-    },
-    __error: function (msg) {
-      const { encoding, raw, skip_records_with_error } = this.options;
-      const err = typeof msg === "string" ? new Error(msg) : msg;
-      if (skip_records_with_error) {
-        this.state.recordHasError = true;
-        if (this.options.on_skip !== undefined) {
-          try {
-            this.options.on_skip(
-              err,
-              raw ? this.state.rawBuffer.toString(encoding) : undefined,
-            );
-          } catch (err) {
-            return err;
-          }
-        }
-        // this.emit('skip', err, raw ? this.state.rawBuffer.toString(encoding) : undefined);
-        return undefined;
-      } else {
-        return err;
-      }
-    },
-    __infoDataSet: function () {
-      return {
-        ...this.info,
-        columns: this.options.columns,
-      };
-    },
-    __infoRecord: function () {
-      const { columns, raw, encoding } = this.options;
-      return {
-        ...this.__infoDataSet(),
-        bytes_records: this.info.bytes,
-        error: this.state.error,
-        header: columns === true,
-        index: this.state.record.length,
-        raw: raw ? this.state.rawBuffer.toString(encoding) : undefined,
-      };
-    },
-    __infoField: function () {
-      const { columns } = this.options;
-      const isColumns = Array.isArray(columns);
-      // Bytes records are only incremented when all records'fields are parsed
-      const bytes_records = this.info.bytes_records;
-      return {
-        ...this.__infoRecord(),
-        bytes_records: bytes_records,
-        column:
-          isColumns === true
-            ? columns.length > this.state.record.length
-              ? columns[this.state.record.length].name
-              : null
-            : this.state.record.length,
-        quoting: this.state.wasQuoting,
-      };
-    },
-  };
-};
-
-const parse = function (data, opts = {}) {
-  if (typeof data === "string") {
-    data = Buffer.from(data);
-  }
-  const records = opts && opts.objname ? {} : [];
-  const parser = transform(opts);
-  const push = (record) => {
-    if (parser.options.objname === undefined) records.push(record);
-    else {
-      records[record[0]] = record[1];
-    }
-  };
-  const close = () => {};
-  const error = parser.parse(data, true, push, close);
-  if (error !== undefined) throw error;
-  // 250606: `parser.parse` was implemented as 2 calls:
-  // const err1 = parser.parse(data, false, push, close);
-  // if (err1 !== undefined) throw err1;
-  // const err2 = parser.parse(undefined, true, push, close);
-  // if (err2 !== undefined) throw err2;
-  return records;
-};
-
-/**
- * Copyright 2023 actions-toolkit authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-class Util {
-    static getInputList(name, opts) {
-        return this.getList(getInput(name), opts);
-    }
-    static getList(input, opts) {
-        const res = [];
-        if (input == '') {
-            return res;
-        }
-        const records = parse(input, {
-            columns: false,
-            relaxQuotes: true,
-            comment: opts?.comment,
-            comment_no_infix: opts?.commentNoInfix,
-            relaxColumnCount: true,
-            skipEmptyLines: true,
-            quote: opts?.quote
-        });
-        for (const record of records) {
-            if (record.length == 1) {
-                if (opts?.ignoreComma) {
-                    res.push(record[0]);
-                }
-                else {
-                    res.push(...record[0].split(','));
-                }
-            }
-            else if (!opts?.ignoreComma) {
-                res.push(...record);
-            }
-            else {
-                res.push(record.join(','));
-            }
-        }
-        return res.filter(item => item).map(pat => pat.trim());
-    }
-    static getInputNumber(name) {
-        const value = getInput(name);
-        if (!value) {
-            return undefined;
-        }
-        return parseInt(value);
-    }
-    static async asyncForEach(array, callback) {
-        for (let index = 0; index < array.length; index++) {
-            await callback(array[index], index, array);
-        }
-    }
-    static isValidURL(urlStr) {
-        let url;
-        try {
-            url = new URL(urlStr);
-        }
-        catch {
-            return false;
-        }
-        return url.protocol === 'http:' || url.protocol === 'https:';
-    }
-    static isValidRef(refStr) {
-        if (Util.isValidURL(refStr)) {
-            return true;
-        }
-        for (const prefix of ['git://', 'github.com/', 'git@']) {
-            if (refStr.startsWith(prefix)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    static async powershellCommand(script, params) {
-        const powershellPath = await which('powershell', true);
-        const escapedScript = script.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-        const escapedParams = [];
-        if (params) {
-            for (const key in params) {
-                escapedParams.push(`-${key} '${params[key].replace(/'/g, "''").replace(/"|\n|\r/g, '')}'`);
-            }
-        }
-        return {
-            command: `"${powershellPath}"`,
-            args: ['-NoLogo', '-Sta', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Unrestricted', '-Command', `& '${escapedScript}' ${escapedParams.join(' ')}`]
-        };
-    }
-    static isDirectory(p) {
-        try {
-            return fs__default.lstatSync(p).isDirectory();
-        }
-        catch {
-            // noop
-        }
-        return false;
-    }
-    static trimPrefix(str, suffix) {
-        if (!str || !suffix) {
-            return str;
-        }
-        const index = str.indexOf(suffix);
-        if (index !== 0) {
-            return str;
-        }
-        return str.substring(suffix.length);
-    }
-    static trimSuffix(str, suffix) {
-        if (!str || !suffix) {
-            return str;
-        }
-        const index = str.lastIndexOf(suffix);
-        if (index === -1 || index + suffix.length !== str.length) {
-            return str;
-        }
-        return str.substring(0, index);
-    }
-    static sleep(seconds) {
-        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
-    }
-    static hash(input) {
-        return crypto__default.createHash('sha256').update(input).digest('hex');
-    }
-    // https://github.com/golang/go/blob/f6b93a4c358b28b350dd8fe1780c1f78e520c09c/src/strconv/atob.go#L7-L18
-    static parseBool(str) {
-        if (str === undefined) {
-            return false;
-        }
-        switch (str) {
-            case '1':
-            case 't':
-            case 'T':
-            case 'true':
-            case 'TRUE':
-            case 'True':
-                return true;
-            case '0':
-            case 'f':
-            case 'F':
-            case 'false':
-            case 'FALSE':
-            case 'False':
-                return false;
-            default:
-                throw new Error(`parseBool syntax error: ${str}`);
-        }
-    }
-    static parseBoolOrDefault(str, defaultValue = false) {
-        try {
-            return this.parseBool(str);
-        }
-        catch {
-            return defaultValue;
-        }
-    }
-    static formatFileSize(bytes) {
-        if (bytes === 0)
-            return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-    static generateRandomString(length = 10) {
-        const bytes = crypto__default.randomBytes(Math.ceil(length / 2));
-        return bytes.toString('hex').slice(0, length);
-    }
-    static stringToUnicodeEntities(str) {
-        return Array.from(str)
-            .map(char => `&#x${char.charCodeAt(0).toString(16)};`)
-            .join('');
-    }
-    static countLines(input) {
-        return input.split(/\r\n|\r|\n/).length;
-    }
-    static isPathRelativeTo(parentPath, childPath) {
-        const rpp = path__default.resolve(parentPath);
-        const rcp = path__default.resolve(childPath);
-        return rcp.startsWith(rpp.endsWith(path__default.sep) ? rpp : `${rpp}${path__default.sep}`);
-    }
-    static formatDuration(ns) {
-        if (ns === 0)
-            return '0s';
-        const totalSeconds = Math.floor(ns / 1e9);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        const parts = [];
-        if (hours)
-            parts.push(`${hours}h`);
-        if (minutes)
-            parts.push(`${minutes}m`);
-        if (seconds || parts.length === 0)
-            parts.push(`${seconds}s`);
-        return parts.join('');
-    }
-}
-
-/**
- * Retrieves and parses the inputs for the GitHub Action.
- *
- * This function collects input values using the GitHub Actions core utilities and
- * returns them as an object that conforms to the Inputs interface. It converts string
- * inputs to appropriate types where necessary, such as parsing the 'collapse-after'
- * input to an integer and interpreting 'publish', 'dry-run', and 'group-dependencies' as booleans.
- *
- * @returns An object containing the structured inputs for the action.
- */
-function getInputs() {
-    return {
-        githubToken: getInput('github-token'),
-        majorLabel: getInput('major-label'),
-        minorLabel: getInput('minor-label'),
-        header: getInput('notes-header'),
-        footer: getInput('notes-footer'),
-        variables: Util.getInputList('variables'),
-        collapseAfter: parseInt(getInput('collapse-after'), 10),
-        publish: getBooleanInput('publish'),
-        configPath: getInput('config-path'),
-        dryRun: getBooleanInput('dry-run'),
-        groupDependencies: getBooleanInput('group-dependencies'),
-        removeConventionalPrefixes: getBooleanInput('remove-conventional-prefixes'),
-    };
-}
-
 async function run() {
     try {
-        const context$1 = context;
-        startGroup(`Context info`);
-        info(`eventName: ${context$1.eventName}`);
-        info(`sha: ${context$1.sha}`);
-        info(`ref: ${context$1.ref}`);
-        info(`workflow: ${context$1.workflow}`);
-        info(`action: ${context$1.action}`);
-        info(`actor: ${context$1.actor}`);
-        info(`runNumber: ${context$1.runNumber}`);
-        info(`runId: ${context$1.runId}`);
-        endGroup();
         const inputs = getInputs();
         const client = getOctokit(inputs.githubToken);
-        const releaseData = await getRelease(client);
-        setOutput('previous-version', releaseData.latestRelease);
-        startGroup(`Releases`);
-        info(`Latest release: ${releaseData.latestRelease}`);
-        info(`Found ${releaseData.releases.length} release(s):`);
-        info(`-`.repeat(20));
-        releaseData.releases.forEach((release) => {
-            info(`ID: ${release.id}`);
-            info(`Release: ${release.tag_name}`);
-            info(`Draft: ${release.draft}`);
-            info(`Target commitish: ${release.target_commitish}`);
-            info(`-`.repeat(20));
+        const context = await getContext(inputs.context);
+        await group(`Context info`, async () => {
+            info(`eventName: ${context.eventName}`);
+            info(`sha: ${context.sha}`);
+            info(`ref: ${context.ref}`);
+            info(`workflow: ${context.workflow}`);
+            info(`action: ${context.action}`);
+            info(`actor: ${context.actor}`);
+            info(`runNumber: ${context.runNumber}`);
+            info(`runId: ${context.runId}`);
         });
-        endGroup();
+        const releaseData = await getRelease(client, inputs);
+        setOutput('previous-version', releaseData.latestRelease);
+        await group(`Releases`, async () => {
+            info(`Latest release: ${releaseData.latestRelease}`);
+            info(`Found ${releaseData.releases.length} release(s):`);
+            info(`-`.repeat(20));
+            releaseData.releases.forEach((release) => {
+                info(`ID: ${release.id}`);
+                info(`Release: ${release.tag_name}`);
+                info(`Draft: ${release.draft}`);
+                info(`Target commitish: ${release.target_commitish}`);
+                info(`-`.repeat(20));
+            });
+        });
         if (releaseData.nextRelease === 'next') {
             // generate release notes for the next release
             const releaseNotes = await generateReleaseNotes(client, inputs, releaseData);

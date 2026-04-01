@@ -11,6 +11,7 @@ await import('@actions/core')
 
 const {parseNotes, generateReleaseNotes, splitMarkdownSections, groupDependencyUpdates, removeConventionalPrefixes} =
   await import('../src/notes.js')
+const {ContextSource} = await import('../src/context.js')
 import type {Inputs} from '../src/context.js'
 
 let gh: ReturnType<typeof github.getOctokit>
@@ -138,6 +139,7 @@ describe('generateReleaseNotes', () => {
       dryRun: false,
       groupDependencies: true,
       removeConventionalPrefixes: false,
+      context: ContextSource.workflow,
     }
     const releaseData = {
       releases: [],
@@ -179,6 +181,7 @@ describe('generateReleaseNotes', () => {
       dryRun: false,
       groupDependencies: false,
       removeConventionalPrefixes: true,
+      context: ContextSource.workflow,
     }
 
     const releaseData = {
@@ -262,6 +265,7 @@ describe('generateReleaseNotes', () => {
       dryRun: false,
       groupDependencies: false,
       removeConventionalPrefixes: true,
+      context: ContextSource.workflow,
     }
 
     const releaseData = {
@@ -313,6 +317,7 @@ describe('generateReleaseNotes', () => {
       dryRun: false,
       groupDependencies: true,
       removeConventionalPrefixes: true,
+      context: ContextSource.workflow,
     }
 
     const releaseData = {

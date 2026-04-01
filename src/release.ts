@@ -2,7 +2,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import {components as OctoOpenApiTypes} from '@octokit/openapi-types'
 import {generateReleaseNotes} from './notes.js'
-import {Inputs} from './context.js'
+import {getContext, Inputs} from './context.js'
 
 type Release = OctoOpenApiTypes['schemas']['release']
 
@@ -13,7 +13,7 @@ export type ReleaseData = {
   nextRelease: string
 }
 
-export async function getRelease(client: ReturnType<typeof github.getOctokit>): Promise<ReleaseData> {
+export async function getRelease(client: ReturnType<typeof github.getOctokit>, inputs: Inputs): Promise<ReleaseData> {
   const releaseResponse: ReleaseData = {
     latestRelease: 'v0.0.0',
     releases: [],
@@ -21,7 +21,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>): 
     nextRelease: '',
   }
 
-  const context = github.context
+  const context = await getContext(inputs.context)
 
   try {
     // get all releases
@@ -70,7 +70,7 @@ export async function createOrUpdateRelease(
   inputs: Inputs,
   releaseData: ReleaseData,
 ): Promise<void> {
-  const context = github.context
+  const context = await getContext(inputs.context)
   const releases = releaseData.releases
   const nextRelease = releaseData.nextRelease
 
