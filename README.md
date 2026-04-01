@@ -24,12 +24,20 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   draft-release:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Draft Release
+        uses: lucacome/draft-release@v2.0.4
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -37,21 +45,21 @@ jobs:
 
 ## Inputs
 
-| Name                          | Type      | Description                                                                |
-|-------------------------------|-----------|----------------------------------------------------------------------------|
-| `github-token`                | `string`  | The GitHub token to use for the release. (default `github.token`)          |
-| `minor-label`                 | `string`  | The label to use for minor releases. (default `enhancement`)               |
-| `major-label`                 | `string`  | The label to use for major releases. (default `change`)                    |
-| `notes-header`                | `string`  | The header to use for the release notes.                                   |
-| `notes-footer`                | `string`  | The footer to use for the release notes.                                   |
-| `variables`                   | `list`    | A list of variables to use in the header and footer.                       |
-| `publish`                     | `boolean` | Whether to publish the release. (default `false`)                          |
-| `collapse-after`              | `number`  | The number of PRs to show before collapsing. (default `0`)                 |
-| `group-dependencies`          | `boolean` | Whether to group dependency updates. (default `true`)                      |
-| `config-path`                 | `string`  | Path to release config file. (default `.github/release.yml`)               |
-| `dry-run`                     | `boolean` | Run without creating a release. (default `false`)                          |
-| `remove-conventional-prefixes`| `boolean` | Remove conventional prefixes from PR titles. (default `false`)             |
-| `context`                     | `string`  | Where to read context data from: `workflow` or `git`. (default `workflow`) |
+| Name                           | Type      | Default                   | Description                                                          |
+|--------------------------------|-----------|---------------------------|----------------------------------------------------------------------|
+| `github-token`                 | `string`  | `github.token`            | The GitHub token to use for the release.                             |
+| `minor-label`                  | `string`  | `enhancement`             | The label to use for minor releases.                                 |
+| `major-label`                  | `string`  | `change`                  | The label to use for major releases.                                 |
+| `notes-header`                 | `string`  |                           | The header to use for the release notes.                             |
+| `notes-footer`                 | `string`  |                           | The footer to use for the release notes.                             |
+| `variables`                    | `list`    |                           | Newline-separated `KEY=VALUE` pairs to use in the header and footer. |
+| `publish`                      | `boolean` | `false`                   | Whether to publish the release.                                      |
+| `collapse-after`               | `number`  | `0`                       | The number of PRs to show before collapsing the section.             |
+| `group-dependencies`           | `boolean` | `true`                    | Whether to group dependency updates.                                 |
+| `config-path`                  | `string`  | `.github/release.yml`     | Path to release config file.                                         |
+| `dry-run`                      | `boolean` | `false`                   | Run without creating a release.                                      |
+| `remove-conventional-prefixes` | `boolean` | `false`                   | Remove conventional prefixes from PR titles.                         |
+| `context`                      | `string`  | `workflow`                | Where to read context data from: `workflow` or `git`.                |
 
 ## Outputs
 
@@ -62,7 +70,7 @@ jobs:
 | `release-id`       | `string` | The ID of the next release.                                                          |
 | `release-notes`    | `string` | The release notes of the next release.                                               |
 | `release-url`      | `string` | The URL of the next release.                                                         |
-| `release-sections` | `string` | A JSON output containing the release sections and the pull requests in each section. |
+| `release-sections` | `string` | A JSON array containing the release section titles and entry counts.                 |
 | `release-header`   | `string` | The header of the release notes.                                                     |
 | `release-footer`   | `string` | The footer of the release notes.                                                     |
 
@@ -100,8 +108,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Draft Release
+        uses: lucacome/draft-release@v2.0.4
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -133,8 +144,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: lucacome/draft-release@v2.0.4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Draft Release
+        uses: lucacome/draft-release@v2.0.4
         id: draft-release
         with:
           minor-label: 'enhancement'
