@@ -333,7 +333,7 @@ const {myFunction} = await import('../src/myModule.js')
 | `release-notes` | Full Markdown release notes |
 | `release-url` | HTML URL of the created/updated release |
 | `release-id` | Numeric ID of the release |
-| `release-sections` | JSON array of section titles and entry counts |
+| `release-sections` | JSON object where keys are category labels and values are arrays of markdown bullet items |
 | `release-header` | Rendered header string |
 | `release-footer` | Rendered footer string |
 

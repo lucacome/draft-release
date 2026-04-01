@@ -63,16 +63,16 @@ jobs:
 
 ## Outputs
 
-| Name               | Type     | Description                                                                          |
-| ------------------ | -------- | ------------------------------------------------------------------------------------ |
-| `version`          | `string` | The version number of the next release.                                              |
-| `previous-version` | `string` | The version number of the previous release.                                          |
-| `release-id`       | `string` | The ID of the next release.                                                          |
-| `release-notes`    | `string` | The release notes of the next release.                                               |
-| `release-url`      | `string` | The URL of the next release.                                                         |
-| `release-sections` | `string` | A JSON array containing the release section titles and entry counts.                 |
-| `release-header`   | `string` | The header of the release notes.                                                     |
-| `release-footer`   | `string` | The footer of the release notes.                                                     |
+| Name               | Type     | Description                                                                                                 |
+| -------------------|----------|-------------------------------------------------------------------------------------------------------------|
+| `version`          | `string` | The version number of the next release.                                                                     |
+| `previous-version` | `string` | The version number of the previous release.                                                                 |
+| `release-id`       | `string` | The ID of the next release.                                                                                 |
+| `release-notes`    | `string` | The release notes of the next release.                                                                      |
+| `release-url`      | `string` | The URL of the next release.                                                                                |
+| `release-sections` | `string` | JSON object where keys are category labels and values are arrays of markdown bullet items for each section. |
+| `release-header`   | `string` | The header of the release notes.                                                                            |
+| `release-footer`   | `string` | The footer of the release notes.                                                                            |
 
 ## Header and Footer
 
