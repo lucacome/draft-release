@@ -51831,7 +51831,7 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     const draft = releaseData.branch !== 'tag' || !inputs.publish;
     const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch;
     debug(`targetBranch: ${targetBranch}`);
-    const newReleaseNotes = await generateReleaseNotes(client, inputs, releaseData);
+    const newReleaseNotes = await generateReleaseNotes(client, inputs, { ...releaseData, branch: targetBranch });
     let response;
     if (!inputs.dryRun) {
         const releaseParams = {

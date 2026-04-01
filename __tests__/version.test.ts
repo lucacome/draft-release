@@ -1,4 +1,4 @@
-import {jest, describe, expect, test} from '@jest/globals'
+import {jest, describe, expect, test, beforeEach} from '@jest/globals'
 import {ContextSource} from '../src/context.js'
 import type {Inputs} from '../src/context.js'
 
@@ -14,6 +14,10 @@ jest.unstable_mockModule('../src/category.js', () => ({
 const {getVersionIncrease} = await import('../src/version.js')
 
 describe('getVersionIncrease', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   const baseInputs: Inputs = {
     majorLabel: '',
     minorLabel: '',

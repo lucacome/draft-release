@@ -418,6 +418,8 @@ describe('createOrUpdateRelease', () => {
         draft: true,
       }),
     )
+    // generateReleaseNotes must not receive 'tag' as target_commitish
+    expect(mockReleaseNotes).toHaveBeenCalledWith(expect.objectContaining({target_commitish: 'v1.0.1'}))
   })
 
   it('should update existing draft when branch is tag and matching draft exists', async () => {
@@ -455,6 +457,8 @@ describe('createOrUpdateRelease', () => {
         draft: true,
       }),
     )
+    // generateReleaseNotes must receive the draft's branch, not 'tag'
+    expect(mockReleaseNotes).toHaveBeenCalledWith(expect.objectContaining({target_commitish: 'main'}))
   })
 
   it('should create a non-draft release when branch is tag and publish is true', async () => {
