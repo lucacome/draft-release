@@ -527,6 +527,83 @@ describe('createOrUpdateRelease', () => {
     )
   })
 
+  it('should update stale same-branch draft when tag does not match nextRelease', async () => {
+    const releaseData: ReleaseData = {
+      latestRelease: 'v2.0.4',
+      releases: [
+        {
+          id: 10,
+          tag_name: 'v2.0.5',
+          target_commitish: 'main',
+          draft: true,
+          created_at: '2024-03-01T00:00:00Z',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any[],
+      branch: 'main',
+      nextRelease: 'v2.1.0',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockUpdate = jest.spyOn(gh.rest.repos, 'updateRelease')
+    mockUpdate.mockResolvedValue(mockResponse)
+
+    const mockCreate = jest.spyOn(gh.rest.repos, 'createRelease')
+
+    await createOrUpdateRelease(gh, inputs, releaseData)
+
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tag_name: 'v2.1.0',
+        target_commitish: 'main',
+        release_id: 10,
+        draft: true,
+      }),
+    )
+  })
+
+  it('should create a new draft when the only existing draft targets a different branch', async () => {
+    const releaseData: ReleaseData = {
+      latestRelease: 'v2.0.4',
+      releases: [
+        {
+          id: 10,
+          tag_name: 'v2.0.5',
+          target_commitish: 'release/2.x',
+          draft: true,
+          created_at: '2024-03-01T00:00:00Z',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any[],
+      branch: 'main',
+      nextRelease: 'v2.1.0',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockCreate = jest.spyOn(gh.rest.repos, 'createRelease')
+    mockCreate.mockResolvedValue(mockResponse)
+
+    const mockUpdate = jest.spyOn(gh.rest.repos, 'updateRelease')
+
+    await createOrUpdateRelease(gh, inputs, releaseData)
+
+    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockCreate).toHaveBeenCalledTimes(1)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tag_name: 'v2.1.0',
+        target_commitish: 'main',
+        draft: true,
+      }),
+    )
+  })
+
   it('should set release-id and release-url outputs from the API response', async () => {
     const releaseData: ReleaseData = {
       latestRelease: 'v1.0.0',

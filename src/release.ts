@@ -78,7 +78,12 @@ export async function createOrUpdateRelease(
   const nextRelease = releaseData.nextRelease
 
   // find if a release draft already exists for versionIncrease
-  const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease)
+  let releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease)
+
+  // for branch events: if no exact match, fall back to the most-recent draft targeting this branch
+  if (releaseDraft === undefined && releaseData.branch !== 'tag') {
+    releaseDraft = releases.find((release) => release.draft && release.target_commitish === releaseData.branch)
+  }
 
   const draft = releaseData.branch !== 'tag' || !inputs.publish
   const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch
