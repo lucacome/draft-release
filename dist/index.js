@@ -51826,8 +51826,15 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     const context = await getContext(inputs.context);
     const releases = releaseData.releases;
     const nextRelease = releaseData.nextRelease;
-    // find if a release draft already exists for versionIncrease
-    const releaseDraft = releases.find((release) => release.draft && release.tag_name === nextRelease);
+    // find if a release draft already exists for versionIncrease;
+    // for branch events also constrain to the current branch to avoid repointing a draft from a parallel release train
+    let releaseDraft = releases.find((release) => release.draft &&
+        release.tag_name === nextRelease &&
+        (releaseData.branch === 'tag' || release.target_commitish === releaseData.branch));
+    // for branch events: if no exact match, fall back to the most-recent draft targeting this branch
+    if (releaseDraft === undefined && releaseData.branch !== 'tag') {
+        releaseDraft = releases.find((release) => release.draft && release.target_commitish === releaseData.branch);
+    }
     const draft = releaseData.branch !== 'tag' || !inputs.publish;
     const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch;
     debug(`targetBranch: ${targetBranch}`);
