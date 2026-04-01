@@ -5,7 +5,7 @@
     "@actions/github": "^9.0.0",
     "@docker/actions-toolkit": "^0.83.0",
     "@types/semver": "^7.7.1",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "semver": "^7.7.4"
   },
   "description": "GitHub Action to create a draft release",
