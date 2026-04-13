@@ -45,13 +45,15 @@ jobs:
           echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
           echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
 
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             console.log("Release Sections: " + JSON.stringify(${{ steps.draft-release.outputs.release-sections }}, null, 2));
 
   test-dry-run-config:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -89,6 +91,8 @@ jobs:
 
   test-git-context:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
