@@ -18,7 +18,11 @@ export async function run(): Promise<void> {
       core.info(`workflow: ${context.workflow}`)
       core.info(`action: ${context.action}`)
       core.info(`actor: ${context.actor}`)
+      core.info(`owner: ${context.repo.owner}`)
+      core.info(`repo: ${context.repo.repo}`)
+      core.info(`job: ${context.job}`)
       core.info(`runNumber: ${context.runNumber}`)
+      core.info(`runAttempt: ${context.runAttempt}`)
       core.info(`runId: ${context.runId}`)
     })
 

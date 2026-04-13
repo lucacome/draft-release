@@ -54,6 +54,31 @@ export function getInputs(): Inputs {
 
 type Context = typeof github.context
 
+// Cache the git context so git commands are only run once per action invocation,
+// and all callers receive the same consistent ref/sha snapshot.
+let cachedGitContext: Context | undefined
+
+/**
+ * Returns the action context from either the workflow environment or live git commands.
+ *
+ * When source is `ContextSource.git`, the result is memoized: git commands (`git branch`,
+ * `git show`, etc.) are executed only on the first call, and every subsequent call returns
+ * the same context object. This guarantees a consistent ref/sha across all callers and
+ * avoids redundant shell spawns.
+ *
+ * @param source - The context source: `workflow` (default GitHub Actions env) or `git` (live git).
+ * @returns The resolved action context.
+ */
 export async function getContext(source: ContextSource): Promise<Context> {
-  return source === ContextSource.git ? await Git.context() : github.context
+  if (source !== ContextSource.git) {
+    return github.context
+  }
+  if (cachedGitContext) {
+    return cachedGitContext
+  }
+  // Git.context() shallow-spreads github.context, which misses prototype getters (e.g. `repo`).
+  // Explicitly re-attach repo so downstream callers can rely on context.repo.
+  const ctx = await Git.context()
+  cachedGitContext = Object.assign(ctx, {repo: github.context.repo})
+  return cachedGitContext
 }
