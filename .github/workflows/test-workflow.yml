@@ -86,3 +86,26 @@ jobs:
           echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
           echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
           echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"
+
+  test-git-context:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./
+        id: draft-release
+        with:
+          context: git
+          dry-run: true
+
+      - name: Validate outputs
+        run: |
+          echo "Version: ${{ steps.draft-release.outputs.version }}"
+          echo "Previous Version: ${{ steps.draft-release.outputs.previous-version }}"
+          echo "Release Notes: ${{ steps.draft-release.outputs.release-notes }}"
+          echo "Release URL: ${{ steps.draft-release.outputs.release-url }}"
+          echo "Release ID: ${{ steps.draft-release.outputs.release-id }}"
+          [ -n "${{ steps.draft-release.outputs.version }}" ] || { echo "ERROR: version output is empty"; exit 1; }
+          [ -n "${{ steps.draft-release.outputs.previous-version }}" ] || { echo "ERROR: previous-version output is empty"; exit 1; }
