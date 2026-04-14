@@ -264,7 +264,7 @@ Jest ESM requires `jest.unstable_mockModule()` called **before** any dynamic imp
 All tests follow this structure:
 
 ```ts
-import {jest, describe, expect, test, beforeEach} from '@jest/globals'
+import {jest, describe, expect, it, beforeEach} from '@jest/globals'
 import type {MyType} from '../src/myModule.js'
 
 // 1. Import fixtures
