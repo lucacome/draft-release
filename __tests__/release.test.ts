@@ -1,4 +1,4 @@
-import {jest, describe, expect, test, it, beforeEach} from '@jest/globals'
+import {jest, describe, expect, it, beforeEach} from '@jest/globals'
 import * as githubfix from '../__fixtures__/github.js'
 import * as corefix from '../__fixtures__/core.js'
 
@@ -44,7 +44,7 @@ describe('getRelease', () => {
     jest.mocked(getContext).mockResolvedValue(githubfix.context as any)
   })
 
-  test('should return the latest release when multiple releases exist', async () => {
+  it('should return the latest release when multiple releases exist', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -79,7 +79,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v1.0.2')
   })
 
-  test('should return the latest for the current branch', async () => {
+  it('should return the latest for the current branch', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -114,7 +114,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v1.0.1')
   })
 
-  test('should return the latest non-draft release', async () => {
+  it('should return the latest non-draft release', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -149,7 +149,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v1.0.0')
   })
 
-  test('should return v0.0.0 when no releases exist', async () => {
+  it('should return v0.0.0 when no releases exist', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -165,7 +165,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v0.0.0')
   })
 
-  test('should use local git state when context is git', async () => {
+  it('should use local git state when context is git', async () => {
     jest.mocked(getContext).mockResolvedValue({
       ...githubfix.context,
       ref: 'refs/heads/feature-branch',
@@ -203,7 +203,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v2.0.0')
   })
 
-  test('should set nextRelease to tag name and branch to "tag" for tag-triggered events', async () => {
+  it('should set nextRelease to tag name and branch to "tag" for tag-triggered events', async () => {
     jest.mocked(getContext).mockResolvedValue({
       ...githubfix.context,
       ref: 'refs/tags/v1.2.3',
@@ -232,7 +232,7 @@ describe('getRelease', () => {
     expect(releaseData.nextRelease).toBe('v1.2.3')
   })
 
-  test('should return v0.0.0 when all releases are drafts', async () => {
+  it('should return v0.0.0 when all releases are drafts', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockResponse: any = {
       headers: {},
@@ -260,7 +260,7 @@ describe('getRelease', () => {
     expect(releaseData.latestRelease).toBe('v0.0.0')
   })
 
-  test('should propagate API errors from paginate', async () => {
+  it('should propagate API errors from paginate', async () => {
     jest.spyOn(gh.rest.repos, 'listReleases').mockRejectedValue(new Error('API error'))
 
     await expect(getRelease(gh, workflowInputs)).rejects.toThrow('API error')

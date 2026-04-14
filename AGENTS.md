@@ -283,7 +283,7 @@ const {myFunction} = await import('../src/myModule.js')
 ### Test Structure
 
 - `describe()` blocks group tests by exported function name
-- `it()` and `test()` are used interchangeably
+- `it()` is used for all test cases (not `test()`)
 - Use `beforeEach()` to reset mock state: `jest.clearAllMocks()`
 - Use `jest.spyOn(gh.rest.repos, 'method').mockResolvedValue(mockResponse)` for API mocking
 - Large markdown fixture strings are defined at module scope and reused across test cases

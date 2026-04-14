@@ -1,4 +1,4 @@
-import {jest, describe, expect, test, beforeEach} from '@jest/globals'
+import {jest, describe, expect, it, beforeEach} from '@jest/globals'
 import {ContextSource} from '../src/context.js'
 import type {Inputs} from '../src/context.js'
 
@@ -41,23 +41,23 @@ describe('getVersionIncrease', () => {
     nextRelease: '1.0.1',
   }
 
-  test('should return patch with empty labels (bug)', async () => {
+  it('should return patch with empty labels (bug)', async () => {
     const inputs: Inputs = {...baseInputs}
     const version = await getVersionIncrease(releaseData, inputs, '### 🐛 Bug Fixes')
     expect(version).toEqual('1.0.1')
   })
-  test('should return patch with empty labels (feature)', async () => {
+  it('should return patch with empty labels (feature)', async () => {
     const inputs: Inputs = {...baseInputs}
     const version = await getVersionIncrease(releaseData, inputs, '### 🚀 Features')
     expect(version).toEqual('1.0.1')
   })
-  test('should return patch with empty labels (change)', async () => {
+  it('should return patch with empty labels (change)', async () => {
     const inputs: Inputs = {...baseInputs}
     const version = await getVersionIncrease(releaseData, inputs, '### 💣 Breaking Changes')
     expect(version).toEqual('1.0.1')
   })
 
-  test('should return minor', async () => {
+  it('should return minor', async () => {
     const inputs: Inputs = {...baseInputs, minorLabel: 'enhancement', majorLabel: 'change'}
 
     const version = await getVersionIncrease(
@@ -72,7 +72,7 @@ describe('getVersionIncrease', () => {
     )
     expect(version).toEqual('1.1.0')
   })
-  test('should return major', async () => {
+  it('should return major', async () => {
     const inputs: Inputs = {...baseInputs, minorLabel: 'bug', majorLabel: 'change'}
     const version = await getVersionIncrease(
       releaseData,
