@@ -264,7 +264,7 @@ Jest ESM requires `jest.unstable_mockModule()` called **before** any dynamic imp
 All tests follow this structure:
 
 ```ts
-import {jest, describe, expect, test, beforeEach} from '@jest/globals'
+import {jest, describe, expect, it, beforeEach} from '@jest/globals'
 import type {MyType} from '../src/myModule.js'
 
 // 1. Import fixtures
@@ -283,7 +283,7 @@ const {myFunction} = await import('../src/myModule.js')
 ### Test Structure
 
 - `describe()` blocks group tests by exported function name
-- `it()` and `test()` are used interchangeably
+- `it()` is used for all test cases (not `test()`)
 - Use `beforeEach()` to reset mock state: `jest.clearAllMocks()`
 - Use `jest.spyOn(gh.rest.repos, 'method').mockResolvedValue(mockResponse)` for API mocking
 - Large markdown fixture strings are defined at module scope and reused across test cases

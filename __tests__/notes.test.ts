@@ -1,4 +1,4 @@
-import {jest, describe, expect, test, it, beforeEach} from '@jest/globals'
+import {jest, describe, expect, it, beforeEach} from '@jest/globals'
 
 import * as githubfix from '../__fixtures__/github.js'
 import * as corefix from '../__fixtures__/core.js'
@@ -17,19 +17,19 @@ import type {Inputs} from '../src/context.js'
 let gh: ReturnType<typeof github.getOctokit>
 
 describe('parseNotes', () => {
-  test('should return patch for bug fixes and empty labels', () => {
+  it('should return patch for bug fixes and empty labels', () => {
     const version = parseNotes('### 🐛 Bug Fixes', '', '')
     expect(version).toEqual('patch')
   })
-  test('should return patch for features and empty labels', () => {
+  it('should return patch for features and empty labels', () => {
     const version = parseNotes('### 🚀 Features', '', '')
     expect(version).toEqual('patch')
   })
-  test('should return patch if minor and major are not in notes', () => {
+  it('should return patch if minor and major are not in notes', () => {
     const version = parseNotes('### 🚀 Features', '💣 Breaking Changes', '🐛 Bug Fixes')
     expect(version).toEqual('patch')
   })
-  test('should return minor', () => {
+  it('should return minor', () => {
     const version = parseNotes(
       `
             ### 🚀 Features
@@ -43,7 +43,7 @@ describe('parseNotes', () => {
     )
     expect(version).toEqual('minor')
   })
-  test('should return minor if major is empty', () => {
+  it('should return minor if major is empty', () => {
     const version = parseNotes(
       `
             ### 💣 Breaking Changes
@@ -57,7 +57,7 @@ describe('parseNotes', () => {
     )
     expect(version).toEqual('minor')
   })
-  test('should return major', () => {
+  it('should return major', () => {
     const version = parseNotes(
       `
             ### 💣 Breaking Changes
