@@ -106,4 +106,4 @@ lib/**/*
 .pnp.*
 
 # mise prepare state file
-.mise/prepare-state.toml
+.mise/deps-state.toml
