@@ -12,6 +12,7 @@ export type ReleaseData = {
   latestRelease: string
   releases: Release[]
   branch: string
+  isTag: boolean
   nextRelease: string
 }
 
@@ -20,6 +21,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
     latestRelease: 'v0.0.0',
     releases: [],
     branch: '',
+    isTag: false,
     nextRelease: '',
   }
 
@@ -38,6 +40,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
 
     const isTag = context.ref.startsWith('refs/tags/')
     releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '')
+    releaseResponse.isTag = isTag
     core.debug(`Current branch: ${releaseResponse.branch}`)
     releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : NEXT_RELEASE_SENTINEL
 
@@ -76,7 +79,7 @@ export async function createOrUpdateRelease(
   const context = await getContext(inputs.context)
   const releases = releaseData.releases
   const nextRelease = releaseData.nextRelease
-  const isTagRun = releaseData.branch === 'tag'
+  const isTagRun = releaseData.isTag
 
   let releaseToUpdate: Release | undefined
 

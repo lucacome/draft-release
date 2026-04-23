@@ -200,6 +200,7 @@ describe('getRelease', () => {
 
     expect(getContext).toHaveBeenCalledWith(ContextSource.git)
     expect(releaseData.branch).toBe('feature-branch')
+    expect(releaseData.isTag).toBe(false)
     expect(releaseData.latestRelease).toBe('v2.0.0')
   })
 
@@ -229,8 +230,45 @@ describe('getRelease', () => {
     const releaseData = await getRelease(gh, workflowInputs)
 
     expect(releaseData.branch).toBe('tag')
+    expect(releaseData.isTag).toBe(true)
     expect(releaseData.nextRelease).toBe('v1.2.3')
     expect(releaseData.latestRelease).toBe('v1.0.0')
+  })
+
+  it('should not treat a branch named "tag" as a tag-triggered run', async () => {
+    jest.mocked(getContext).mockResolvedValue({
+      ...githubfix.context,
+      ref: 'refs/heads/tag',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockResponse: any = {
+      headers: {},
+      status: 200,
+      data: [
+        {
+          tag_name: 'v1.0.1',
+          target_commitish: 'tag',
+          draft: false,
+          created_at: '2024-03-03T00:00:00Z',
+        },
+        {
+          tag_name: 'v1.0.0',
+          target_commitish: 'main',
+          draft: false,
+          created_at: '2024-03-01T00:00:00Z',
+        },
+      ],
+    }
+
+    jest.spyOn(gh.rest.repos, 'listReleases').mockResolvedValue(mockResponse)
+
+    const releaseData = await getRelease(gh, workflowInputs)
+
+    expect(releaseData.branch).toBe('tag')
+    expect(releaseData.isTag).toBe(false)
+    expect(releaseData.latestRelease).toBe('v1.0.1')
   })
 
   it('should return v0.0.0 when all releases are drafts', async () => {
@@ -321,6 +359,7 @@ describe('createOrUpdateRelease', () => {
       latestRelease: 'v1.0.0',
       releases: [],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v1.0.1',
     }
 
@@ -356,6 +395,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v1.0.1',
     }
 
@@ -383,6 +423,7 @@ describe('createOrUpdateRelease', () => {
       latestRelease: 'v1.0.0',
       releases: [],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v1.0.1',
     }
 
@@ -400,6 +441,7 @@ describe('createOrUpdateRelease', () => {
       latestRelease: 'v1.0.0',
       releases: [],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -423,6 +465,45 @@ describe('createOrUpdateRelease', () => {
     expect(mockReleaseNotes).toHaveBeenCalledWith(expect.objectContaining({target_commitish: 'abc123'}))
   })
 
+  it('should use branch-mode matching when branch name is "tag" but isTag is false', async () => {
+    const releaseData: ReleaseData = {
+      latestRelease: 'v1.0.0',
+      releases: [
+        {
+          id: 6,
+          tag_name: 'v1.0.1',
+          target_commitish: 'tag',
+          draft: true,
+          created_at: '2024-03-02T00:00:00Z',
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any[],
+      branch: 'tag',
+      isTag: false,
+      nextRelease: 'v1.1.0',
+    }
+
+    const mockReleaseNotes = jest.spyOn(gh.rest.repos, 'generateReleaseNotes')
+    mockReleaseNotes.mockResolvedValue(mockNotes)
+
+    const mockUpdate = jest.spyOn(gh.rest.repos, 'updateRelease')
+    mockUpdate.mockResolvedValue(mockResponse)
+
+    const mockCreate = jest.spyOn(gh.rest.repos, 'createRelease')
+
+    await createOrUpdateRelease(gh, inputs, releaseData)
+
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        release_id: 6,
+        tag_name: 'v1.1.0',
+        target_commitish: 'tag',
+        draft: true,
+      }),
+    )
+  })
+
   it('should update existing draft when branch is tag and matching draft exists', async () => {
     const releaseData: ReleaseData = {
       latestRelease: 'v1.0.0',
@@ -437,6 +518,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -483,6 +565,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -517,6 +600,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -548,6 +632,7 @@ describe('createOrUpdateRelease', () => {
       latestRelease: 'v1.0.0',
       releases: [],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -585,6 +670,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v1.0.1',
     }
 
@@ -621,6 +707,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v2.0.0',
     }
 
@@ -657,6 +744,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'tag',
+      isTag: true,
       nextRelease: 'v2.0.0',
     }
 
@@ -693,6 +781,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v2.1.0',
     }
 
@@ -732,6 +821,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v2.1.0',
     }
 
@@ -770,6 +860,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v2.1.0',
     }
 
@@ -815,6 +906,7 @@ describe('createOrUpdateRelease', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v2.1.0',
     }
 
@@ -845,6 +937,7 @@ describe('createOrUpdateRelease', () => {
       latestRelease: 'v1.0.0',
       releases: [],
       branch: 'main',
+      isTag: false,
       nextRelease: 'v1.0.1',
     }
 
