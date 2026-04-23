@@ -63,9 +63,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/github@npm:^9.0.0, @actions/github@npm:^9.1.0":
-  version: 9.1.0
-  resolution: "@actions/github@npm:9.1.0"
+"@actions/github@npm:^9.0.0, @actions/github@npm:^9.1.0, @actions/github@npm:^9.1.1":
+  version: 9.1.1
+  resolution: "@actions/github@npm:9.1.1"
   dependencies:
     "@actions/http-client": "npm:^3.0.2"
     "@octokit/core": "npm:^7.0.6"
@@ -74,7 +74,7 @@ __metadata:
     "@octokit/request": "npm:^10.0.7"
     "@octokit/request-error": "npm:^7.1.0"
     undici: "npm:^6.23.0"
-  checksum: 10c0/af8836a3472de479ac4d4bab49ace6a3971c8ffe283ca87546db3331e6d59dbf8880469cb49f466d60770926dc68041238f02eb2de55d309c493f01a39298098
+  checksum: 10c0/044783dfbe075eddf7323faba6d07b34f6bc7dd0b44df059f1cfbe03ab1c3a341ce720088ff2a46eeb721ada18d91137961f7802976548c9753046ac5f4f8398
   languageName: node
   linkType: hard
 
@@ -5581,7 +5581,7 @@ __metadata:
   resolution: "lucacome-draft-release@workspace:."
   dependencies:
     "@actions/core": "npm:^3.0.0"
-    "@actions/github": "npm:^9.1.0"
+    "@actions/github": "npm:^9.1.1"
     "@docker/actions-toolkit": "npm:^0.88.0"
     "@eslint/compat": "npm:^2.0.5"
     "@eslint/eslintrc": "npm:^3.3.5"
