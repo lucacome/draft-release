@@ -51825,6 +51825,7 @@ async function getRelease(client, inputs) {
         latestRelease: 'v0.0.0',
         releases: [],
         branch: '',
+        isTag: false,
         nextRelease: '',
     };
     const context = await getContext(inputs.context);
@@ -51838,6 +51839,7 @@ async function getRelease(client, inputs) {
         releaseResponse.releases = releases;
         const isTag = context.ref.startsWith('refs/tags/');
         releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '');
+        releaseResponse.isTag = isTag;
         debug(`Current branch: ${releaseResponse.branch}`);
         releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : NEXT_RELEASE_SENTINEL;
         if (releases.length === 0) {
@@ -51868,40 +51870,49 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     const context = await getContext(inputs.context);
     const releases = releaseData.releases;
     const nextRelease = releaseData.nextRelease;
-    // find if a release draft already exists for versionIncrease;
-    // for branch events also constrain to the current branch to avoid repointing a draft from a parallel release train
-    let releaseDraft = releases.find((release) => release.draft &&
-        release.tag_name === nextRelease &&
-        (releaseData.branch === 'tag' || release.target_commitish === releaseData.branch));
-    // for branch events: if no exact match, fall back to the most-recent draft targeting this branch
-    if (releaseDraft === undefined && releaseData.branch !== 'tag') {
-        releaseDraft = releases.find((release) => release.draft && release.target_commitish === releaseData.branch);
+    const isTagRun = releaseData.isTag;
+    let releaseToUpdate;
+    if (isTagRun) {
+        const sameTagDraft = releases.find((release) => release.draft && release.tag_name === nextRelease);
+        const sameTagPublished = releases.find((release) => !release.draft && release.tag_name === nextRelease);
+        // Tag flow precedence:
+        // 1) Same tag draft
+        // 2) Same tag published release
+        // 3) Create a new release
+        releaseToUpdate = sameTagDraft ?? sameTagPublished;
     }
-    const draft = releaseData.branch !== 'tag' || !inputs.publish;
-    const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch;
-    debug(`targetBranch: ${targetBranch}`);
-    const newReleaseNotes = await generateReleaseNotes(client, inputs, { ...releaseData, branch: targetBranch });
+    else {
+        // Branch flow: match tag+branch first, then fall back to latest draft on branch.
+        releaseToUpdate = releases.find((release) => release.draft && release.tag_name === nextRelease && release.target_commitish === releaseData.branch);
+        if (releaseToUpdate === undefined) {
+            releaseToUpdate = releases.find((release) => release.draft && release.target_commitish === releaseData.branch);
+        }
+    }
+    const draft = isTagRun ? (releaseToUpdate?.draft === false ? false : !inputs.publish) : true;
+    const targetCommitish = isTagRun ? (releaseToUpdate?.target_commitish ?? context.sha) : releaseData.branch;
+    debug(`targetCommitish: ${targetCommitish}`);
+    const newReleaseNotes = await generateReleaseNotes(client, inputs, { ...releaseData, branch: targetCommitish });
     let response;
     if (!inputs.dryRun) {
         const releaseParams = {
             ...context.repo,
             tag_name: nextRelease,
             name: nextRelease,
-            target_commitish: targetBranch,
+            target_commitish: targetCommitish,
             body: newReleaseNotes,
             draft: draft,
         };
-        response = await (releaseDraft === undefined
+        response = await (releaseToUpdate === undefined
             ? client.rest.repos.createRelease({
                 ...releaseParams,
             })
             : client.rest.repos.updateRelease({
                 ...releaseParams,
-                release_id: releaseDraft.id,
+                release_id: releaseToUpdate.id,
             }));
     }
     const separator = '----------------------------------';
-    startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`);
+    startGroup(`${releaseToUpdate === undefined ? 'Create' : 'Update'} release for ${nextRelease}`);
     info(separator);
     info(`latestRelease: ${releaseData.latestRelease}`);
     info(separator);
@@ -51909,8 +51920,8 @@ async function createOrUpdateRelease(client, inputs, releaseData) {
     info(separator);
     info(`releaseURL: ${response?.data?.html_url}`);
     info(separator);
-    debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`);
-    debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`);
+    debug(`releaseToUpdate: ${JSON.stringify(releaseToUpdate, null, 2)}`);
+    debug(`${releaseToUpdate === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`);
     endGroup();
     setOutput('release-notes', newReleaseNotes.trim());
     setOutput('release-id', response?.data?.id !== undefined ? String(response.data.id) : '');

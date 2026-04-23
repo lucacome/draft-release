@@ -12,6 +12,7 @@ export type ReleaseData = {
   latestRelease: string
   releases: Release[]
   branch: string
+  isTag: boolean
   nextRelease: string
 }
 
@@ -20,6 +21,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
     latestRelease: 'v0.0.0',
     releases: [],
     branch: '',
+    isTag: false,
     nextRelease: '',
   }
 
@@ -38,6 +40,7 @@ export async function getRelease(client: ReturnType<typeof github.getOctokit>, i
 
     const isTag = context.ref.startsWith('refs/tags/')
     releaseResponse.branch = isTag ? 'tag' : context.ref.replace('refs/heads/', '')
+    releaseResponse.isTag = isTag
     core.debug(`Current branch: ${releaseResponse.branch}`)
     releaseResponse.nextRelease = isTag ? context.ref.replace('refs/tags/', '') : NEXT_RELEASE_SENTINEL
 
@@ -76,25 +79,34 @@ export async function createOrUpdateRelease(
   const context = await getContext(inputs.context)
   const releases = releaseData.releases
   const nextRelease = releaseData.nextRelease
+  const isTagRun = releaseData.isTag
 
-  // find if a release draft already exists for versionIncrease;
-  // for branch events also constrain to the current branch to avoid repointing a draft from a parallel release train
-  let releaseDraft = releases.find(
-    (release) =>
-      release.draft &&
-      release.tag_name === nextRelease &&
-      (releaseData.branch === 'tag' || release.target_commitish === releaseData.branch),
-  )
+  let releaseToUpdate: Release | undefined
 
-  // for branch events: if no exact match, fall back to the most-recent draft targeting this branch
-  if (releaseDraft === undefined && releaseData.branch !== 'tag') {
-    releaseDraft = releases.find((release) => release.draft && release.target_commitish === releaseData.branch)
+  if (isTagRun) {
+    const sameTagDraft = releases.find((release) => release.draft && release.tag_name === nextRelease)
+    const sameTagPublished = releases.find((release) => !release.draft && release.tag_name === nextRelease)
+
+    // Tag flow precedence:
+    // 1) Same tag draft
+    // 2) Same tag published release
+    // 3) Create a new release
+    releaseToUpdate = sameTagDraft ?? sameTagPublished
+  } else {
+    // Branch flow: match tag+branch first, then fall back to latest draft on branch.
+    releaseToUpdate = releases.find(
+      (release) => release.draft && release.tag_name === nextRelease && release.target_commitish === releaseData.branch,
+    )
+
+    if (releaseToUpdate === undefined) {
+      releaseToUpdate = releases.find((release) => release.draft && release.target_commitish === releaseData.branch)
+    }
   }
 
-  const draft = releaseData.branch !== 'tag' || !inputs.publish
-  const targetBranch = releaseData.branch === 'tag' ? (releaseDraft?.target_commitish ?? nextRelease) : releaseData.branch
-  core.debug(`targetBranch: ${targetBranch}`)
-  const newReleaseNotes = await generateReleaseNotes(client, inputs, {...releaseData, branch: targetBranch})
+  const draft = isTagRun ? (releaseToUpdate?.draft === false ? false : !inputs.publish) : true
+  const targetCommitish = isTagRun ? (releaseToUpdate?.target_commitish ?? context.sha) : releaseData.branch
+  core.debug(`targetCommitish: ${targetCommitish}`)
+  const newReleaseNotes = await generateReleaseNotes(client, inputs, {...releaseData, branch: targetCommitish})
 
   let response
   if (!inputs.dryRun) {
@@ -102,23 +114,23 @@ export async function createOrUpdateRelease(
       ...context.repo,
       tag_name: nextRelease,
       name: nextRelease,
-      target_commitish: targetBranch,
+      target_commitish: targetCommitish,
       body: newReleaseNotes,
       draft: draft,
     }
 
-    response = await (releaseDraft === undefined
+    response = await (releaseToUpdate === undefined
       ? client.rest.repos.createRelease({
           ...releaseParams,
         })
       : client.rest.repos.updateRelease({
           ...releaseParams,
-          release_id: releaseDraft.id,
+          release_id: releaseToUpdate.id,
         }))
   }
 
   const separator = '----------------------------------'
-  core.startGroup(`${releaseDraft === undefined ? 'Create' : 'Update'} release draft for ${nextRelease}`)
+  core.startGroup(`${releaseToUpdate === undefined ? 'Create' : 'Update'} release for ${nextRelease}`)
   core.info(separator)
   core.info(`latestRelease: ${releaseData.latestRelease}`)
   core.info(separator)
@@ -126,8 +138,8 @@ export async function createOrUpdateRelease(
   core.info(separator)
   core.info(`releaseURL: ${response?.data?.html_url}`)
   core.info(separator)
-  core.debug(`releaseDraft: ${JSON.stringify(releaseDraft, null, 2)}`)
-  core.debug(`${releaseDraft === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`)
+  core.debug(`releaseToUpdate: ${JSON.stringify(releaseToUpdate, null, 2)}`)
+  core.debug(`${releaseToUpdate === undefined ? 'create' : 'update'}Release: ${JSON.stringify(response?.data, null, 2)}`)
   core.endGroup()
 
   core.setOutput('release-notes', newReleaseNotes.trim())

@@ -12,6 +12,7 @@ export const context: Partial<typeof github.context> = {
     repo: 'helloworld',
   },
   ref: 'refs/heads/main',
+  sha: 'abc123',
 }
 
 const paginateImpl = async (method: (options: Record<string, unknown>) => Promise<{data: unknown[]}>, options: Record<string, unknown>) => {
