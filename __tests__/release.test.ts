@@ -724,6 +724,7 @@ describe('createOrUpdateRelease', () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         tag_name: 'v2.0.0',
+        // falls back to context.sha when no matching release exists (__fixtures__/github.ts context.sha = 'abc123')
         target_commitish: 'abc123',
         draft: true,
       }),
@@ -761,6 +762,7 @@ describe('createOrUpdateRelease', () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         tag_name: 'v2.0.0',
+        // falls back to context.sha when no matching release exists (__fixtures__/github.ts context.sha = 'abc123')
         target_commitish: 'abc123',
         draft: true,
       }),

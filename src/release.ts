@@ -104,7 +104,7 @@ export async function createOrUpdateRelease(
   }
 
   const draft = isTagRun ? (releaseToUpdate?.draft === false ? false : !inputs.publish) : true
-  const targetCommitish = isTagRun ? releaseToUpdate?.target_commitish || context.sha : releaseData.branch
+  const targetCommitish = isTagRun ? (releaseToUpdate?.target_commitish ?? context.sha) : releaseData.branch
   core.debug(`targetCommitish: ${targetCommitish}`)
   const newReleaseNotes = await generateReleaseNotes(client, inputs, {...releaseData, branch: targetCommitish})
 
