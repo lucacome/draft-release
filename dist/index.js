@@ -34660,6 +34660,12 @@ function setSecret(secret) {
  */
 function getInput(name, options) {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+    if (options && options.required && !val) {
+        throw new Error(`Input required and not supplied: ${name}`);
+    }
+    if (options && options.trimWhitespace === false) {
+        return val;
+    }
     return val.trim();
 }
 /**
@@ -34675,7 +34681,7 @@ function getInput(name, options) {
 function getBooleanInput(name, options) {
     const trueValue = ['true', 'True', 'TRUE'];
     const falseValue = ['false', 'False', 'FALSE'];
-    const val = getInput(name);
+    const val = getInput(name, options);
     if (trueValue.includes(val))
         return true;
     if (falseValue.includes(val))
@@ -47792,7 +47798,7 @@ const parse = function (data, opts = {}) {
  */
 class Util {
     static getInputList(name, opts) {
-        return this.getList(getInput(name), opts);
+        return this.getList(getInput(name, { trimWhitespace: opts?.trimWhitespace !== false }), opts);
     }
     static getList(input, opts) {
         const res = [];
@@ -47824,7 +47830,7 @@ class Util {
                 res.push(record.join(','));
             }
         }
-        return res.filter(item => item).map(pat => pat.trim());
+        return res.filter(item => item).map(item => (opts?.trimWhitespace === false ? item : item.trim()));
     }
     static getInputNumber(name) {
         const value = getInput(name);
@@ -47951,6 +47957,9 @@ class Util {
     static generateRandomString(length = 10) {
         const bytes = crypto__default.randomBytes(Math.ceil(length / 2));
         return bytes.toString('hex').slice(0, length);
+    }
+    static compileHandlebars(value, options, data) {
+        return Handlebars.compile(value, options)(data);
     }
     static stringToUnicodeEntities(str) {
         return Array.from(str)
