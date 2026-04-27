@@ -63,7 +63,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/github@npm:^9.0.0, @actions/github@npm:^9.1.0, @actions/github@npm:^9.1.1":
+"@actions/github@npm:^9.0.0, @actions/github@npm:^9.1.1":
   version: 9.1.1
   resolution: "@actions/github@npm:9.1.1"
   dependencies:
@@ -98,7 +98,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^4.0.0":
+"@actions/http-client@npm:^4.0.0, @actions/http-client@npm:^4.0.1":
   version: 4.0.1
   resolution: "@actions/http-client@npm:4.0.1"
   dependencies:
@@ -684,16 +684,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.88.0":
-  version: 0.88.0
-  resolution: "@docker/actions-toolkit@npm:0.88.0"
+"@docker/actions-toolkit@npm:^0.89.1":
+  version: 0.89.1
+  resolution: "@docker/actions-toolkit@npm:0.89.1"
   dependencies:
     "@actions/artifact": "npm:^6.2.1"
     "@actions/cache": "npm:^6.0.0"
-    "@actions/core": "npm:^3.0.0"
+    "@actions/core": "npm:^3.0.1"
     "@actions/exec": "npm:^3.0.0"
-    "@actions/github": "npm:^9.1.0"
-    "@actions/http-client": "npm:^4.0.0"
+    "@actions/github": "npm:^9.1.1"
+    "@actions/http-client": "npm:^4.0.1"
     "@actions/io": "npm:^3.0.2"
     "@actions/tool-cache": "npm:^4.0.0"
     "@sigstore/bundle": "npm:^4.0.0"
@@ -710,7 +710,7 @@ __metadata:
     semver: "npm:^7.7.4"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.5"
-  checksum: 10c0/d9001d99966915d6b7c819dbb02fa257ac6b5cd672257799e9a2a8160bbb0b843654cd04ec5924267634084e20414d4020bf42635dbd55bbab425f4215d5f26d
+  checksum: 10c0/ccc45f72142c7c85bdc48e705d1e8b74b7168438defba2a5c1f458b99fa1e1bf13aa58b6874ee36e4deb6076f0dc2854a242c0d7c8aacf2334e82eee5c0bdf00
   languageName: node
   linkType: hard
 
@@ -5600,7 +5600,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^3.0.1"
     "@actions/github": "npm:^9.1.1"
-    "@docker/actions-toolkit": "npm:^0.88.0"
+    "@docker/actions-toolkit": "npm:^0.89.1"
     "@eslint/compat": "npm:^2.0.5"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
