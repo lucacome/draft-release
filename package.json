@@ -3,7 +3,7 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "@docker/actions-toolkit": "^0.88.0",
+    "@docker/actions-toolkit": "^0.89.1",
     "@types/semver": "^7.7.1",
     "handlebars": "^4.7.9",
     "js-yaml": "^4.1.1",
