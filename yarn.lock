@@ -5662,7 +5662,7 @@ __metadata:
     js-yaml: "npm:^4.1.1"
     prettier: "npm:3.8.4"
     rollup: "npm:^4.62.0"
-    semver: "npm:^7.8.0"
+    semver: "npm:^7.8.4"
     ts-jest: "npm:^29.4.10"
     ts-jest-resolver: "npm:^2.0.1"
     typescript: "npm:^6.0.3"
@@ -6753,7 +6753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4, semver@npm:^7.8.0, semver@npm:^7.8.1":
+"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4, semver@npm:^7.8.0, semver@npm:^7.8.1, semver@npm:^7.8.4":
   version: 7.8.4
   resolution: "semver@npm:7.8.4"
   bin:
