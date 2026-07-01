@@ -1972,13 +1972,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/js-yaml@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@types/js-yaml@npm:4.0.9"
-  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
-  languageName: node
-  linkType: hard
-
 "@types/json-schema@npm:^7.0.15":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
@@ -5496,17 +5489,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "js-yaml@npm:5.1.0"
-  dependencies:
-    argparse: "npm:^2.0.1"
-  bin:
-    js-yaml: bin/js-yaml.mjs
-  checksum: 10c0/a21c3817fb736ab3215c9d1ffb0a94823d02ecb51b481e88ab4bf0f9522baccbe9168bdf265bc315124d5087e2261de93e56176c2a7cd589d8275a18d7b3316e
-  languageName: node
-  linkType: hard
-
 "jsesc@npm:^3.0.2":
   version: 3.1.0
   resolution: "jsesc@npm:3.1.0"
@@ -5691,7 +5673,6 @@ __metadata:
     "@rollup/plugin-typescript": "npm:^12.3.0"
     "@rollup/rollup-linux-x64-gnu": "npm:*"
     "@types/jest": "npm:^30.0.0"
-    "@types/js-yaml": "npm:^4.0.9"
     "@types/node": "npm:^24.13.2"
     "@types/semver": "npm:^7.7.1"
     "@typescript-eslint/eslint-plugin": "npm:^8.62.1"
@@ -5704,7 +5685,6 @@ __metadata:
     globals: "npm:^17.6.0"
     handlebars: "npm:^4.7.9"
     jest: "npm:^30.4.2"
-    js-yaml: "npm:^5.1.0"
     prettier: "npm:3.9.4"
     rollup: "npm:^4.62.2"
     semver: "npm:^7.8.5"
