@@ -5406,7 +5406,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^5.2.1, js-yaml@npm:^5.2.3":
+"js-yaml@npm:^5.2.1":
   version: 5.2.3
   resolution: "js-yaml@npm:5.2.3"
   dependencies:
@@ -5414,6 +5414,17 @@ __metadata:
   bin:
     js-yaml: bin/js-yaml.mjs
   checksum: 10c0/55cd6310c8eee88d432ae038d451ac9d6aa0eb9e5d38a94df3d6c4a4015d08c9dad7c18669e0e8854e4173a615d6b6b7448bd0aac408773f8a46122ffd863c69
+  languageName: node
+  linkType: hard
+
+"js-yaml@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "js-yaml@npm:5.3.0"
+  dependencies:
+    argparse: "npm:^2.0.1"
+  bin:
+    js-yaml: bin/js-yaml.mjs
+  checksum: 10c0/c67383a74026f3b550fe1131c6f0f56df11e227fc9b8b8c1c85154f106831a95a944f2dd4f505498d537790483aec7cd5e3d5e9913fe28fa2d131eeb894a0fd9
   languageName: node
   linkType: hard
 
@@ -5607,7 +5618,7 @@ __metadata:
     globals: "npm:^17.9.0"
     handlebars: "npm:^4.7.9"
     jest: "npm:^30.4.2"
-    js-yaml: "npm:^5.2.3"
+    js-yaml: "npm:^5.3.0"
     prettier: "npm:3.9.6"
     rollup: "npm:^4.62.4"
     semver: "npm:^7.8.5"
