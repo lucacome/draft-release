@@ -1,6 +1,6 @@
-amends "package://github.com/jdx/hk/releases/download/v1.54.1/hk@1.54.1#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v2.0.0/hk@2.0.0#/Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v1.54.1/hk@1.54.1#/Builtins.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.0.0/hk@2.0.0#/Builtins.pkl"
 
 exclude = List("dist", "lib", "node_modules", ".agents", ".claude")
 
@@ -10,6 +10,8 @@ local linters = new Mapping<String, Step> {
   ["fix-smart-quotes"] = Builtins.fix_smart_quotes
   ["mixed-line-ending"] = Builtins.mixed_line_ending
   ["check-json"] = Builtins.jq
+  ["check-symlinks"] = Builtins.check_symlinks
+  ["destroyed-symlinks"] = Builtins.destroyed_symlinks
   ["pkl-lint"] = Builtins.pkl_format
   ["yamllint"] = Builtins.yamllint
   ["actionlint"] = Builtins.actionlint
@@ -17,6 +19,7 @@ local linters = new Mapping<String, Step> {
     depends = List("eslint")
   }
   ["eslint"] = Builtins.eslint
+  ["sort-package-json"] = Builtins.sort_package_json
   ["markdownlint"] {
     glob = List("**/*.md")
     check = "markdownlint-cli2 {{files}}"
@@ -35,9 +38,7 @@ local precommit = new Mapping<String, Step> {
   ["check-added-large-files"] = Builtins.check_added_large_files
   ["check-merge-conflict"] = Builtins.check_merge_conflict
   ["no-commit-to-branch"] = Builtins.no_commit_to_branch
-  ["gitleaks"] {
-    check = "gitleaks git --pre-commit --redact --staged --verbose --no-banner"
-  }
+  ["betterleaks"] = Builtins.betterleaks
 }
 
 local checkers = new Mapping<String, Step> {
