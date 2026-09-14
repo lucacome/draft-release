@@ -1,5 +1,34 @@
 {
+  "name": "lucacome-draft-release",
+  "description": "GitHub Action to create a draft release",
+  "keywords": [
+    "actions",
+    "release",
+    "notes",
+    "draft"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucacome/draft-release.git"
+  },
+  "license": "MIT",
   "author": "Luca Comellini",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "main": "src/main.ts",
+  "scripts": {
+    "all": "yarn format && yarn test && yarn build",
+    "build": "npx rimraf ./dist && npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "eslint": "eslint --max-warnings=0 .",
+    "eslint:fix": "eslint --fix .",
+    "format": "yarn run prettier:fix && yarn run eslint:fix",
+    "lint": "yarn run prettier && yarn run eslint",
+    "prettier": "prettier --check \"./**/*.ts\"",
+    "prettier:fix": "prettier --write \"./**/*.ts\"",
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
+  },
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
@@ -9,7 +38,6 @@
     "js-yaml": "^5.2.3",
     "semver": "^7.8.5"
   },
-  "description": "GitHub Action to create a draft release",
   "devDependencies": {
     "@eslint/compat": "^2.1.0",
     "@eslint/eslintrc": "^3.3.6",
@@ -39,36 +67,8 @@
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
   },
+  "packageManager": "yarn@4.18.0",
   "engines": {
     "node": ">=24.19.0"
-  },
-  "exports": {
-    ".": "./dist/index.js"
-  },
-  "keywords": [
-    "actions",
-    "release",
-    "notes",
-    "draft"
-  ],
-  "license": "MIT",
-  "main": "src/main.ts",
-  "name": "lucacome-draft-release",
-  "packageManager": "yarn@4.18.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lucacome/draft-release.git"
-  },
-  "scripts": {
-    "all": "yarn format && yarn test && yarn build",
-    "build": "npx rimraf ./dist && npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
-    "eslint": "eslint --max-warnings=0 .",
-    "eslint:fix": "eslint --fix .",
-    "format": "yarn run prettier:fix && yarn run eslint:fix",
-    "lint": "yarn run prettier && yarn run eslint",
-    "prettier": "prettier --check \"./**/*.ts\"",
-    "prettier:fix": "prettier --write \"./**/*.ts\"",
-    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
-  },
-  "type": "module"
+  }
 }
