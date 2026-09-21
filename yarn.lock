@@ -5548,7 +5548,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^5.2.3, js-yaml@npm:^5.4.1":
+"js-yaml@npm:^5.4.1, js-yaml@npm:^5.4.2":
   version: 5.4.2
   resolution: "js-yaml@npm:5.4.2"
   dependencies:
@@ -5756,7 +5756,7 @@ __metadata:
     globals: "npm:^17.12.0"
     handlebars: "npm:^4.7.9"
     jest: "npm:^30.5.2"
-    js-yaml: "npm:^5.2.3"
+    js-yaml: "npm:^5.4.2"
     prettier: "npm:3.9.8"
     rollup: "npm:^4.63.3"
     semver: "npm:^7.8.5"
