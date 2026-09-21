@@ -10,7 +10,7 @@ permissions:
 jobs:
 
   test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
@@ -51,7 +51,7 @@ jobs:
             console.log("Release Sections: " + JSON.stringify(${{ steps.draft-release.outputs.release-sections }}, null, 2));
 
   test-dry-run-config:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
@@ -90,7 +90,7 @@ jobs:
           echo "Release Sections: ${{ steps.draft-release.outputs.release-sections }}"
 
   test-git-context:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
