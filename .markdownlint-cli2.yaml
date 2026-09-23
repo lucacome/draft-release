@@ -16,9 +16,9 @@ config:
 
 ignores:
 
-- '.github/**'
-- 'node_modules/**'
-- '.agents/**'
+  - '.github/**'
+  - 'node_modules/**'
+  - '.agents/**'
 
 # Fix any fixable errors
 
