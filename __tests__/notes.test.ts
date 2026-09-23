@@ -33,7 +33,7 @@ describe('parseNotes', () => {
     const version = parseNotes(
       `
             ### 🚀 Features
-            some feaures
+            some features
             ### 🐛 Bug Fixes
             some bug fixes
 
