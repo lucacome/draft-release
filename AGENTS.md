@@ -102,7 +102,7 @@ yamllint .
 
 ```bash
 markdownlint-cli2 "**/*.md"
-# Config: .markdownlint-cli2.yaml (ignores .github/**, node_modules/**, .agents/**, .claude/**)
+# Config: .markdownlint-cli2.yaml (ignores .github/**, node_modules/**, .agents/**)
 # To auto-fix: markdownlint-cli2 --fix "**/*.md"
 ```
 

@@ -2,7 +2,7 @@ amends "package://github.com/jdx/hk/releases/download/v2.1.0/hk@2.1.0#/Config.pk
 
 import "package://github.com/jdx/hk/releases/download/v2.1.0/hk@2.1.0#/Builtins.pkl"
 
-exclude = List("dist", "lib", "node_modules", ".agents", ".claude")
+exclude = List("dist", "lib", "node_modules", ".agents")
 
 local linters = new Mapping<String, Step> {
   ["actionlint"] = Builtins.actionlint

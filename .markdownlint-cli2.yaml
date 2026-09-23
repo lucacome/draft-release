@@ -1,5 +1,7 @@
-# Rule configuration.
-# For rule descriptions and how to fix: https://github.com/DavidAnson/markdownlint/tree/main#rules--aliases
+# Rule configuration
+
+# For rule descriptions and how to fix: <https://github.com/DavidAnson/markdownlint/tree/main#rules--aliases>
+
 config:
   ul-style:
     style: dash
@@ -11,11 +13,13 @@ config:
     tables: false
 
 # Define glob expressions to ignore
+
 ignores:
-  - '.github/**'
-  - 'node_modules/**'
-  - '.agents/**'
-  - '.claude/**'
+
+- '.github/**'
+- 'node_modules/**'
+- '.agents/**'
 
 # Fix any fixable errors
+
 fix: true
