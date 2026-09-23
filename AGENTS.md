@@ -5,8 +5,9 @@ This file provides guidance for agentic coding agents working in this repository
 (`dist/index.js`) is committed to the repository and must be rebuilt after source changes.
 
 > **Self-maintenance rule:** After completing any change to the codebase, always review
-> this file and update it if the change affects project structure, commands, inputs/outputs,
-> dependencies, coding conventions, or testing patterns documented here.
+> and update this file (`AGENTS.md`) if the change affects project structure, commands,
+> inputs/outputs, dependencies, coding conventions, testing patterns, or pre-commit
+> hooks / lint config (`hk.pkl`, `.mise.toml`) documented here.
 > **README rule:** After any change to action inputs or outputs (in `action.yml` or
 > `src/context.ts`), always update the inputs/outputs tables in `README.md` to match.
 
@@ -131,23 +132,29 @@ yarn all
 ## Pre-commit Hooks (`hk`)
 
 The repository uses [`hk`](https://github.com/jdx/hk) (configured in `hk.pkl`) as the
-git pre-commit hook runner. On every commit it runs:
+git pre-commit hook runner. Excluded paths: `dist`, `lib`, `node_modules`, `.agents`.
+On every commit (`fix = true`, `stash = "git"`) it runs, in order:
 
-1. **build** — `mise run build` when any `.ts`, `package.json`, `yarn.lock`,
-    `tsconfig.json`, or `rollup.config.ts` file is staged. This keeps `dist/` in sync
-    automatically. The hook stashes unstaged changes before building.
-2. **linters** — prettier, eslint, knip, yamllint (via `ryl`), actionlint, markdownlint,
-    codespell, typos, sort-package-json, pkl-lint, mise, trailing-whitespace,
-    end-of-file-fixer, smart-quotes, mixed-line-ending, JSON/symlink checks
-3. **postlint** — `mise run postlint` (`git diff --exit-code`, exclusive) fails if
+1. **build** — `mise run build` when any `**/*.ts`, `package.json`, `yarn.lock`,
+    `tsconfig.json`, or `rollup.config.ts` file is staged (`exclusive = true`). This keeps
+    `dist/` in sync automatically.
+2. **linters** (group) — prettier (runs after eslint via `depends`), eslint, knip,
+    yamllint (via `ryl`), actionlint, markdownlint (`markdownlint-cli2`), codespell
+    (ignores `commitish`, skips `dist/**`, `lib/**`, `node_modules/**`), typos,
+    sort-package-json, pkl-lint (`pkl_format`), mise, trailing-whitespace,
+    end-of-file-fixer (`newlines`), fix-smart-quotes, mixed-line-ending, check-json (`jq`),
+    check-symlinks, destroyed-symlinks, editorconfig-checker, check-case-conflict
+3. **postlint** — `mise run postlint` (`git diff --exit-code`, `exclusive = true`) fails if
     linters left uncommitted changes
-4. **checkers** — editorconfig-checker, case-conflict check
-5. **security** — betterleaks secret scan, detect-private-key, no-commit-to-branch,
+4. **precommit** (group) — betterleaks secret scan, detect-private-key, no-commit-to-branch,
     check-added-large-files, check-merge-conflict
 
-The pre-commit hook runs with `fix = true`, meaning auto-fixable issues are corrected
-before the commit is recorded. Run `mise run lint` (`hk check --all`) to replicate CI
-lint checks locally without committing.
+Run `mise run lint` (`hk check --all`) to replicate CI lint checks locally without
+committing, or `mise run format` (`hk fix --all`) to auto-fix. The `check` and `fix`
+hooks run only the `linters` group (no build/postlint/precommit steps).
+
+> **Note:** When changing `hk.pkl` or `.mise.toml` tasks, update this section and the
+> Commands section above to match so `AGENTS.md` stays in sync.
 
 ---
 
