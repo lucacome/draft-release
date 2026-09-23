@@ -102,7 +102,7 @@ yamllint .
 
 ```bash
 markdownlint-cli2 "**/*.md"
-# Config: .markdownlint-cli2.yaml (ignores .github/** and node_modules/**)
+# Config: .markdownlint-cli2.yaml (ignores .github/**, node_modules/**, .agents/**, .claude/**)
 # To auto-fix: markdownlint-cli2 --fix "**/*.md"
 ```
 
@@ -117,12 +117,13 @@ codespell --ignore-words-list=commitish --quiet-level=7 --skip=./dist/**,./lib/*
 
 ```bash
 yarn all
+# Expands to: yarn format && yarn test && yarn build
 ```
 
 > **Note:** `--experimental-vm-modules` is mandatory because the project uses
 > `"type": "module"` and Jest requires this flag for ESM support.
 >
-> **Note:** `yamllint`, `markdownlint-cli2`, `codespell`, and `hk` are managed via
+> **Note:** `yamllint` (via `ryl`), `markdownlint-cli2`, `codespell`, `typos`, `knip`, and `hk` are managed via
 > mise (`.mise.toml`). Run `mise install` to ensure they are available locally.
 
 ---
@@ -135,10 +136,14 @@ git pre-commit hook runner. On every commit it runs:
 1. **build** — `mise run build` when any `.ts`, `package.json`, `yarn.lock`,
     `tsconfig.json`, or `rollup.config.ts` file is staged. This keeps `dist/` in sync
     automatically. The hook stashes unstaged changes before building.
-2. **linters** — prettier, eslint, yamllint, actionlint, markdownlint, codespell,
-    trailing-whitespace, end-of-file-fixer, smart-quotes, mixed-line-ending, JSON check
-3. **checkers** — editorconfig-checker, case-conflict check
-4. **security** — gitleaks secret scan, detect-private-key, no-commit-to-branch
+2. **linters** — prettier, eslint, knip, yamllint (via `ryl`), actionlint, markdownlint,
+    codespell, typos, sort-package-json, pkl-lint, mise, trailing-whitespace,
+    end-of-file-fixer, smart-quotes, mixed-line-ending, JSON/symlink checks
+3. **postlint** — `mise run postlint` (`git diff --exit-code`, exclusive) fails if
+    linters left uncommitted changes
+4. **checkers** — editorconfig-checker, case-conflict check
+5. **security** — betterleaks secret scan, detect-private-key, no-commit-to-branch,
+    check-added-large-files, check-merge-conflict
 
 The pre-commit hook runs with `fix = true`, meaning auto-fixable issues are corrected
 before the commit is recorded. Run `mise run lint` (`hk check --all`) to replicate CI
@@ -298,6 +303,7 @@ const {myFunction} = await import('../src/myModule.js')
 | `@actions/core` | Inputs, outputs, logging (`core.info`, `core.setFailed`, etc.) |
 | `@actions/github` | Octokit GitHub API client and Action context |
 | `@docker/actions-toolkit` | `Util.getInputList` for multi-value inputs (e.g. `variables`) |
+| `@octokit/openapi-types` | TypeScript types for GitHub API responses (e.g. `release` schema) |
 | `semver` | Semantic version parsing and comparison |
 | `handlebars` | Template interpolation for header/footer strings |
 | `js-yaml` | Parses `.github/release.yml` for release categories (runtime dep, bundled by Rollup) |
