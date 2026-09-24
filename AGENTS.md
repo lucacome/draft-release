@@ -95,8 +95,9 @@ yarn format
 ### Lint YAML files
 
 ```bash
-yamllint .
+ryl check .
 # Config: .yamllint.yaml (extends default, 120-char line limit, ignores .gitignore'd paths)
+# To auto-fix: ryl --fix .
 ```
 
 ### Lint Markdown files
