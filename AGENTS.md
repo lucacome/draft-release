@@ -5,8 +5,9 @@ This file provides guidance for agentic coding agents working in this repository
 (`dist/index.js`) is committed to the repository and must be rebuilt after source changes.
 
 > **Self-maintenance rule:** After completing any change to the codebase, always review
-> this file and update it if the change affects project structure, commands, inputs/outputs,
-> dependencies, coding conventions, or testing patterns documented here.
+> and update this file (`AGENTS.md`) if the change affects project structure, commands,
+> inputs/outputs, dependencies, coding conventions, testing patterns, or pre-commit
+> hooks / lint config (`hk.pkl`, `.mise.toml`) documented here.
 > **README rule:** After any change to action inputs or outputs (in `action.yml` or
 > `src/context.ts`), always update the inputs/outputs tables in `README.md` to match.
 
@@ -94,15 +95,16 @@ yarn format
 ### Lint YAML files
 
 ```bash
-yamllint .
+ryl check .
 # Config: .yamllint.yaml (extends default, 120-char line limit, ignores .gitignore'd paths)
+# To auto-fix: ryl --fix .
 ```
 
 ### Lint Markdown files
 
 ```bash
 markdownlint-cli2 "**/*.md"
-# Config: .markdownlint-cli2.yaml (ignores .github/** and node_modules/**)
+# Config: .markdownlint-cli2.yaml (ignores .github/**, node_modules/**, .agents/**)
 # To auto-fix: markdownlint-cli2 --fix "**/*.md"
 ```
 
@@ -117,12 +119,13 @@ codespell --ignore-words-list=commitish --quiet-level=7 --skip=./dist/**,./lib/*
 
 ```bash
 yarn all
+# Expands to: yarn format && yarn test && yarn build
 ```
 
 > **Note:** `--experimental-vm-modules` is mandatory because the project uses
 > `"type": "module"` and Jest requires this flag for ESM support.
 >
-> **Note:** `yamllint`, `markdownlint-cli2`, `codespell`, and `hk` are managed via
+> **Note:** `yamllint` (via `ryl`), `markdownlint-cli2`, `codespell`, `typos`, `knip`, and `hk` are managed via
 > mise (`.mise.toml`). Run `mise install` to ensure they are available locally.
 
 ---
@@ -130,19 +133,29 @@ yarn all
 ## Pre-commit Hooks (`hk`)
 
 The repository uses [`hk`](https://github.com/jdx/hk) (configured in `hk.pkl`) as the
-git pre-commit hook runner. On every commit it runs:
+git pre-commit hook runner. Excluded paths: `dist`, `lib`, `node_modules`, `.agents`.
+On every commit (`fix = true`, `stash = "git"`) it runs, in order:
 
-1. **build** — `mise run build` when any `.ts`, `package.json`, `yarn.lock`,
-    `tsconfig.json`, or `rollup.config.ts` file is staged. This keeps `dist/` in sync
-    automatically. The hook stashes unstaged changes before building.
-2. **linters** — prettier, eslint, yamllint, actionlint, markdownlint, codespell,
-    trailing-whitespace, end-of-file-fixer, smart-quotes, mixed-line-ending, JSON check
-3. **checkers** — editorconfig-checker, case-conflict check
-4. **security** — gitleaks secret scan, detect-private-key, no-commit-to-branch
+1. **build** — `mise run build` when any `**/*.ts`, `package.json`, `yarn.lock`,
+    `tsconfig.json`, or `rollup.config.ts` file is staged (`exclusive = true`). This keeps
+    `dist/` in sync automatically.
+2. **linters** (group) — prettier (runs after eslint via `depends`), eslint, knip,
+    yamllint (via `ryl`), actionlint, markdownlint (`markdownlint-cli2`), codespell
+    (ignores `commitish`, skips `dist/**`, `lib/**`, `node_modules/**`), typos,
+    sort-package-json, pkl-lint (`pkl_format`), mise, trailing-whitespace,
+    end-of-file-fixer (`newlines`), fix-smart-quotes, mixed-line-ending, check-json (`jq`),
+    check-symlinks, destroyed-symlinks, editorconfig-checker, check-case-conflict
+3. **postlint** — `mise run postlint` (`git diff --exit-code`, `exclusive = true`) fails if
+    linters left uncommitted changes
+4. **precommit** (group) — betterleaks secret scan, detect-private-key, no-commit-to-branch,
+    check-added-large-files, check-merge-conflict
 
-The pre-commit hook runs with `fix = true`, meaning auto-fixable issues are corrected
-before the commit is recorded. Run `mise run lint` (`hk check --all`) to replicate CI
-lint checks locally without committing.
+Run `mise run lint` (`hk check --all`) to replicate CI lint checks locally without
+committing, or `mise run format` (`hk fix --all`) to auto-fix. The `check` and `fix`
+hooks run only the `linters` group (no build/postlint/precommit steps).
+
+> **Note:** When changing `hk.pkl` or `.mise.toml` tasks, update this section and the
+> Commands section above to match so `AGENTS.md` stays in sync.
 
 ---
 
@@ -298,6 +311,7 @@ const {myFunction} = await import('../src/myModule.js')
 | `@actions/core` | Inputs, outputs, logging (`core.info`, `core.setFailed`, etc.) |
 | `@actions/github` | Octokit GitHub API client and Action context |
 | `@docker/actions-toolkit` | `Util.getInputList` for multi-value inputs (e.g. `variables`) |
+| `@octokit/openapi-types` | TypeScript types for GitHub API responses (e.g. `release` schema) |
 | `semver` | Semantic version parsing and comparison |
 | `handlebars` | Template interpolation for header/footer strings |
 | `js-yaml` | Parses `.github/release.yml` for release categories (runtime dep, bundled by Rollup) |

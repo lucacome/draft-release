@@ -65,7 +65,7 @@ describe('getVersionIncrease', () => {
       inputs,
       `
             ### 🚀 Features
-            some feaures
+            some features
             ### 🐛 Bug Fixes
             some bug fixes
         `,
