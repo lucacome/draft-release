@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Draft Release
-        uses: lucacome/draft-release@v2.2.1
+        uses: lucacome/draft-release@v2.2.2
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Draft Release
-        uses: lucacome/draft-release@v2.2.1
+        uses: lucacome/draft-release@v2.2.2
         with:
           minor-label: 'enhancement'
           major-label: 'change'
@@ -148,7 +148,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Draft Release
-        uses: lucacome/draft-release@v2.2.1
+        uses: lucacome/draft-release@v2.2.2
         id: draft-release
         with:
           minor-label: 'enhancement'
