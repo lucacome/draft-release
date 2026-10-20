@@ -1893,13 +1893,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/rollup-linux-x64-gnu@npm:4.63.4":
-  version: 4.63.4
-  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.63.4"
-  conditions: os=linux & cpu=x64 & libc=glibc
-  languageName: node
-  linkType: hard
-
 "@rollup/rollup-linux-x64-gnu@npm:4.64.9":
   version: 4.64.9
   resolution: "@rollup/rollup-linux-x64-gnu@npm:4.64.9"
@@ -4484,7 +4477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"handlebars@npm:4.7.10, handlebars@npm:^4.7.10, handlebars@npm:^4.7.9":
+"handlebars@npm:4.7.10, handlebars@npm:^4.7.10":
   version: 4.7.10
   resolution: "handlebars@npm:4.7.10"
   dependencies:
@@ -5841,7 +5834,7 @@ __metadata:
     "@rollup/plugin-commonjs": "npm:29.0.3"
     "@rollup/plugin-node-resolve": "npm:16.0.3"
     "@rollup/plugin-typescript": "npm:12.3.0"
-    "@rollup/rollup-linux-x64-gnu": "npm:4.63.4"
+    "@rollup/rollup-linux-x64-gnu": "npm:4.64.9"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.19.2"
     "@types/semver": "npm:7.8.0"
