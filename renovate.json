@@ -4,5 +4,12 @@
     "github>lucacome/common",
     "schedule:weekly"
   ],
-  "rangeStrategy": "bump"
+  "postUpgradeTasks": {
+    "commands": [
+      "corepack enable",
+      "yarn build"
+    ],
+    "executionMode": "branch"
+  },
+  "rangeStrategy": "pin"
 }

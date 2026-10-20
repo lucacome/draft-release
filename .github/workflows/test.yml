@@ -8,7 +8,7 @@ on:
       - main
 
 concurrency:
-  group: ${{ github.ref_name }}-test
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,9 +17,12 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Enable corepack
         run: corepack enable
