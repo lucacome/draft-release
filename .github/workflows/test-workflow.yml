@@ -4,6 +4,9 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 
@@ -11,11 +14,14 @@ jobs:
 
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./
         id: draft-release
         with:
@@ -52,11 +58,14 @@ jobs:
 
   test-dry-run-config:
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./
         id: draft-release
         with:
@@ -91,11 +100,14 @@ jobs:
 
   test-git-context:
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./
         id: draft-release
         with:
