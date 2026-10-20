@@ -39,8 +39,8 @@ jobs:
       - name: Draft Release
         uses: lucacome/draft-release@v2.2.2
         with:
-          minor-label: 'enhancement'
-          major-label: 'change'
+          minor-label: enhancement
+          major-label: change
 ```
 
 ## Inputs
@@ -97,7 +97,7 @@ on:
     branches:
       - main
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - v[0-9]+.[0-9]+.[0-9]+
 
 permissions:
   contents: read
@@ -114,8 +114,8 @@ jobs:
       - name: Draft Release
         uses: lucacome/draft-release@v2.2.2
         with:
-          minor-label: 'enhancement'
-          major-label: 'change'
+          minor-label: enhancement
+          major-label: change
           variables: |
             my-variable=My Variable
           notes-footer: |
@@ -151,8 +151,8 @@ jobs:
         uses: lucacome/draft-release@v2.2.2
         id: draft-release
         with:
-          minor-label: 'enhancement'
-          major-label: 'change'
+          minor-label: enhancement
+          major-label: change
 
       - name: Get Version Number
         run: echo ${{ steps.draft-release.outputs.version }}

@@ -1,6 +1,6 @@
-amends "package://github.com/jdx/hk/releases/download/v2.7.1/hk@2.7.1#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v2.8.0/hk@2.8.0#/Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v2.7.1/hk@2.7.1#/Builtins.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.8.0/hk@2.8.0#/Builtins.pkl"
 
 exclude = List("dist", "lib", "node_modules", ".agents", "*lock.json")
 
@@ -17,10 +17,13 @@ local linters = new Mapping<String, Step> {
   ["mise"] = Builtins.mise
   ["mixed-line-ending"] = Builtins.mixed_line_ending
   ["pkl-lint"] = Builtins.pkl_format
+  ["ryl_format"] = Builtins.ryl_format
+  ["ryl_markdown_format"] = Builtins.ryl_markdown_format
+  ["ryl_markdown"] = Builtins.ryl_markdown
+  ["ryl"] = Builtins.ryl
   ["sort-package-json"] = Builtins.sort_package_json
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["typos"] = Builtins.typos
-  ["yamllint"] = Builtins.ryl
   ["prettier"] = (Builtins.prettier) {
     depends = List("eslint")
   }
