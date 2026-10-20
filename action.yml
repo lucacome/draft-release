@@ -1,80 +1,80 @@
-name: 'Draft Release Notes'
-description: 'Create a draft release on GitHub based on release.yml'
+name: Draft Release Notes
+description: Create a draft release on GitHub based on release.yml
 author: Luca Comellini <lucacome>
 inputs:
   github-token:
-    description: 'GitHub Token as provided by secrets'
+    description: GitHub Token as provided by secrets
     default: ${{ github.token }}
     required: false
   major-label:
-    description: 'Label to use for major version bump'
-    default: 'change'
+    description: Label to use for major version bump
+    default: change
     required: false
   minor-label:
-    description: 'Label to use for minor version bump'
-    default: 'enhancement'
+    description: Label to use for minor version bump
+    default: enhancement
     required: false
   notes-header:
-    description: 'Header to use for changelog'
-    default: ''
+    description: Header to use for changelog
+    default: ""
     required: false
   notes-footer:
-    description: 'Footer to use for changelog'
-    default: ''
+    description: Footer to use for changelog
+    default: ""
     required: false
   variables:
-    description: 'List of variables to use in the header and footer'
-    default: ''
+    description: List of variables to use in the header and footer
+    default: ""
     required: false
   collapse-after:
-    description: 'Number of lines required for the section to be collapsed'
-    default: '0'
+    description: Number of lines required for the section to be collapsed
+    default: "0"
     required: false
   group-dependencies:
-    description: 'Whether to group dependencies of the same type'
-    default: 'true'
+    description: Whether to group dependencies of the same type
+    default: "true"
     required: false
   remove-conventional-prefixes:
-    description: 'Remove conventional commit prefixes like "chore:", "feat:", etc. from dependency updates'
+    description: Remove conventional commit prefixes like "chore:", "feat:", etc. from dependency updates
     required: false
-    default: 'false'
+    default: "false"
   publish:
-    description: 'Whether to publish the release'
-    default: 'false'
+    description: Whether to publish the release
+    default: "false"
     required: false
   config-path:
-    description: 'Path to the configuration file'
-    default: '.github/release.yml'
+    description: Path to the configuration file
+    default: .github/release.yml
     required: false
   dry-run:
-    description: 'Whether to run the action without creating a release'
-    default: 'false'
+    description: Whether to run the action without creating a release
+    default: "false"
     required: false
   context:
-    description: 'Where to get context data. Allowed options are "workflow" (default), "git".'
-    default: 'workflow'
+    description: Where to get context data. Allowed options are "workflow" (default), "git".
+    default: workflow
     required: false
 outputs:
   version:
-    description: 'The version of the release'
+    description: The version of the release
   previous-version:
-    description: 'The version of the previous release'
+    description: The version of the previous release
   release-notes:
-    description: 'The release notes for the release'
+    description: The release notes for the release
   release-url:
-    description: 'The URL of the release'
+    description: The URL of the release
   release-id:
-    description: 'The ID of the release'
+    description: The ID of the release
   release-sections:
-    description: 'The sections of the release in JSON format'
+    description: The sections of the release in JSON format
   release-header:
-    description: 'The header of the release'
+    description: The header of the release
   release-footer:
-    description: 'The footer of the release'
+    description: The footer of the release
 runs:
-  using: 'node24'
-  main: 'dist/index.js'
+  using: node24
+  main: dist/index.js
 
 branding:
-  icon: 'file-text'
-  color: 'green'
+  icon: file-text
+  color: green
