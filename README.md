@@ -156,3 +156,11 @@ jobs:
 
       - name: Get Version Number
         run: echo ${{ steps.draft-release.outputs.version }}
+```
+
+## Security
+
+Please do not report security vulnerabilities through public issues. Use GitHub's
+private vulnerability reporting on the
+[Security Advisories](https://github.com/lucacome/draft-release/security/advisories)
+page instead. See [SECURITY.md](SECURITY.md) for supported versions and what to expect.
