@@ -28,7 +28,7 @@ jobs:
       - name: Mise
         uses: jdx/mise-action@v5.2.2
         with:
-          version: v2026.10.15
+          version: v2026.10.17
 
       - name: Install dependencies
         run: |
