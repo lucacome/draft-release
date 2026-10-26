@@ -73,6 +73,7 @@ jobs:
           retention-days: 1
 
   commit:
+    if: ${{ needs.build.result == 'success' && github.actor == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     needs: build
