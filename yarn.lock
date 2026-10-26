@@ -726,9 +726,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:0.106.0":
-  version: 0.106.0
-  resolution: "@docker/actions-toolkit@npm:0.106.0"
+"@docker/actions-toolkit@npm:0.107.0":
+  version: 0.107.0
+  resolution: "@docker/actions-toolkit@npm:0.107.0"
   dependencies:
     "@actions/artifact": "npm:^6.3.1"
     "@actions/cache": "npm:^6.3.0"
@@ -746,12 +746,12 @@ __metadata:
     gunzip-maybe: "npm:^1.4.2"
     handlebars: "npm:^4.7.10"
     he: "npm:^2.0.0"
-    js-yaml: "npm:^5.4.3"
+    js-yaml: "npm:^5.5.0"
     jwt-decode: "npm:^4.0.0"
     semver: "npm:^7.8.5"
     tar-stream: "npm:^3.2.2"
     tmp: "npm:^0.2.7"
-  checksum: 10c0/04a2e4b30a3961975c3019733ad65753996b4b1eb892ba50e9c01d8f15e1155c215eadc28a73942c2ccab13241477f62a27e4e2c79dfe9a56971c293ad9e4a7f
+  checksum: 10c0/6fc203ba267a64d9ed2c22a474944e0bccbcc01d2da2599bd1ae93bd43e014cf192937dba5622037d043b669e5e5822e480a2fdced50a53c0ad2cda97e8c803e
   languageName: node
   linkType: hard
 
@@ -5646,7 +5646,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:5.5.0, js-yaml@npm:^5.4.3":
+"js-yaml@npm:5.5.0, js-yaml@npm:^5.5.0":
   version: 5.5.0
   resolution: "js-yaml@npm:5.5.0"
   dependencies:
@@ -5847,7 +5847,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:3.0.1"
     "@actions/github": "npm:9.1.1"
-    "@docker/actions-toolkit": "npm:0.106.0"
+    "@docker/actions-toolkit": "npm:0.107.0"
     "@eslint/compat": "npm:2.1.1"
     "@eslint/eslintrc": "npm:3.3.7"
     "@eslint/js": "npm:10.0.1"
