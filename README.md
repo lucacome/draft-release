@@ -1,5 +1,10 @@
 # Draft Release Action
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/lucacome/draft-release/badge)](https://scorecard.dev/viewer/?uri=github.com/lucacome/draft-release)
+[![Test](https://github.com/lucacome/draft-release/actions/workflows/test.yml/badge.svg)](https://github.com/lucacome/draft-release/actions/workflows/test.yml)
+[![GitHub release badge](https://badgen.net/github/release/lucacome/draft-release/stable)](https://github.com/lucacome/draft-release/releases/latest)
+[![GitHub license badge](https://badgen.net/github/license/lucacome/draft-release)](https://github.com/lucacome/draft-release/blob/main/LICENSE)
+
 This action creates a draft release for the next version to be released. It reads the release file in `.github/release.yml` and creates a draft release with the next version number based on the current version number and the labels of the pull requests merged since the last release.
 
 To use this action, you need to create a release file in `.github/release.yml` as shown in the GitHub documentation for [creating a release file](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes).
